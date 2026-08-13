@@ -1,0 +1,124 @@
+---
+title: "Modelling Match State and Player Performance in the Big Bash League"
+format: 
+  html:
+    toc: true
+    toc_float: true
+---
+
+## Background
+
+The Big Bash League (`BBL`) is Australia's premier Twenty20 cricket competition, featuring eight franchises and played annually from December to February. T20 cricket is a format defined by rapidly shifting match states: a team's fortunes can swing dramatically within a single over, and the pressure on batters and bowlers changes ball by ball as the target, the run rate, and the number of wickets in hand all evolve together.
+
+`Cricsheet` is a freely available, community-maintained repository of structured ball-by-ball cricket data, covering international and domestic T20 competitions worldwide. We have downloaded the complete Cricsheet archive for the BBL, covering all seasons from 2011/12 through to 2024/25. Each delivery in every match is recorded as a separate row, making it possible to reconstruct the full match state at any point in a game and to evaluate the performance of individual batters and bowlers in context.
+
+## Project Aim
+
+The aim of this project is to use ball-by-ball BBL data to model player performance in context, and to investigate how match state — the combination of runs needed, balls remaining, wickets in hand, and phase of play — shapes the difficulty and value of each delivery. Students will need to engineer match-state features from the raw delivery-level data before applying statistical and machine learning methods to answer questions about batter and bowler performance, scoring patterns, and the dynamics of T20 run chases.
+
+## Data
+
+<center>
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+library(downloadthis)
+download_file(
+  path = "data/bbl_deliveries.csv",
+  button_label = "BBL Ball-by-Ball Deliveries",
+  button_type = "success"
+)
+```
+</center><br>
+
+<center>
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+library(downloadthis)
+download_file(
+  path = "data/bbl_match_info.csv",
+  button_label = "BBL Match Information",
+  button_type = "success"
+)
+```
+</center><br>
+
+The deliveries dataset contains one row per ball bowled across all BBL matches. The match information dataset contains one row per match with contextual metadata. Key variables are described below.
+
+**Deliveries dataset**
+
+| Variable | Description |
+|---|---|
+| `match_id` | Unique match identifier (links to match info) |
+| `season` | BBL season (e.g., `2023/24`) |
+| `start_date` | Date the match was played |
+| `venue` | Ground name |
+| `innings` | Innings number (`1` = first innings, `2` = second innings / chase) |
+| `ball` | Ball identifier in `over.delivery` format (e.g., `4.3` = 3rd ball of 5th over) |
+| `batting_team` / `bowling_team` | Team names |
+| `striker` / `non_striker` | Batter names |
+| `bowler` | Bowler name |
+| `runs_off_bat` | Runs scored off the bat (0–6) |
+| `extras` | Extra runs (wides, no-balls, byes, leg-byes) |
+| `wides` / `noballs` / `byes` / `legbyes` | Breakdown of extras |
+| `wicket_type` | Dismissal type if a wicket fell (e.g., `caught`, `bowled`, `run out`) |
+| `player_dismissed` | Name of dismissed batter |
+| `fielder_1`, `fielder_2`, `fielder_3` | Fielder(s) involved in dismissal |
+
+**Match information dataset**
+
+| Variable | Description |
+|---|---|
+| `match_id` | Unique match identifier |
+| `toss_winner` / `toss_decision` | Which team won the toss and whether they chose to bat or field |
+| `winner` | Winning team |
+| `winner_runs` / `winner_wickets` | Margin of victory |
+| `target_runs` | Runs required by the chasing team in innings 2 |
+| `player_of_match` | Player awarded match honours |
+
+::: {.callout-important}
+**Feature engineering is central to this project.** The raw data records individual deliveries but does not pre-compute match-state variables. Before any modelling can begin, students will need to derive features such as the over number and phase of play, cumulative runs and wickets at each point in an innings, the required run rate and runs needed in innings 2, and batter- or bowler-level rolling performance summaries. This engineering step is a deliberate and substantial part of the project.
+:::
+
+::: {.callout-note}
+**Ball column format:** The `ball` column is stored as a decimal in `over.delivery` format (e.g., `4.3` means the 3rd legal delivery of the 5th over). Extra deliveries such as wides and no-balls appear as additional decimal places and require careful handling. The `actual_delivery` column records the legal ball count within the over and is often more reliable for sequencing.
+:::
+
+## Key Questions
+
+Below are some questions you may like to explore with the data:
+
+1. How do scoring rates and wicket probabilities vary across the three phases of a T20 innings — the Powerplay (overs 1–6), the middle overs (7–16), and the death overs (17–20)?
+2. Can we build a model that predicts the probability of a wicket falling on any given delivery, using match-state and player-identity features?
+3. Which batters perform best under high-pressure chase situations — defined by a high required run rate and few wickets in hand — relative to their performance in low-pressure situations?
+4. Which bowlers are most effective at restricting runs and taking wickets in the death overs, after controlling for the match state they bowl in?
+5. Does winning the toss and choosing to field (the more common decision in T20) actually translate into a meaningful advantage?
+6. Do players naturally cluster into distinct batting or bowling archetypes based on their ball-by-ball performance profiles?
+
+## Suggested Analysis
+
+Below are some potential analysis methods you may consider as a starting point:
+
+- parse the `ball` column to extract over number, phase of play, and delivery number within the over
+- compute cumulative match-state variables for each delivery: runs scored, wickets fallen, current run rate, and (for innings 2) runs needed, balls remaining, required run rate, and wickets in hand
+- produce descriptive summaries and visualisations of run-scoring and wicket patterns by phase, team, and season
+- model the probability of a boundary (4 or 6) or a wicket on each delivery using logistic regression or a tree-based classifier, with match-state and player features as predictors
+- evaluate batter performance using a context-adjusted metric — for example, comparing a batter's actual runs to the average runs expected from a batter of similar quality facing the same match state
+- compare bowler effectiveness across phases using economy rate, wicket rate, and dot ball percentage, and assess whether these metrics are consistent across seasons
+- apply clustering methods (k-means or hierarchical) to group batters or bowlers by their phase-specific performance profiles
+- use PCA or UMAP to visualise player similarity in a low-dimensional space based on their delivery-level statistics
+
+## Additional Considerations
+
+- examine whether the toss advantage has changed over the history of the competition, or whether it varies by venue
+- investigate whether specific batter–bowler matchups show statistically meaningful patterns beyond what would be expected by chance
+- explore whether a team's overall network of batting partnerships (time at the crease together) is associated with match outcomes
+- consider the effect of player experience: do batters and bowlers improve measurably across their first 20, 50, and 100 BBL appearances?
+- test whether home ground advantage is significant in the BBL, and whether it interacts with toss decision
+
+## Deliverables
+
+Some potential outputs could include:
+
+- a short written report summarising the feature engineering methodology, analysis, and key findings
+- a reproducible R or Python analysis workflow
+- a clear set of visualisations including at least one phase-of-play analysis, one player performance comparison, and one clustering or dimensionality reduction plot
+- a brief conclusion explaining what ball-by-ball analysis reveals about T20 cricket that traditional career averages cannot capture
+- a Shiny app (or equivalent interactive tool) that allows users to explore a selected batter's or bowler's performance profile across phases and seasons
