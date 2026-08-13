@@ -4,6 +4,7 @@ format:
   html:
     toc: true
     toc_float: true
+    embed-resources: true
 ---
 
 ## Background
@@ -22,7 +23,7 @@ The aim of this project is to use ball-by-ball BBL data to model player performa
 ```{r, echo=FALSE, warning=FALSE, message=FALSE}
 library(downloadthis)
 download_file(
-  path = "data/bbl_deliveries.csv",
+  path = "data/bbl_all.csv",
   button_label = "BBL Ball-by-Ball Deliveries",
   button_type = "success"
 )
