@@ -1,0 +1,38 @@
+library(dplyr)
+
+# Create a clean lookup table
+stadium_lookup <- tibble::tribble(
+  ~original_stadium, ~clean_stadium, ~home_team,
+  "Sydney Showground Stadium", "Sydney Showground Stadium", "Sydney Thunder",
+  "Adelaide Oval", "Adelaide Oval", "Adelaide Strikers",
+  "Docklands Stadium", "Marvel Stadium", "Melbourne Renegades",
+  "Sydney Cricket Ground", "Sydney Cricket Ground (SCG)", "Sydney Sixers",
+  "Western Australia Cricket Association Ground", "WACA Ground", "Western Australia",
+  "Bellerive Oval", "Bellerive Oval (Ninja Stadium)", "Hobart Hurricanes",
+  "Brisbane Cricket Ground, Woolloongabba", "The Gabba", "Brisbane Heat",
+  "Melbourne Cricket Ground", "Melbourne Cricket Ground (MCG)", "Melbourne Stars",
+  "W.A.C.A. Ground", "WACA Ground", "Western Australia",
+  "Aurora Stadium", "University of Tasmania Stadium", "Hobart Hurricanes",
+  "Simonds Stadium, South Geelong, Victoria", "Kardinia Park (GMHBA Stadium)", "Melbourne Renegades",
+  "Traeger Park", "Traeger Park", "Hobart Hurricanes",
+  "Manuka Oval", "Manuka Oval", "Sydney Thunder",
+  "Perth Stadium", "Optus Stadium", "Perth Scorchers",
+  "Carrara Oval", "Metricon Stadium (Carrara Stadium)", "Brisbane Heat",
+  "Geelong Cricket Ground", "Kardinia Park (GMHBA Stadium)", "Melbourne Renegades",
+  "Ted Summerton Reserve", "Ted Summerton Reserve", "Melbourne Stars",
+  "International Sports Stadium", "International Sports Stadium (Coffs Harbour)", "Sydney Sixers",
+  "Brisbane Cricket Ground", "The Gabba", "Brisbane Heat",
+  "Manuka Oval, Canberra", "Manuka Oval", "Sydney Thunder",
+  "Docklands Stadium, Melbourne", "Marvel Stadium", "Melbourne Renegades",
+  "Aurora Stadium, Launceston", "University of Tasmania Stadium", "Hobart Hurricanes",
+  "Bellerive Oval, Hobart", "Bellerive Oval (Ninja Stadium)", "Hobart Hurricanes",
+  "Brisbane Cricket Ground, Woolloongabba, Brisbane", "The Gabba", "Brisbane Heat",
+  "GMHBA Stadium, South Geelong, Victoria", "Kardinia Park (GMHBA Stadium)", "Melbourne Renegades",
+  "Junction Oval, Melbourne", "Junction Oval", "Melbourne Stars",
+  "International Sports Stadium, Coffs Harbour", "International Sports Stadium (Coffs Harbour)", "Sydney Sixers",
+  "Cazaly's Stadium, Cairns", "Cazalys Stadium", "Brisbane Heat",
+  "University of Tasmania Stadium, Launceston", "University of Tasmania Stadium", "Hobart Hurricanes",
+  "Lavington Sports Oval, Albury", "Lavington Sports Oval", "Sydney Thunder",
+  "North Sydney Oval, Sydney", "North Sydney Oval", "Sydney Sixers",
+  "Stadium Australia", "Stadium Australia", "Sydney Thunder"
+)
