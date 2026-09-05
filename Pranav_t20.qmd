@@ -1,0 +1,51 @@
+---
+title: "Untitled"
+format: html
+---
+
+```{r Loading Libraries}
+library(tidyverse)
+```
+
+```{r Reading in Data}
+bbl_match_info <-  read_csv("./data/bbl_match_info.csv")
+bbl_all <- read_csv("./data/bbl_all.csv")
+```
+
+
+```{r}
+summary(bbl_match_info)
+glimpse(bbl_all)
+```
+
+to check how legal balls are recorded, let us check up on the rows pertaining to deliveries
+
+
+```{r}
+bbl_delivery <- bbl_all|> select(ball,actual_delivery,wides, noballs,extras)
+view(bbl_delivery)
+bbl_delivery|> count(extras)
+```
+
+Creating a runnning score and per delivery score
+```{r}
+bbl_all <- bbl_all|> group_by(match_id,innings)|>
+    mutate(delivery_runs = runs_off_bat+extras,
+    current_score = cumsum(delivery_runs))
+```
+
+Creating dot ball indicator
+```{r}
+bbl_all <- bbl_all |>mutate(
+    dot_ball = ifelse(runs_off_bat == 0 & extras == 0, 1, 0)
+  )
+```
+
+Creating over number and phase of play
+
+```{r}
+bbl_all <- bbl_all|> mutate(over_no = floor(ball)+1,
+phase= case_when(over_no >=1 & over_no <=6 ~ "Powerplay",
+over_no >=7 & over_no <=15 ~ "Middle",
+over_no >=16 & over_no <=20 ~ "Death")) 
+```
