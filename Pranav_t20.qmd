@@ -18,7 +18,9 @@ summary(bbl_match_info)
 glimpse(bbl_all)
 ```
 
-to check how legal balls are recorded, let us check up on the rows pertaining to deliveries
+## 1. Creating Necessary Variables
+
+To check how legal balls are recorded, let us check up on the rows pertaining to deliveries
 
 
 ```{r}
@@ -31,7 +33,8 @@ Creating a runnning score and per delivery score
 ```{r}
 bbl_all <- bbl_all|> group_by(match_id,innings)|>
     mutate(delivery_runs = runs_off_bat+extras,
-    current_score = cumsum(delivery_runs))
+    current_score = cumsum(delivery_runs),
+    score_before=lag((current_score),default=0))
 ```
 
 Creating dot ball indicator
@@ -39,6 +42,7 @@ Creating dot ball indicator
 bbl_all <- bbl_all |>mutate(
     dot_ball = ifelse(runs_off_bat == 0 & extras == 0, 1, 0)
   )
+
 ```
 
 Creating over number and phase of play
@@ -49,3 +53,70 @@ phase= case_when(over_no >=1 & over_no <=6 ~ "Powerplay",
 over_no >=7 & over_no <=15 ~ "Middle",
 over_no >=16 & over_no <=20 ~ "Death")) 
 ```
+
+
+Now to determine legal balls and remaining balls
+
+```{r}
+bbl_all <-  bbl_all|> mutate(legal_ball = ifelse(is.na(noballs) & is.na(wides),1,0),
+balls_remaining= lag(120-cumsum(legal_ball),default=120))
+
+```
+
+Calculating target and runs required
+
+```{r}
+bbl_all <-  bbl_all|> group_by(match_id)|>
+    mutate(target=max(current_score[innings==1])+1,
+    required_runs=ifelse(innings==2,(target-score_before),NA_real_))
+```
+
+Creating a boundary indicator
+
+```{r}
+bbl_all <-  bbl_all|> group_by(match_id, innings)|>
+    mutate(boundary_type=case_when(runs_off_bat== 4 & is.na(non_boundary)  ~ "Four",
+                                    runs_off_bat== 6 & is.na(non_boundary)  ~ "Six",
+                                    TRUE ~ NA), 
+boundary_runs = ifelse(runs_off_bat %in% c(4,6),runs_off_bat,0))
+
+```
+
+Free hit indicator(useful for modelling, no concern to other metrics)
+
+```{r}
+bbl_all <- bbl_all |>group_by(match_id, innings) |>
+  mutate(
+    free_hit = ifelse(
+      lag(noballs) > 0,
+      1,
+      0 ))
+```
+Now we will create bowler economy:
+
+```{r}
+bbl_all <-  bbl_all|> group_by(match_id,bowler)|>
+    mutate(bowler_balls_bowled_before = 
+                      lag(cumsum(legal_ball),default = 0),
+
+            runs_conceded_before =
+                     lag(cumsum(runs_off_bat+ coalesce(wides,0) + coalesce(noballs,0)),
+                     default = 0),
+
+            bowler_economy_before = ifelse(bowler_balls_bowled_before > 0 ,
+                     (runs_conceded_before/bowler_balls_bowled_before)*6,
+                     NA_real_))
+```
+
+Another statistic is boundary % per bowler.
+
+```{r}
+bbl_all <- bbl_all|> group_by(match_id,bowler)|>
+    mutate(bowler_boundary_p_before = ifelse(runs_conceded_before>0,
+                lag(cumsum(boundary_runs),default=0)/runs_conceded_before*100,
+                0
+    ))
+
+```
+
+
