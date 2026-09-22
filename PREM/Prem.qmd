@@ -1,0 +1,254 @@
+---
+title: "Prem"
+format: html
+editor: visual
+---
+
+## 
+
+```{r, message=FALSE}
+library(readr)
+library(tidyverse)
+```
+
+```{r, message=FALSE, warning=FALSE}
+raw_data <- read_csv("./data/bbl_all.csv")
+raw_data_1 <- read_csv("./data/bbl_match_info.csv")
+```
+
+```{r}
+#changing the date format into dd/mm/yy
+processed_data <- raw_data |>
+  mutate(match_date = format(start_date, "%d/%m/%y")) |>
+  relocate(match_date, .after = season)
+
+#below code is to cross check the date columns match or not before we split the data into separate seasons
+all(as.Date(processed_data$match_date, format = "%d/%m/%y") ==
+      processed_data$start_date)
+
+#(not able to remove the start date)
+processed_data <- processed_data |>
+  relocate(start_date, .after = fielder_3) |>
+  select(-penalty,
+         -other_wicket_type)
+
+processed_data <- processed_data |>
+  mutate(over = floor(actual_delivery) + 1) |>
+  relocate(over, .after = actual_delivery)
+    
+processed_data <- processed_data |>
+  relocate(
+    runs_off_bat,
+    extras,
+    wides,
+    noballs,
+    byes,
+    legbyes,
+    wicket_type,
+    .after = over
+  )
+
+processed_data <- processed_data |>
+  mutate(
+    Phase_over = case_when(
+      over <= 6 ~ "Powerplay",
+      over <= 16 ~ "Mid-Game",
+      over <= 20 ~ "Death"
+    )
+  ) |>
+  relocate(Phase_over, .after = over)
+
+#arranging matches chronologically before assigning delivery order
+processed_data <- processed_data |>
+  arrange(start_date, match_id, innings) |>
+  mutate(delivery_order = row_number())
+
+processed_data <- processed_data |>
+  left_join(
+    raw_data_1 |>
+      select(match_id, target_runs),
+    by = "match_id"
+  ) |>
+  relocate(target_runs, .after = innings)
+
+processed_data <- processed_data |>
+  mutate(
+    wicket_this_ball = case_when(
+      is.na(wicket_type) ~ 0,
+      wicket_type == "retired hurt" ~ 0,
+      TRUE ~ 1
+    )
+  ) |>
+  relocate(wicket_this_ball, .after = wicket_type)
+
+processed_data <- processed_data |>
+  mutate(runs_this_ball = runs_off_bat + extras) |>
+  relocate(runs_this_ball, .after = wicket_this_ball)
+
+```
+
+
+```{r}
+calculate_score <- function(data) {
+
+  required_cols <- c(
+    "match_id",
+    "innings",
+    "delivery_order",
+    "runs_this_ball",
+    "wicket_this_ball"
+  )
+
+  missing_cols <- setdiff(required_cols, names(data))
+
+  if (length(missing_cols) > 0) {
+    stop(
+      paste(
+        "Missing required columns:",
+        paste(missing_cols, collapse = ", ")
+      )
+    )
+  }
+
+  data <- data |>
+  arrange(delivery_order) |>
+  group_by(match_id, innings) |>
+  mutate(
+    cumulative_runs = cumsum(runs_this_ball),
+    cumulative_wickets = cumsum(wicket_this_ball),
+    score = paste0(cumulative_runs, "/", cumulative_wickets)
+  ) |>
+    relocate(cumulative_runs,
+             cumulative_wickets,
+             score,
+             .after = runs_this_ball) |>
+  ungroup()
+  
+  return(data)
+}
+```
+
+```{r}
+processed_data_test <- calculate_score(processed_data)
+```
+
+```{r}
+over_data <- processed_data_test |>
+  group_by(
+    season,
+    match_id,
+    innings,
+    batting_team,
+    over,
+    Phase_over
+  ) |>
+  summarise(
+    runs_in_over = sum(runs_this_ball, na.rm = TRUE),
+    wickets_in_over = sum(wicket_this_ball, na.rm = TRUE),
+    cumulative_runs = last(cumulative_runs),
+    cumulative_wickets = last(cumulative_wickets),
+    score = last(score),
+    .groups = "drop"
+  )
+```
+
+
+
+```{r}
+#Splitting the data into seasons
+processed_data_1 <- processed_data |>
+  filter(season == "2011/12")
+
+processed_data_2 <- processed_data |>
+  filter(season == "2012/13")
+
+processed_data_3 <- processed_data |>
+  filter(season == "2013/14")
+
+processed_data_4 <- processed_data |>
+  filter(season == "2014/15")
+
+processed_data_5 <- processed_data |>
+  filter(season == "2015/16")
+
+processed_data_6 <- processed_data |>
+  filter(season == "2016/17")
+
+processed_data_7 <- processed_data |>
+  filter(season == "2017/18")
+
+processed_data_8 <- processed_data |>
+  filter(season == "2018/19")
+
+processed_data_9 <- processed_data |>
+  filter(season == "2019/20")
+
+processed_data_10 <- processed_data |>
+  filter(season == "2020/21")
+
+processed_data_11 <- processed_data |>
+  filter(season == "2021/22")
+
+processed_data_12 <- processed_data |>
+  filter(season == "2022/23")
+
+processed_data_13 <- processed_data |>
+  filter(season == "2023/24")
+
+processed_data_14 <- processed_data |>
+  filter(season == "2024/25")
+
+processed_data_15 <- processed_data |>
+  filter(season == "2025/26")
+```
+
+```{r}
+unique(processed_data$venue)
+unique(processed_data$penalty)
+unique(processed_data$non_boundary)
+unique(processed_data$wicket_type)
+unique(processed_data$other_wicket_type)
+```
+
+```{r}
+#rough work
+raw_data_1 |>
+  count(match_id) |>
+  filter(n > 1)
+
+n_distinct(raw_data_1$match_id)
+
+n_distinct(processed_data$match_id)
+
+nrow(raw_data)
+nrow(processed_data)
+unique(processed_data$wicket_type)
+
+processed_data |>
+  count(wicket_type, wicket_this_ball)
+
+processed_data |>
+  filter(
+    (is.na(wicket_type) & wicket_this_ball != 0) |
+    (wicket_type == "retired hurt" & wicket_this_ball != 0) |
+    (!is.na(wicket_type) & wicket_type != "retired hurt" & wicket_this_ball != 1)
+  )
+
+
+processed_data |>
+  count(match_id, innings, ball) |>
+  filter(n > 1)  
+  
+processed_data |>
+  filter(ball == 0.1) |>
+  count(match_id, innings) |>
+  filter(n > 1)
+```
+```{r}
+wickets <- processed_data |>
+  filter(wicket_type == '	NA')
+
+processed_data_1 |>
+  distinct(match_id)
+```
+
