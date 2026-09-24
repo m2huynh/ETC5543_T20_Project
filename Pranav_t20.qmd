@@ -175,3 +175,120 @@ bbl_all <- bbl_all |>
     )
   )
 ```
+
+
+HISTORICAL PLAYER STATISTICS
+For historical stats we have to make sure that the bowler was credited for the particular dismissal(this is not always the case as retired out is not counted) and that the ball faced by the batsman is not a wide.
+
+```{r}
+bbl_all <- bbl_all |>
+  group_by(match_id, bowler) |>
+  mutate(
+    bowler_wickets_before = lag(
+      cumsum(
+        wicket_type %in% c(
+          "caught",
+          "bowled",
+          "lbw",
+          "caught and bowled",
+          "stumped",
+          "hit wicket")),
+      default = 0)) |>
+  ungroup()
+```
+
+1. Batter match level stats
+
+```{r}
+batsman_match_stats <- bbl_all |>
+  group_by(match_id, start_date, striker) |>
+  summarise(
+    
+    # Total runs scored by the batter in the match
+    runs_scored = sum(runs_off_bat),
+    
+    # Balls faced: wides do not count
+    balls_faced = sum(ifelse(is.na(wides), 1, 0)),
+    
+    # Dismissals of this batter
+    dismissals = sum(player_dismissed == striker, na.rm = TRUE),
+    
+    # Boundary runs scored
+    boundary_runs = sum(boundary_runs),
+    
+    .groups = "drop"
+  )
+
+```
+
+2. Bowler match stats
+```{r}
+bowler_match_stats <- bbl_all |>
+  group_by(match_id, start_date, bowler) |>
+  summarise(
+    balls_bowled   = sum(legal_ball),
+    runs_conceded  = sum(runs_off_bat + coalesce(wides, 0) + coalesce(noballs, 0)),
+    wickets_taken  = sum(wicket_type %in% c("caught", "bowled", "lbw",
+                                             "caught and bowled", "stumped", "hit wicket")),
+    dot_balls      = sum(dot_ball),
+    .groups = "drop"
+  )
+```
+
+
+Batsman historical/career data
+```{r}
+batsman_history <- batsman_match_stats |>
+  arrange(striker, start_date) |>
+  group_by(striker) |>
+  mutate(
+    career_matches_before      = row_number() - 1,
+    career_runs_before         = lag(cumsum(runs_scored), default = 0),
+    career_balls_before        = lag(cumsum(balls_faced), default = 0),
+    career_dismissals_before   = lag(cumsum(dismissals), default = 0),
+    career_boundary_runs_before = lag(cumsum(boundary_runs), default = 0),
+
+    career_batting_avg_before = ifelse(career_dismissals_before > 0,
+                                        career_runs_before / career_dismissals_before,
+                                        NA_real_),
+    career_strike_rate_before = ifelse(career_balls_before > 0,
+                                        career_runs_before / career_balls_before * 100,
+                                        NA_real_),
+    career_boundary_p_before  = ifelse(career_runs_before > 0,
+                                        career_boundary_runs_before / career_runs_before * 100,
+                                        NA_real_)
+  ) |>
+  ungroup() |>
+  select(match_id, striker, starts_with("career_"))
+```
+
+Bowler historical/career level data
+
+
+```{r}
+bowler_history <- bowler_match_stats |>
+  arrange(bowler, start_date) |>
+  group_by(bowler) |>
+  mutate(
+    career_matches_bowled_before = row_number() - 1,
+    career_balls_bowled_before   = lag(cumsum(balls_bowled), default = 0),
+    career_runs_conceded_before  = lag(cumsum(runs_conceded), default = 0),
+    career_wickets_before        = lag(cumsum(wickets_taken), default = 0),
+    career_dots_before           = lag(cumsum(dot_balls), default = 0),
+
+    career_economy_before = ifelse(career_balls_bowled_before > 0,
+                                    career_runs_conceded_before / career_balls_bowled_before * 6,
+                                    NA_real_),
+    career_bowling_avg_before = ifelse(career_wickets_before > 0,
+                                        career_runs_conceded_before / career_wickets_before,
+                                        NA_real_),
+    career_strike_rate_before = ifelse(career_wickets_before > 0,
+                                        career_balls_bowled_before / career_wickets_before,
+                                        NA_real_),
+    career_dot_p_before = ifelse(career_balls_bowled_before > 0,
+                                  career_dots_before / career_balls_bowled_before * 100,
+                                  NA_real_)
+  ) |>
+  ungroup() |>
+  select(match_id, bowler, starts_with("career_"))
+```
