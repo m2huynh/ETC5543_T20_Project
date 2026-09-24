@@ -71,6 +71,14 @@ bbl_all <-  bbl_all|> group_by(match_id)|>
     required_runs=ifelse(innings==2,(target-score_before),NA_real_))
 ```
 
+Calculating wickets lost by batting team
+
+```{r}
+bbl_all <-  bbl_all|> group_by(match_id, innings)|>
+    mutate(wickets = ifelse(is.na(wicket_type),0,1) ,
+    wickets_lost_before = cumsum(lag(wickets, default = 0)))
+```
+
 Creating a boundary indicator
 
 ```{r}
@@ -120,3 +128,15 @@ bbl_all <- bbl_all|> group_by(match_id,bowler)|>
 ```
 
 
+```{r}
+bbl_all <- bbl_all |>
+  group_by(match_id, bowler) |>
+  mutate(
+    bowler_dot_ball_p_before = ifelse(
+      bowler_balls_bowled_before > 0,
+      lag(cumsum(dot_ball), default = 0) /
+        bowler_balls_bowled_before * 100,
+      NA_real_ ))
+```
+
+BATSMAN VARIABLES:
