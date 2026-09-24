@@ -100,6 +100,7 @@ bbl_all <- bbl_all |>group_by(match_id, innings) |>
       1,
       0 ))
 ```
+
 Now we will create bowler economy:
 
 ```{r}
@@ -114,6 +115,7 @@ bbl_all <-  bbl_all|> group_by(match_id,bowler)|>
             bowler_economy_before = ifelse(bowler_balls_bowled_before > 0 ,
                      (runs_conceded_before/bowler_balls_bowled_before)*6,
                      NA_real_))
+                     
 ```
 
 Another statistic is boundary % per bowler.
@@ -137,6 +139,39 @@ bbl_all <- bbl_all |>
       lag(cumsum(dot_ball), default = 0) /
         bowler_balls_bowled_before * 100,
       NA_real_ ))
+      
 ```
 
 BATSMAN VARIABLES:
+
+Cumulative runs(lagged)
+```{r}
+bbl_all <- bbl_all|> group_by(match_id,striker)|>
+    mutate(batsman_runs_scored_before= cumsum(lag(runs_off_bat,default=0)))
+```
+
+
+```{r}
+bbl_all <- bbl_all |>
+  group_by(match_id, striker) |>
+  mutate(
+ 
+    batsman_balls_faced_before = cumsum(
+      lag(ifelse(is.na(wides), 1, 0), default = 0) #as wides will not be counted
+    ),
+    
+    batsman_strike_rate_before = ifelse(
+      batsman_balls_faced_before > 0,
+      batsman_runs_scored_before /
+        batsman_balls_faced_before * 100,
+      NA_real_
+    ),
+    
+    batsman_boundary_p_before = ifelse(
+      batsman_runs_scored_before > 0,
+      lag(cumsum(boundary_runs), default = 0) /
+        batsman_runs_scored_before * 100,
+      NA_real_
+    )
+  )
+```
