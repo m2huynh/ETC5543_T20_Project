@@ -5,6 +5,9 @@ format: html
 
 ```{r Loading Libraries}
 library(tidyverse)
+library(xgboost)      
+library(Matrix)     
+library(pROC)      
 ```
 
 ```{r Reading in Data}
@@ -16,6 +19,10 @@ bbl_all <- read_csv("./data/bbl_all.csv")
 ```{r}
 summary(bbl_match_info)
 glimpse(bbl_all)
+```
+
+```{r}
+bbl_all <- bbl_all |> mutate(start_date = as.Date(start_date))
 ```
 
 ## 1. Creating Necessary Variables
@@ -94,11 +101,7 @@ Free hit indicator(useful for modelling, no concern to other metrics)
 
 ```{r}
 bbl_all <- bbl_all |>group_by(match_id, innings) |>
-  mutate(
-    free_hit = ifelse(
-      lag(noballs) > 0,
-      1,
-      0 ))
+  mutate(free_hit = ifelse(coalesce(lag(noballs), 0) > 0, 1, 0))
 ```
 
 Now we will create bowler economy:
@@ -251,7 +254,7 @@ batsman_history <- batsman_match_stats |>
     career_batting_avg_before = ifelse(career_dismissals_before > 0,
                                         career_runs_before / career_dismissals_before,
                                         NA_real_),
-    career_strike_rate_before = ifelse(career_balls_before > 0,
+    career_batting_strike_rate_before = ifelse(career_balls_before > 0,
                                         career_runs_before / career_balls_before * 100,
                                         NA_real_),
     career_boundary_p_before  = ifelse(career_runs_before > 0,
@@ -282,7 +285,7 @@ bowler_history <- bowler_match_stats |>
     career_bowling_avg_before = ifelse(career_wickets_before > 0,
                                         career_runs_conceded_before / career_wickets_before,
                                         NA_real_),
-    career_strike_rate_before = ifelse(career_wickets_before > 0,
+    career_bowling_strike_rate_before = ifelse(career_wickets_before > 0,
                                         career_balls_bowled_before / career_wickets_before,
                                         NA_real_),
     career_dot_p_before = ifelse(career_balls_bowled_before > 0,
@@ -291,4 +294,169 @@ bowler_history <- bowler_match_stats |>
   ) |>
   ungroup() |>
   select(match_id, bowler, starts_with("career_"))
+```
+
+
+Joining to main dataset
+
+
+```{r}
+bbl_all <- bbl_all|>
+    left_join(batsman_history, by=(c('match_id','striker')))|>
+    left_join(bowler_history, by = (c("match_id","bowler")))
+```
+
+
+Building the model:
+
+1. Selecting relevant columns
+
+```{r}
+feature_cols <- c(
+  # match state
+  "innings", "over_no", "phase", "balls_remaining",
+  "score_before", "wickets_lost_before", "required_runs", "target",
+  "free_hit",
+
+  # bowler in-match form
+  "bowler_balls_bowled_before", "bowler_economy_before",
+  "bowler_boundary_p_before", "bowler_dot_ball_p_before",
+
+  # batsman in-match form
+  "batsman_runs_scored_before", "batsman_balls_faced_before",
+  "batsman_strike_rate_before", "batsman_boundary_p_before",
+
+  # historical / career form
+  "career_matches_before", "career_batting_avg_before",
+  "career_bowling_strike_rate_before","career_batting_strike_rate_before", "career_boundary_p_before",
+  "career_matches_bowled_before", "career_economy_before",
+  "career_bowling_avg_before", "career_dot_p_before"
+)
+
+model_data <- bbl_all |>
+  select(match_id, start_date, all_of(feature_cols), wickets) |>
+  mutate(phase = factor(phase, levels = c("Powerplay", "Middle", "Death")))
+```
+
+2. Training and testing split according to start date
+
+```{r}
+match_dates <- model_data |>
+  distinct(match_id, start_date) |>
+  arrange(start_date, match_id)
+
+cutoff_index <- floor(nrow(match_dates) * 0.8)
+
+cutoff_date <- match_dates$start_date[cutoff_index]
+
+train_data <- model_data |>
+  filter(start_date <= cutoff_date)
+
+test_data <- model_data |>
+  filter(start_date > cutoff_date)
+
+```
+
+One hot encoding for phase variable:
+
+
+```{r}
+encode_phase <- function(df) {
+  df |>
+    mutate(
+      phase_Powerplay = ifelse(phase == "Powerplay", 1, 0),
+      phase_Middle    = ifelse(phase == "Middle", 1, 0),
+      phase_Death     = ifelse(phase == "Death", 1, 0)
+    ) |>
+    select(-phase)
+}
+
+t20_train_d <- train_data |> select(-match_id, -start_date, -wickets) |> encode_phase()
+t20_test_d  <- test_data  |> select(-match_id, -start_date, -wickets) |> encode_phase()
+
+t20_train <- as.matrix(t20_train_d)
+t20_test  <- as.matrix(t20_test_d)
+
+dim(t20_train)
+dim(t20_test)
+```
+
+creating xgb matrix
+
+
+```{r}
+y_train <- train_data$wickets
+y_test  <- test_data$wickets
+
+t20_xgtrain <- xgb.DMatrix(data = t20_train, label = y_train)
+t20_xgtest  <- xgb.DMatrix(data = t20_test,  label = y_test)
+
+scale_pos_weight <- sum(y_train == 0) / sum(y_train == 1)
+```
+
+Setting parameters
+
+```{r}
+params <- list(
+  objective = "binary:logistic",
+  eval_metric = "aucpr",
+  max_depth = 6,
+  eta = 0.05,
+  subsample = 0.8,
+  colsample_bytree = 0.8,
+  min_child_weight = 5
+)
+```
+
+5 fold cross validation
+
+
+```{r}
+set.seed(35571381)
+t20_cv <- xgb.cv(
+  params = params,
+  data = t20_xgtrain,
+  nrounds = 500,
+  nfold = 5,
+  early_stopping_rounds = 25,
+  print_every_n = 25,
+  maximize = TRUE
+)
+
+best_nrounds <- t20_cv$early_stop
+best_nrounds
+```
+
+training final model
+
+
+```{r}
+t20_final <- xgb.train(
+  params = params,
+  data = t20_xgtrain,
+  nrounds = best_nrounds,
+  watchlist = list(train = t20_xgtrain, test = t20_xgtest),
+  print_every_n = 5
+)
+```
+
+
+Predicting
+
+```{r}
+pred_probs <- predict(t20_final, t20_xgtest)
+
+
+roc_obj <- roc(y_test, pred_probs)
+auc(roc_obj)
+```
+
+
+```{r}
+calibration <- tibble(pred = pred_probs, actual = y_test) |>
+  mutate(bucket = ntile(pred, 10)) |>
+  group_by(bucket) |>
+  summarise(mean_pred = mean(pred), mean_actual = mean(actual), n = n())
+
+print(calibration)
 ```
