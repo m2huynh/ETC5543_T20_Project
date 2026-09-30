@@ -8,11 +8,12 @@ library(tidyverse)
 library(xgboost)      
 library(Matrix)     
 library(pROC)      
+library(here)
 ```
 
 ```{r Reading in Data}
-bbl_match_info <-  read_csv("./data/bbl_match_info.csv")
-bbl_all <- read_csv("./data/bbl_all.csv")
+bbl_match_info <- read_csv(here("data", "bbl_match_info.csv"))
+bbl_all <- read_csv(here("data", "bbl_all.csv"))
 ```
 
 
@@ -338,6 +339,26 @@ model_data <- bbl_all |>
   mutate(phase = factor(phase, levels = c("Powerplay", "Middle", "Death")))
 ```
 
+One hot encoding phase
+
+```{r}
+encode_phase <- function(df) {
+  df |>
+    mutate(
+      phase_Powerplay = ifelse(phase == "Powerplay", 1, 0),
+      phase_Middle    = ifelse(phase == "Middle", 1, 0),
+      phase_Death     = ifelse(phase == "Death", 1, 0)
+    ) |>
+    select(-phase)
+}
+
+model_data <- model_data |> encode_phase()
+```
+
+```{r}
+model_data <- readRDS(here("Pranav", "data", "t20_wicket_model_data.rds"))
+```
+
 2. Training and testing split according to start date
 
 ```{r}
@@ -357,106 +378,3 @@ test_data <- model_data |>
 
 ```
 
-One hot encoding for phase variable:
-
-
-```{r}
-encode_phase <- function(df) {
-  df |>
-    mutate(
-      phase_Powerplay = ifelse(phase == "Powerplay", 1, 0),
-      phase_Middle    = ifelse(phase == "Middle", 1, 0),
-      phase_Death     = ifelse(phase == "Death", 1, 0)
-    ) |>
-    select(-phase)
-}
-
-t20_train_d <- train_data |> select(-match_id, -start_date, -wickets) |> encode_phase()
-t20_test_d  <- test_data  |> select(-match_id, -start_date, -wickets) |> encode_phase()
-
-t20_train <- as.matrix(t20_train_d)
-t20_test  <- as.matrix(t20_test_d)
-
-dim(t20_train)
-dim(t20_test)
-```
-
-creating xgb matrix
-
-
-```{r}
-y_train <- train_data$wickets
-y_test  <- test_data$wickets
-
-t20_xgtrain <- xgb.DMatrix(data = t20_train, label = y_train)
-t20_xgtest  <- xgb.DMatrix(data = t20_test,  label = y_test)
-
-scale_pos_weight <- sum(y_train == 0) / sum(y_train == 1)
-```
-
-Setting parameters
-
-```{r}
-params <- list(
-  objective = "binary:logistic",
-  eval_metric = "aucpr",
-  max_depth = 6,
-  eta = 0.05,
-  subsample = 0.8,
-  colsample_bytree = 0.8,
-  min_child_weight = 5
-)
-```
-
-5 fold cross validation
-
-
-```{r}
-set.seed(35571381)
-t20_cv <- xgb.cv(
-  params = params,
-  data = t20_xgtrain,
-  nrounds = 500,
-  nfold = 5,
-  early_stopping_rounds = 25,
-  print_every_n = 25,
-  maximize = TRUE
-)
-
-best_nrounds <- t20_cv$early_stop
-best_nrounds
-```
-
-training final model
-
-
-```{r}
-t20_final <- xgb.train(
-  params = params,
-  data = t20_xgtrain,
-  nrounds = best_nrounds,
-  watchlist = list(train = t20_xgtrain, test = t20_xgtest),
-  print_every_n = 5
-)
-```
-
-
-Predicting
-
-```{r}
-pred_probs <- predict(t20_final, t20_xgtest)
-
-
-roc_obj <- roc(y_test, pred_probs)
-auc(roc_obj)
-```
-
-
-```{r}
-calibration <- tibble(pred = pred_probs, actual = y_test) |>
-  mutate(bucket = ntile(pred, 10)) |>
-  group_by(bucket) |>
-  summarise(mean_pred = mean(pred), mean_actual = mean(actual), n = n())
-
-print(calibration)
-```
