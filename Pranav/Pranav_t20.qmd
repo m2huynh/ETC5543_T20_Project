@@ -1,0 +1,380 @@
+---
+title: "Untitled"
+format: html
+---
+
+```{r Loading Libraries}
+library(tidyverse)
+library(xgboost)      
+library(Matrix)     
+library(pROC)      
+library(here)
+```
+
+```{r Reading in Data}
+bbl_match_info <- read_csv(here("data", "bbl_match_info.csv"))
+bbl_all <- read_csv(here("data", "bbl_all.csv"))
+```
+
+
+```{r}
+summary(bbl_match_info)
+glimpse(bbl_all)
+```
+
+```{r}
+bbl_all <- bbl_all |> mutate(start_date = as.Date(start_date))
+```
+
+## 1. Creating Necessary Variables
+
+To check how legal balls are recorded, let us check up on the rows pertaining to deliveries
+
+
+```{r}
+bbl_delivery <- bbl_all|> select(ball,actual_delivery,wides, noballs,extras)
+view(bbl_delivery)
+bbl_delivery|> count(extras)
+```
+
+Creating a runnning score and per delivery score
+```{r}
+bbl_all <- bbl_all|> group_by(match_id,innings)|>
+    mutate(delivery_runs = runs_off_bat+extras,
+    current_score = cumsum(delivery_runs),
+    score_before=lag((current_score),default=0))
+```
+
+Creating dot ball indicator
+```{r}
+bbl_all <- bbl_all |>mutate(
+    dot_ball = ifelse(runs_off_bat == 0 & extras == 0, 1, 0)
+  )
+
+```
+
+Creating over number and phase of play
+
+```{r}
+bbl_all <- bbl_all|> mutate(over_no = floor(ball)+1,
+phase= case_when(over_no >=1 & over_no <=6 ~ "Powerplay",
+over_no >=7 & over_no <=15 ~ "Middle",
+over_no >=16 & over_no <=20 ~ "Death")) 
+```
+
+
+Now to determine legal balls and remaining balls
+
+```{r}
+bbl_all <-  bbl_all|> mutate(legal_ball = ifelse(is.na(noballs) & is.na(wides),1,0),
+balls_remaining= lag(120-cumsum(legal_ball),default=120))
+
+```
+
+Calculating target and runs required
+
+```{r}
+bbl_all <-  bbl_all|> group_by(match_id)|>
+    mutate(target=max(current_score[innings==1])+1,
+    required_runs=ifelse(innings==2,(target-score_before),NA_real_))
+```
+
+Calculating wickets lost by batting team
+
+```{r}
+bbl_all <-  bbl_all|> group_by(match_id, innings)|>
+    mutate(wickets = ifelse(is.na(wicket_type),0,1) ,
+    wickets_lost_before = cumsum(lag(wickets, default = 0)))
+```
+
+Creating a boundary indicator
+
+```{r}
+bbl_all <-  bbl_all|> group_by(match_id, innings)|>
+    mutate(boundary_type=case_when(runs_off_bat== 4 & is.na(non_boundary)  ~ "Four",
+                                    runs_off_bat== 6 & is.na(non_boundary)  ~ "Six",
+                                    TRUE ~ NA), 
+boundary_runs = ifelse(runs_off_bat %in% c(4,6),runs_off_bat,0))
+
+```
+
+Free hit indicator(useful for modelling, no concern to other metrics)
+
+```{r}
+bbl_all <- bbl_all |>group_by(match_id, innings) |>
+  mutate(free_hit = ifelse(coalesce(lag(noballs), 0) > 0, 1, 0))
+```
+
+Now we will create bowler economy:
+
+```{r}
+bbl_all <-  bbl_all|> group_by(match_id,bowler)|>
+    mutate(bowler_balls_bowled_before = 
+                      lag(cumsum(legal_ball),default = 0),
+
+            runs_conceded_before =
+                     lag(cumsum(runs_off_bat+ coalesce(wides,0) + coalesce(noballs,0)),
+                     default = 0),
+
+            bowler_economy_before = ifelse(bowler_balls_bowled_before > 0 ,
+                     (runs_conceded_before/bowler_balls_bowled_before)*6,
+                     NA_real_))
+                     
+```
+
+Another statistic is boundary % per bowler.
+
+```{r}
+bbl_all <- bbl_all|> group_by(match_id,bowler)|>
+    mutate(bowler_boundary_p_before = ifelse(runs_conceded_before>0,
+                lag(cumsum(boundary_runs),default=0)/runs_conceded_before*100,
+                0
+    ))
+
+```
+
+
+```{r}
+bbl_all <- bbl_all |>
+  group_by(match_id, bowler) |>
+  mutate(
+    bowler_dot_ball_p_before = ifelse(
+      bowler_balls_bowled_before > 0,
+      lag(cumsum(dot_ball), default = 0) /
+        bowler_balls_bowled_before * 100,
+      NA_real_ ))
+      
+```
+
+BATSMAN VARIABLES:
+
+Cumulative runs(lagged)
+```{r}
+bbl_all <- bbl_all|> group_by(match_id,striker)|>
+    mutate(batsman_runs_scored_before= cumsum(lag(runs_off_bat,default=0)))
+```
+
+
+```{r}
+bbl_all <- bbl_all |>
+  group_by(match_id, striker) |>
+  mutate(
+ 
+    batsman_balls_faced_before = cumsum(
+      lag(ifelse(is.na(wides), 1, 0), default = 0) #as wides will not be counted
+    ),
+    
+    batsman_strike_rate_before = ifelse(
+      batsman_balls_faced_before > 0,
+      batsman_runs_scored_before /
+        batsman_balls_faced_before * 100,
+      NA_real_
+    ),
+    
+    batsman_boundary_p_before = ifelse(
+      batsman_runs_scored_before > 0,
+      lag(cumsum(boundary_runs), default = 0) /
+        batsman_runs_scored_before * 100,
+      NA_real_
+    )
+  )
+```
+
+
+HISTORICAL PLAYER STATISTICS
+For historical stats we have to make sure that the bowler was credited for the particular dismissal(this is not always the case as retired out is not counted) and that the ball faced by the batsman is not a wide.
+
+```{r}
+bbl_all <- bbl_all |>
+  group_by(match_id, bowler) |>
+  mutate(
+    bowler_wickets_before = lag(
+      cumsum(
+        wicket_type %in% c(
+          "caught",
+          "bowled",
+          "lbw",
+          "caught and bowled",
+          "stumped",
+          "hit wicket")),
+      default = 0)) |>
+  ungroup()
+```
+
+1. Batter match level stats
+
+```{r}
+batsman_match_stats <- bbl_all |>
+  group_by(match_id, start_date, striker) |>
+  summarise(
+    
+    # Total runs scored by the batter in the match
+    runs_scored = sum(runs_off_bat),
+    
+    # Balls faced: wides do not count
+    balls_faced = sum(ifelse(is.na(wides), 1, 0)),
+    
+    # Dismissals of this batter
+    dismissals = sum(player_dismissed == striker, na.rm = TRUE),
+    
+    # Boundary runs scored
+    boundary_runs = sum(boundary_runs),
+    
+    .groups = "drop"
+  )
+
+```
+
+2. Bowler match stats
+```{r}
+bowler_match_stats <- bbl_all |>
+  group_by(match_id, start_date, bowler) |>
+  summarise(
+    balls_bowled   = sum(legal_ball),
+    runs_conceded  = sum(runs_off_bat + coalesce(wides, 0) + coalesce(noballs, 0)),
+    wickets_taken  = sum(wicket_type %in% c("caught", "bowled", "lbw",
+                                             "caught and bowled", "stumped", "hit wicket")),
+    dot_balls      = sum(dot_ball),
+    .groups = "drop"
+  )
+```
+
+
+Batsman historical/career data
+```{r}
+batsman_history <- batsman_match_stats |>
+  arrange(striker, start_date) |>
+  group_by(striker) |>
+  mutate(
+    career_matches_before      = row_number() - 1,
+    career_runs_before         = lag(cumsum(runs_scored), default = 0),
+    career_balls_before        = lag(cumsum(balls_faced), default = 0),
+    career_dismissals_before   = lag(cumsum(dismissals), default = 0),
+    career_boundary_runs_before = lag(cumsum(boundary_runs), default = 0),
+
+    career_batting_avg_before = ifelse(career_dismissals_before > 0,
+                                        career_runs_before / career_dismissals_before,
+                                        NA_real_),
+    career_batting_strike_rate_before = ifelse(career_balls_before > 0,
+                                        career_runs_before / career_balls_before * 100,
+                                        NA_real_),
+    career_boundary_p_before  = ifelse(career_runs_before > 0,
+                                        career_boundary_runs_before / career_runs_before * 100,
+                                        NA_real_)
+  ) |>
+  ungroup() |>
+  select(match_id, striker, starts_with("career_"))
+```
+
+Bowler historical/career level data
+
+
+```{r}
+bowler_history <- bowler_match_stats |>
+  arrange(bowler, start_date) |>
+  group_by(bowler) |>
+  mutate(
+    career_matches_bowled_before = row_number() - 1,
+    career_balls_bowled_before   = lag(cumsum(balls_bowled), default = 0),
+    career_runs_conceded_before  = lag(cumsum(runs_conceded), default = 0),
+    career_wickets_before        = lag(cumsum(wickets_taken), default = 0),
+    career_dots_before           = lag(cumsum(dot_balls), default = 0),
+
+    career_economy_before = ifelse(career_balls_bowled_before > 0,
+                                    career_runs_conceded_before / career_balls_bowled_before * 6,
+                                    NA_real_),
+    career_bowling_avg_before = ifelse(career_wickets_before > 0,
+                                        career_runs_conceded_before / career_wickets_before,
+                                        NA_real_),
+    career_bowling_strike_rate_before = ifelse(career_wickets_before > 0,
+                                        career_balls_bowled_before / career_wickets_before,
+                                        NA_real_),
+    career_dot_p_before = ifelse(career_balls_bowled_before > 0,
+                                  career_dots_before / career_balls_bowled_before * 100,
+                                  NA_real_)
+  ) |>
+  ungroup() |>
+  select(match_id, bowler, starts_with("career_"))
+```
+
+
+Joining to main dataset
+
+
+```{r}
+bbl_all <- bbl_all|>
+    left_join(batsman_history, by=(c('match_id','striker')))|>
+    left_join(bowler_history, by = (c("match_id","bowler")))
+```
+
+
+Building the model:
+
+1. Selecting relevant columns
+
+```{r}
+feature_cols <- c(
+  # match state
+  "innings", "over_no", "phase", "balls_remaining",
+  "score_before", "wickets_lost_before", "required_runs", "target",
+  "free_hit",
+
+  # bowler in-match form
+  "bowler_balls_bowled_before", "bowler_economy_before",
+  "bowler_boundary_p_before", "bowler_dot_ball_p_before",
+
+  # batsman in-match form
+  "batsman_runs_scored_before", "batsman_balls_faced_before",
+  "batsman_strike_rate_before", "batsman_boundary_p_before",
+
+  # historical / career form
+  "career_matches_before", "career_batting_avg_before",
+  "career_bowling_strike_rate_before","career_batting_strike_rate_before", "career_boundary_p_before",
+  "career_matches_bowled_before", "career_economy_before",
+  "career_bowling_avg_before", "career_dot_p_before"
+)
+
+model_data <- bbl_all |>
+  select(match_id, start_date, all_of(feature_cols), wickets) |>
+  mutate(phase = factor(phase, levels = c("Powerplay", "Middle", "Death")))
+```
+
+One hot encoding phase
+
+```{r}
+encode_phase <- function(df) {
+  df |>
+    mutate(
+      phase_Powerplay = ifelse(phase == "Powerplay", 1, 0),
+      phase_Middle    = ifelse(phase == "Middle", 1, 0),
+      phase_Death     = ifelse(phase == "Death", 1, 0)
+    ) |>
+    select(-phase)
+}
+
+model_data <- model_data |> encode_phase()
+```
+
+```{r}
+model_data <- readRDS(here("Pranav", "data", "t20_wicket_model_data.rds"))
+```
+
+2. Training and testing split according to start date
+
+```{r}
+match_dates <- model_data |>
+  distinct(match_id, start_date) |>
+  arrange(start_date, match_id)
+
+cutoff_index <- floor(nrow(match_dates) * 0.8)
+
+cutoff_date <- match_dates$start_date[cutoff_index]
+
+train_data <- model_data |>
+  filter(start_date <= cutoff_date)
+
+test_data <- model_data |>
+  filter(start_date > cutoff_date)
+
+```
+
