@@ -1,0 +1,64 @@
+---
+title: "Prem"
+format: html
+editor: visual
+---
+
+```{r}
+#runs before ball
+model_data <- processed_data_test |>
+  mutate(
+    runs_before_ball = cumulative_runs - runs_this_ball,
+    wickets_before_ball = cumulative_wickets - wicket_this_ball
+  ) |>
+  relocate(runs_before_ball, .after = runs_this_ball) |>
+  relocate(wickets_before_ball, .after = wicket_this_ball)
+
+model_data <- model_data |>
+  mutate(
+    wides = ifelse(is.na(wides), 0, wides),
+    noballs = ifelse(is.na(noballs), 0, noballs)
+  )
+
+  
+#Batsmen score
+model_data <- model_data |>
+  group_by(match_id, innings, striker) |>
+  mutate(
+    batsmen_cumulative_runs = cumsum(runs_off_bat),
+    batsmen_runs_before_ball = batsmen_cumulative_runs - runs_off_bat
+  ) |>
+  relocate(batsmen_runs_before_ball,
+           batsmen_cumulative_runs,
+           .after = score)
+
+#bowler wickets and runs
+model_data <- model_data |>
+  group_by(match_id, innings, bowler) |>
+  mutate(
+    bowler_cumulative_wickets = cumsum(
+      wicket_type %in% c(
+        "caught", "bowled",
+        "lbw", "stumped",
+        "hit wicket", "caught and bowled")),
+
+    bowler_wickets_before_ball =
+      bowler_cumulative_wickets - (wicket_type %in% c(
+        "caught", "bowled",
+        "lbw", "stumped",
+        "hit wicket", "caught and bowled"
+      )),
+
+    bowler_cumulative_runs =
+      cumsum(runs_off_bat + wides + noballs),
+
+    bowler_runs_before_ball =
+      bowler_cumulative_runs - (runs_off_bat + wides + noballs)
+    ) |>
+  relocate(bowler_cumulative_wickets,
+           bowler_wickets_before_ball,
+           bowler_cumulative_runs,
+           bowler_runs_before_ball,
+           .after = batsmen_cumulative_runs)
+
+```

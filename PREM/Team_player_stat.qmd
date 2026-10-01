@@ -1,0 +1,324 @@
+---
+title: "Team_playerstats"
+format: html
+editor: visual
+---
+
+```{r}
+#changing the date format into dd/mm/yy
+processed_data <- raw_data |>
+  mutate(match_date = format(start_date, "%d/%m/%y")) |>
+  relocate(match_date, .after = season)
+
+#below code is to cross check the date columns match or not before we split the data into separate seasons
+all(as.Date(processed_data$match_date, format = "%d/%m/%y") ==
+      processed_data$start_date)
+
+#(not able to remove the start date)
+processed_data <- processed_data |>
+  relocate(start_date, .after = fielder_3) |>
+  select(-penalty,
+         -other_wicket_type)
+
+processed_data <- processed_data |>
+  mutate(over = floor(actual_delivery) + 1) |>
+  relocate(over, .after = actual_delivery)
+    
+processed_data <- processed_data |>
+  relocate(
+    runs_off_bat,
+    extras,
+    wides,
+    noballs,
+    byes,
+    legbyes,
+    wicket_type,
+    .after = over
+  )
+
+processed_data <- processed_data |>
+  mutate(
+    Phase_over = case_when(
+      over <= 6 ~ "Powerplay",
+      over <= 16 ~ "Mid-Game",
+      over <= 20 ~ "Death"
+    )
+  ) |>
+  relocate(Phase_over, .after = over)
+
+#arranging matches chronologically before assigning delivery order
+processed_data <- processed_data |>
+  arrange(start_date, match_id, innings) |>
+  mutate(delivery_order = row_number())
+
+processed_data <- processed_data |>
+  left_join(
+    raw_data_1 |>
+      select(match_id, target_runs),
+    by = "match_id"
+  ) |>
+  relocate(target_runs, .after = innings)
+
+processed_data <- processed_data |>
+  mutate(
+    wicket_this_ball = case_when(
+      is.na(wicket_type) ~ 0,
+      wicket_type == "retired hurt" ~ 0,
+      TRUE ~ 1
+    )
+  ) |>
+  relocate(wicket_this_ball, .after = wicket_type)
+
+processed_data <- processed_data |>
+  mutate(runs_this_ball = runs_off_bat + extras) |>
+  relocate(runs_this_ball, .after = wicket_this_ball)
+
+processed_data <- processed_data |>
+  relocate(
+    innings,
+    target_runs,
+    ball,
+    actual_delivery,
+    over,
+    Phase_over,
+    wides,
+    noballs,
+    byes,
+    legbyes,
+    extras,
+    wicket_this_ball,
+    wicket_type,
+    runs_off_bat,
+    runs_this_ball,
+    .after = match_date
+  )
+
+
+calculate_score_phase <- function(data) {
+
+  required_cols <- c(
+    "match_id",
+    "innings",
+    "delivery_order",
+    "runs_this_ball",
+    "wicket_this_ball",
+    "Phase_over"
+  )
+
+  missing_cols <- setdiff(required_cols, names(data))
+
+  if (length(missing_cols) > 0) {
+    stop(
+      paste(
+        "Missing required columns:",
+        paste(missing_cols, collapse = ", ")
+      )
+    )
+  }
+
+  data <- data |>
+  arrange(delivery_order) |>
+  group_by(match_id, innings) |>
+  mutate(
+    cumulative_runs = cumsum(runs_this_ball),
+    cumulative_wickets = cumsum(wicket_this_ball),
+    score = paste0(cumulative_runs, "/", cumulative_wickets)
+  ) |>
+    relocate(cumulative_runs,
+             cumulative_wickets,
+             score,
+             .after = runs_this_ball) |>
+  ungroup()
+  
+  data <- data |>
+    group_by(
+      match_id,
+      innings,
+      Phase_over
+    ) |>
+    mutate(
+      phase_runs = cumsum(runs_this_ball),
+      phase_wickets = cumsum(wicket_this_ball)
+    ) |>
+    relocate(phase_runs,
+             phase_wickets,
+             score,
+             .after = cumulative_wickets) |>
+    ungroup()
+  
+  return(data)
+}
+
+
+processed_data_test <- calculate_score_phase(processed_data)
+
+
+processed_data_test <- processed_data_test |>
+  mutate(
+    legal_ball = case_when(
+      !is.na(wides) & wides > 0 ~ 0,
+      !is.na(noballs) & noballs > 0 ~ 0,
+      TRUE ~ 1
+    )
+  ) |>
+  relocate(legal_ball, .after = runs_this_ball)
+
+
+processed_data_test <- processed_data_test |>
+  group_by(
+    match_id,
+    innings
+  ) |>
+  mutate(
+    cumulative_legal_balls = cumsum(legal_ball)
+  ) |>
+  relocate(
+    cumulative_legal_balls,
+    .after = legal_ball
+  ) |>
+  ungroup()
+
+processed_data_test <- processed_data_test |>
+  mutate(
+    team_run_rate = case_when(
+      cumulative_legal_balls > 0 ~
+        (cumulative_runs / cumulative_legal_balls) * 6,
+      TRUE ~ NA_real_
+    )
+  ) |>
+  relocate(
+    team_run_rate,
+    .after = cumulative_legal_balls
+  )
+```
+
+```{r}
+team_player_data <- processed_data_test |>
+  mutate(
+    runs_before_ball = cumulative_runs - runs_this_ball,
+    wickets_before_ball = cumulative_wickets - wicket_this_ball
+  ) |>
+  relocate(runs_before_ball, .after = runs_this_ball) |>
+  relocate(wickets_before_ball, .after = wicket_this_ball)
+
+team_player_data <- team_player_data |>
+  mutate(
+    wides = ifelse(is.na(wides), 0, wides),
+    noballs = ifelse(is.na(noballs), 0, noballs)
+  )
+
+#Batsmen score
+team_player_data <- team_player_data |>
+  group_by(match_id, innings, striker) |>
+  mutate(
+    batsmen_cumulative_runs = cumsum(runs_off_bat),
+    batsmen_runs_before_ball = batsmen_cumulative_runs - runs_off_bat
+  ) |>
+  relocate(
+    batsmen_runs_before_ball,
+    batsmen_cumulative_runs,
+    .after = score
+  )
+
+#bowler wickets and runs
+team_player_data <- team_player_data |>
+  group_by(match_id, innings, bowler) |>
+  mutate(
+    bowler_cumulative_wickets = cumsum(
+      wicket_type %in% c(
+        "caught", "bowled",
+        "lbw", "stumped",
+        "hit wicket", "caught and bowled"
+      )
+    ),
+
+    bowler_wickets_before_ball =
+      bowler_cumulative_wickets - (wicket_type %in% c(
+        "caught", "bowled",
+        "lbw", "stumped",
+        "hit wicket", "caught and bowled"
+      )),
+
+    bowler_cumulative_runs =
+      cumsum(runs_off_bat + wides + noballs),
+
+    bowler_runs_before_ball =
+      bowler_cumulative_runs - (runs_off_bat + wides + noballs)
+  ) |>
+  relocate(
+    bowler_cumulative_wickets,
+    bowler_wickets_before_ball,
+    bowler_cumulative_runs,
+    bowler_runs_before_ball,
+    .after = batsmen_cumulative_runs
+  )
+```
+
+```{r}
+Melbourne_stars <- team_player_data |>
+  filter(batting_team == "Melbourne Stars")
+```
+
+```{r}
+Melbourne_stars_retention <- Melbourne_stars |>
+  ungroup() |>
+  distinct(season, striker) |>
+  count(striker, name = "seasons_with_team") |>
+  arrange(desc(seasons_with_team))
+
+knitr::kable(
+  Melbourne_stars_retention,
+  col.names = c("Batsman", "Seasons with Team"),
+  caption = "Melbourne Stars - Player Retention Across Seasons"
+)
+```
+
+```{r}
+Melbourne_stars_batord <- Melbourne_stars |>
+  ungroup() |>
+  group_by(match_id, innings, striker) |>
+  summarise(
+    entry_phase = first(Phase_over),
+    .groups = "drop"
+  )
+
+Melbourne_stars_batord_count <- Melbourne_stars_batord |>
+  count(striker, entry_phase) |>
+  arrange(striker, entry_phase)
+```
+
+```{r}
+MS_batting_count <- Melbourne_stars |>
+  ungroup() |>
+  count(striker, name = "balls_faced")
+
+MS_bowling_count <- Melbourne_stars |>
+  ungroup() |>
+  count(bowler, name = "balls_bowled")
+```
+
+##rough work
+
+```{r}
+table(
+  team_player_data$non_boundary,
+  useNA = "ifany"
+)
+
+team_player_data |>
+  filter(runs_off_bat %in% c(3, 4, 6)) |>
+  count(runs_off_bat, non_boundary, .drop = FALSE)
+```
+
+```{r}
+unique(team_player_data$batting_team)
+unique(Melbourne_stars$striker)
+
+names(model_data)
+names(processed_data_test)
+
+unique(model_data$runs_off_bat)
+unique(model_data$non_boundary)
+```
+
+batsmanMeanStrikeRate()

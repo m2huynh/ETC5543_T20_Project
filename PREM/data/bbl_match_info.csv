@@ -1,0 +1,663 @@
+match_id,gender,season,date,event,match_type,venue,city,toss_winner,toss_decision,player_of_match,target_runs,winner,winner_wickets,winner_runs
+1023581,male,2016/17,2016/12/20,Big Bash League,T20,Sydney Showground Stadium,,Sydney Sixers,field,MC Henriques,160,Sydney Sixers,9,
+1023583,male,2016/17,2016/12/21,Big Bash League,T20,Adelaide Oval,,Adelaide Strikers,field,BB McCullum,207,Brisbane Heat,,10
+1023585,male,2016/17,2016/12/22,Big Bash League,T20,Docklands Stadium,Melbourne,Sydney Thunder,field,AJ Finch,180,Melbourne Renegades,,49
+1023587,male,2016/17,2016/12/23,Big Bash League,T20,Sydney Cricket Ground,,Sydney Sixers,field,DJM Short,201,Hobart Hurricanes,,60
+1023589,male,2016/17,2016/12/23,Big Bash League,T20,Western Australia Cricket Association Ground,Perth,Adelaide Strikers,field,AJ Turner,198,Perth Scorchers,,48
+1023591,male,2016/17,2016/12/26,Big Bash League,T20,Bellerive Oval,Hobart,Hobart Hurricanes,bat,RJ Quiney,189,Melbourne Stars,7,
+1023593,male,2016/17,2016/12/27,Big Bash League,T20,Sydney Cricket Ground,,Perth Scorchers,bat,J Botha,131,Sydney Sixers,6,
+1023595,male,2016/17,2016/12/28,Big Bash League,T20,Sydney Showground Stadium,,Brisbane Heat,field,CA Lynn,158,Brisbane Heat,3,
+1023597,male,2016/17,2016/12/29,Big Bash League,T20,Docklands Stadium,Melbourne,Perth Scorchers,field,M Klinger,149,Perth Scorchers,4,
+1023599,male,2016/17,2016/12/30,Big Bash League,T20,"Brisbane Cricket Ground, Woolloongabba",Brisbane,Brisbane Heat,field,CA Lynn,174,Brisbane Heat,7,
+1023601,male,2016/17,2016/12/31,Big Bash League,T20,Adelaide Oval,,Sydney Sixers,field,SA Abbott,153,Adelaide Strikers,,48
+1023603,male,2016/17,2017/01/01,Big Bash League,T20,Melbourne Cricket Ground,,Melbourne Stars,field,GB Hogg,159,Melbourne Renegades,,7
+1023605,male,2016/17,2017/01/01,Big Bash League,T20,Western Australia Cricket Association Ground,Perth,Sydney Thunder,field,MR Marsh,178,Perth Scorchers,,50
+1023607,male,2016/17,2017/01/02,Big Bash League,T20,Bellerive Oval,Hobart,Hobart Hurricanes,field,DT Christian,144,Hobart Hurricanes,8,
+1023609,male,2016/17,2017/01/03,Big Bash League,T20,"Brisbane Cricket Ground, Woolloongabba",Brisbane,Sydney Sixers,field,DP Hughes,187,Sydney Sixers,3,
+1023611,male,2016/17,2017/01/04,Big Bash League,T20,Sydney Showground Stadium,,Sydney Thunder,field,EJG Morgan,167,Sydney Thunder,6,
+1023613,male,2016/17,2017/01/05,Big Bash League,T20,Western Australia Cricket Association Ground,Perth,Perth Scorchers,bat,CA Lynn,174,Brisbane Heat,9,
+1023615,male,2016/17,2017/01/06,Big Bash League,T20,Adelaide Oval,,Adelaide Strikers,field,BR Dunk,162,Adelaide Strikers,5,
+1023617,male,2016/17,2017/01/07,Big Bash League,T20,Docklands Stadium,Melbourne,Melbourne Renegades,field,A Zampa,201,Melbourne Stars,,46
+1023619,male,2016/17,2017/01/08,Big Bash League,T20,Bellerive Oval,Hobart,Sydney Thunder,field,SR Watson,162,Sydney Thunder,6,
+1023621,male,2016/17,2017/01/09,Big Bash League,T20,Sydney Cricket Ground,,Melbourne Renegades,bat,BJ Haddin,171,Sydney Sixers,6,
+1023623,male,2016/17,2017/01/10,Big Bash League,T20,Melbourne Cricket Ground,,Melbourne Stars,field,BW Hilfenhaus,153,Melbourne Stars,2,
+1023625,male,2016/17,2017/01/11,Big Bash League,T20,"Brisbane Cricket Ground, Woolloongabba",Brisbane,Brisbane Heat,field,M Klinger,157,Perth Scorchers,,27
+1023627,male,2016/17,2017/01/12,Big Bash League,T20,Docklands Stadium,Melbourne,Hobart Hurricanes,field,BR McDermott,223,Hobart Hurricanes,2,
+1023629,male,2016/17,2017/01/14,Big Bash League,T20,Sydney Cricket Ground,,Sydney Sixers,bat,Fawad Ahmed,100,Sydney Thunder,8,
+1023631,male,2016/17,2017/01/14,Big Bash League,T20,Western Australia Cricket Association Ground,Perth,Perth Scorchers,bat,MA Beer,135,Melbourne Stars,7,
+1023633,male,2016/17,2017/01/16,Big Bash League,T20,Adelaide Oval,,Adelaide Strikers,field,MS Harris,172,Melbourne Renegades,,6
+1023635,male,2016/17,2017/01/17,Big Bash League,T20,Melbourne Cricket Ground,,Melbourne Stars,bat,MJ Swepson,139,Brisbane Heat,7,
+1023637,male,2016/17,2017/01/18,Big Bash League,T20,Sydney Showground Stadium,,Sydney Thunder,field,IS Sodhi,179,Adelaide Strikers,,77
+1023639,male,2016/17,2017/01/20,Big Bash League,T20,"Brisbane Cricket Ground, Woolloongabba",Brisbane,Brisbane Heat,field,AJ Finch,200,Melbourne Renegades,,1
+1023641,male,2016/17,2017/01/21,Big Bash League,T20,Bellerive Oval,Hobart,Perth Scorchers,field,SE Marsh,135,Perth Scorchers,7,
+1023643,male,2016/17,2017/01/21,Big Bash League,T20,Melbourne Cricket Ground,,Sydney Sixers,field,SA Abbott,157,Sydney Sixers,3,
+1023645,male,2016/17,2017/01/24,Big Bash League,T20,Western Australia Cricket Association Ground,Perth,Perth Scorchers,field,MG Johnson,137,Perth Scorchers,7,
+1023647,male,2016/17,2017/01/25,Big Bash League,T20,"Brisbane Cricket Ground, Woolloongabba",Brisbane,Sydney Sixers,field,MC Henriques,168,,,
+1023649,male,2016/17,2017/01/28,Big Bash League,T20,Western Australia Cricket Association Ground,Perth,Perth Scorchers,field,JA Richardson,142,Perth Scorchers,9,
+1114856,male,2017/18,2017/12/19,Big Bash League,T20,Sydney Showground Stadium,Sydney,Sydney Thunder,field,SR Watson,150,Sydney Thunder,5,
+1114857,male,2017/18,2017/12/20,Big Bash League,T20,"Brisbane Cricket Ground, Woolloongabba",Brisbane,Melbourne Stars,field,MP Stoinis,207,Brisbane Heat,,15
+1114858,male,2017/18,2017/12/21,Big Bash League,T20,Bellerive Oval,Hobart,Melbourne Renegades,field,DJ Bravo,165,Melbourne Renegades,7,
+1114859,male,2017/18,2017/12/22,Big Bash League,T20,Adelaide Oval,Adelaide,Adelaide Strikers,bat,Rashid Khan,164,Adelaide Strikers,,53
+1114860,male,2017/18,2017/12/23,Big Bash League,T20,Sydney Cricket Ground,Sydney,Perth Scorchers,field,AJ Turner,133,Perth Scorchers,6,
+1114861,male,2017/18,2017/12/23,Big Bash League,T20,Docklands Stadium,Melbourne,Melbourne Renegades,field,JD Wildermuth,133,Melbourne Renegades,7,
+1114862,male,2017/18,2017/12/26,Big Bash League,T20,W.A.C.A. Ground,Perth,Melbourne Stars,field,HWR Cartwright,143,Perth Scorchers,,13
+1114863,male,2017/18,2017/12/27,Big Bash League,T20,"Brisbane Cricket Ground, Woolloongabba",Brisbane,Sydney Thunder,bat,AI Ross,151,Brisbane Heat,6,
+1114864,male,2017/18,2017/12/28,Big Bash League,T20,Sydney Cricket Ground,Sydney,Sydney Sixers,field,AT Carey,168,Adelaide Strikers,,6
+1114865,male,2017/18,2017/12/29,Big Bash League,T20,Docklands Stadium,Melbourne,Perth Scorchers,field,MG Johnson,131,Perth Scorchers,3,
+1114866,male,2017/18,2017/12/30,Big Bash League,T20,Aurora Stadium,Launceston,Hobart Hurricanes,field,JC Buttler,167,Sydney Thunder,,57
+1114867,male,2017/18,2017/12/31,Big Bash League,T20,Adelaide Oval,Adelaide,Adelaide Strikers,bat,MG Neser,148,Adelaide Strikers,,56
+1114868,male,2017/18,2018/01/01,Big Bash League,T20,Sydney Showground Stadium,Sydney,Sydney Thunder,field,DJM Short,190,Hobart Hurricanes,,9
+1114869,male,2017/18,2018/01/01,Big Bash League,T20,W.A.C.A. Ground,Perth,Perth Scorchers,field,M Klinger,168,Perth Scorchers,6,
+1114870,male,2017/18,2018/01/02,Big Bash League,T20,Melbourne Cricket Ground,Melbourne,Brisbane Heat,field,MJ Swepson,142,Brisbane Heat,9,
+1114871,male,2017/18,2018/01/03,Big Bash League,T20,"Simonds Stadium, South Geelong, Victoria",Geelong,Melbourne Renegades,field,AJ Finch,112,Melbourne Renegades,8,
+1114872,male,2017/18,2018/01/04,Big Bash League,T20,Bellerive Oval,Hobart,Hobart Hurricanes,bat,DJM Short,184,Hobart Hurricanes,,7
+1114873,male,2017/18,2018/01/05,Big Bash League,T20,"Brisbane Cricket Ground, Woolloongabba",Brisbane,Perth Scorchers,field,BCJ Cutting,192,Brisbane Heat,,49
+1114874,male,2017/18,2018/01/06,Big Bash League,T20,Melbourne Cricket Ground,Melbourne,Melbourne Renegades,field,Mohammad Nabi,158,Melbourne Renegades,6,
+1114875,male,2017/18,2018/01/07,Big Bash League,T20,Sydney Showground Stadium,Sydney,Adelaide Strikers,bat,Rashid Khan,159,Adelaide Strikers,,25
+1114876,male,2017/18,2018/01/08,Big Bash League,T20,Bellerive Oval,Hobart,Hobart Hurricanes,bat,SW Billings,171,Hobart Hurricanes,,5
+1114877,male,2017/18,2018/01/08,Big Bash League,T20,W.A.C.A. Ground,Perth,Perth Scorchers,field,AJ Turner,186,Perth Scorchers,5,
+1114878,male,2017/18,2018/01/09,Big Bash League,T20,Adelaide Oval,Adelaide,Melbourne Stars,bat,TM Head,152,Adelaide Strikers,8,
+1114879,male,2017/18,2018/01/10,Big Bash League,T20,"Brisbane Cricket Ground, Woolloongabba",Brisbane,Hobart Hurricanes,bat,DJM Short,180,Hobart Hurricanes,,3
+1114880,male,2017/18,2018/01/11,Big Bash League,T20,Sydney Showground Stadium,Sydney,Sydney Thunder,bat,UT Khawaja,176,Sydney Thunder,,3
+1114881,male,2017/18,2018/01/12,Big Bash League,T20,Docklands Stadium,Melbourne,Melbourne Renegades,field,KP Pietersen,168,Melbourne Stars,,23
+1114882,male,2017/18,2018/01/13,Big Bash League,T20,Traeger Park,Alice Springs,Perth Scorchers,field,AC Agar,113,Perth Scorchers,6,
+1114883,male,2017/18,2018/01/13,Big Bash League,T20,Sydney Cricket Ground,Sydney,Sydney Sixers,field,CJ Green,157,Sydney Sixers,8,
+1114884,male,2017/18,2018/01/15,Big Bash League,T20,Bellerive Oval,Hobart,Brisbane Heat,bat,DT Christian,166,Hobart Hurricanes,6,
+1114885,male,2017/18,2018/01/16,Big Bash League,T20,Melbourne Cricket Ground,Melbourne,Sydney Sixers,field,NM Lyon,129,Sydney Sixers,8,
+1114886,male,2017/18,2018/01/17,Big Bash League,T20,Adelaide Oval,Adelaide,Adelaide Strikers,bat,AT Carey,188,Adelaide Strikers,,11
+1114887,male,2017/18,2018/01/18,Big Bash League,T20,Sydney Cricket Ground,Sydney,Sydney Sixers,field,SA Abbott,74,Sydney Sixers,9,
+1114888,male,2017/18,2018/01/20,Big Bash League,T20,Melbourne Cricket Ground,Melbourne,Sydney Thunder,field,SR Watson,148,Sydney Thunder,7,
+1114889,male,2017/18,2018/01/20,Big Bash League,T20,W.A.C.A. Ground,Perth,Perth Scorchers,field,AC Agar,168,Perth Scorchers,5,
+1114890,male,2017/18,2018/01/22,Big Bash League,T20,Docklands Stadium,Melbourne,Melbourne Renegades,field,CA Ingram,174,Adelaide Strikers,,26
+1114891,male,2017/18,2018/01/23,Big Bash League,T20,Sydney Cricket Ground,Sydney,Sydney Sixers,field,JL Denly,190,Sydney Sixers,5,
+1114892,male,2017/18,2018/01/24,Big Bash League,T20,Manuka Oval,Canberra,Sydney Thunder,field,KW Richardson,190,Melbourne Renegades,,9
+1114893,male,2017/18,2018/01/25,Big Bash League,T20,W.A.C.A. Ground,Perth,Perth Scorchers,field,AC Voges,138,Perth Scorchers,4,
+1114894,male,2017/18,2018/01/27,Big Bash League,T20,Melbourne Cricket Ground,Melbourne,Melbourne Stars,field,KP Pietersen,186,Melbourne Stars,3,
+1114895,male,2017/18,2018/01/27,Big Bash League,T20,"Brisbane Cricket Ground, Woolloongabba",Brisbane,Brisbane Heat,field,TLW Cooper,188,Melbourne Renegades,,26
+1114896,male,2017/18,2018/02/01,Big Bash League,T20,Perth Stadium,Perth,Perth Scorchers,field,MS Wade,211,Hobart Hurricanes,,71
+1114897,male,2017/18,2018/02/02,Big Bash League,T20,Adelaide Oval,Adelaide,Adelaide Strikers,bat,TM Head,179,Adelaide Strikers,,1
+1114898,male,2017/18,2018/02/04,Big Bash League,T20,Adelaide Oval,Adelaide,Adelaide Strikers,bat,J Weatherald,203,Adelaide Strikers,,25
+1152511,male,2018/19,2018/12/19,Big Bash League,T20,"Brisbane Cricket Ground, Woolloongabba",Brisbane,Adelaide Strikers,field,Rashid Khan,147,Adelaide Strikers,5,
+1152512,male,2018/19,2018/12/20,Big Bash League,T20,Docklands Stadium,Melbourne,Melbourne Renegades,field,Usman Shinwari,104,Melbourne Renegades,4,
+1152513,male,2018/19,2018/12/21,Big Bash League,T20,Manuka Oval,Canberra,Melbourne Stars,field,DR Sams,90,Sydney Thunder,,15
+1152514,male,2018/19,2018/12/22,Big Bash League,T20,Sydney Cricket Ground,Sydney,Sydney Sixers,bat,SNJ O'Keefe,165,Sydney Sixers,,17
+1152515,male,2018/19,2018/12/22,Big Bash League,T20,Carrara Oval,Carrara,Brisbane Heat,field,DJM Short,160,Hobart Hurricanes,,15
+1152516,male,2018/19,2018/12/23,Big Bash League,T20,Adelaide Oval,Adelaide,Melbourne Renegades,field,DT Christian,175,Melbourne Renegades,5,
+1152517,male,2018/19,2018/12/24,Big Bash League,T20,Bellerive Oval,Hobart,Hobart Hurricanes,field,DJM Short,156,Hobart Hurricanes,6,
+1152518,male,2018/19,2018/12/24,Big Bash League,T20,Sydney Showground Stadium,Sydney,Sydney Sixers,field,JC Buttler,170,Sydney Thunder,,21
+1152519,male,2018/19,2018/12/26,Big Bash League,T20,Perth Stadium,Perth,Perth Scorchers,field,JA Richardson,89,Perth Scorchers,7,
+1152520,male,2018/19,2018/12/27,Big Bash League,T20,Sydney Cricket Ground,Sydney,Melbourne Stars,field,PSP Handscomb,131,Melbourne Stars,5,
+1152521,male,2018/19,2018/12/28,Big Bash League,T20,Bellerive Oval,Hobart,Hobart Hurricanes,field,MS Wade,194,Hobart Hurricanes,7,
+1152522,male,2018/19,2018/12/29,Big Bash League,T20,Docklands Stadium,Melbourne,Melbourne Renegades,field,BAD Manenti,133,Sydney Sixers,,33
+1152523,male,2018/19,2018/12/30,Big Bash League,T20,Aurora Stadium,Launceston,Hobart Hurricanes,field,RP Meredith,108,Hobart Hurricanes,6,
+1152524,male,2018/19,2018/12/31,Big Bash League,T20,Adelaide Oval,Adelaide,Adelaide Strikers,bat,PM Siddle,176,Adelaide Strikers,,20
+1152525,male,2018/19,2019/01/01,Big Bash League,T20,Carrara Oval,Carrara,Sydney Sixers,field,CA Lynn,165,Sydney Sixers,5,
+1152526,male,2018/19,2019/01/01,Big Bash League,T20,Melbourne Cricket Ground,Melbourne,Melbourne Stars,field,MP Stoinis,149,Melbourne Stars,7,
+1152527,male,2018/19,2019/01/02,Big Bash League,T20,Sydney Showground Stadium,Sydney,Sydney Thunder,bat,CJ Ferguson,143,Sydney Thunder,,1
+1152528,male,2018/19,2019/01/03,Big Bash League,T20,"Simonds Stadium, South Geelong, Victoria",Geelong,Melbourne Renegades,field,J Weatherald,159,Adelaide Strikers,,32
+1152529,male,2018/19,2019/01/04,Big Bash League,T20,Bellerive Oval,Hobart,Hobart Hurricanes,field,DJM Short,162,Hobart Hurricanes,5,
+1152530,male,2018/19,2019/01/05,Big Bash League,T20,Carrara Oval,Carrara,Sydney Thunder,bat,MP Stoinis,136,Melbourne Stars,8,
+1152531,male,2018/19,2019/01/05,Big Bash League,T20,Perth Stadium,Perth,Brisbane Heat,field,Mujeeb Ur Rahman,136,Brisbane Heat,5,
+1152532,male,2018/19,2019/01/06,Big Bash League,T20,Adelaide Oval,Adelaide,Adelaide Strikers,bat,JL Denly,151,Sydney Sixers,6,
+1152533,male,2018/19,2019/01/07,Big Bash League,T20,Docklands Stadium,Melbourne,Melbourne Renegades,field,SB Harper,146,Melbourne Renegades,6,
+1152534,male,2018/19,2019/01/08,Big Bash League,T20,Sydney Showground Stadium,Sydney,Sydney Thunder,field,CA Lynn,50,Brisbane Heat,,15
+1152535,male,2018/19,2019/01/09,Big Bash League,T20,Melbourne Cricket Ground,Melbourne,Perth Scorchers,field,AJ Tye,147,Perth Scorchers,6,
+1152536,male,2018/19,2019/01/10,Big Bash League,T20,"Brisbane Cricket Ground, Woolloongabba",Brisbane,Melbourne Renegades,field,SB Harper,145,Melbourne Renegades,8,
+1152537,male,2018/19,2019/01/11,Big Bash League,T20,Adelaide Oval,Adelaide,Melbourne Stars,field,CA Ingram,179,Adelaide Strikers,,41
+1152538,male,2018/19,2019/01/13,Big Bash League,T20,Sydney Showground Stadium,Sydney,Sydney Thunder,bat,SR Watson,169,Sydney Thunder,,71
+1152539,male,2018/19,2019/01/13,Big Bash League,T20,Geelong Cricket Ground,Geelong,Melbourne Renegades,field,M Bryant,193,Brisbane Heat,,101
+1152540,male,2018/19,2019/01/13,Big Bash League,T20,Perth Stadium,Perth,Perth Scorchers,field,CT Bancroft,178,Perth Scorchers,7,
+1152541,male,2018/19,2019/01/14,Big Bash League,T20,Melbourne Cricket Ground,Melbourne,Melbourne Stars,field,DJM Short,186,Hobart Hurricanes,,59
+1152542,male,2018/19,2019/01/16,Big Bash League,T20,Sydney Cricket Ground,Sydney,Melbourne Renegades,field,KW Richardson,116,Melbourne Renegades,7,
+1152543,male,2018/19,2019/01/17,Big Bash League,T20,"Brisbane Cricket Ground, Woolloongabba",Brisbane,Sydney Thunder,bat,,187,,,
+1152544,male,2018/19,2019/01/18,Big Bash League,T20,Perth Stadium,Perth,Hobart Hurricanes,field,GJ Bailey,178,Hobart Hurricanes,4,
+1152545,male,2018/19,2019/01/19,Big Bash League,T20,Docklands Stadium,Melbourne,Melbourne Stars,field,MP Stoinis,122,Melbourne Stars,6,
+1152546,male,2018/19,2019/01/20,Big Bash League,T20,Sydney Cricket Ground,Sydney,Brisbane Heat,field,JM Vince,178,Sydney Sixers,,79
+1152547,male,2018/19,2019/01/21,Big Bash League,T20,Adelaide Oval,Adelaide,Adelaide Strikers,bat,MS Wade,155,Hobart Hurricanes,10,
+1152548,male,2018/19,2019/01/22,Big Bash League,T20,Sydney Showground Stadium,Sydney,Sydney Thunder,field,HF Gurney,153,Melbourne Renegades,,12
+1152549,male,2018/19,2019/01/23,Big Bash League,T20,Ted Summerton Reserve,Moe,Adelaide Strikers,field,BR Dunk,168,Melbourne Stars,,44
+1152550,male,2018/19,2019/01/23,Big Bash League,T20,Sydney Cricket Ground,Sydney,Sydney Sixers,field,JR Philippe,173,Sydney Sixers,9,
+1152551,male,2018/19,2019/01/24,Big Bash League,T20,Perth Stadium,Perth,Sydney Thunder,field,CJ Ferguson,182,Sydney Thunder,6,
+1152552,male,2018/19,2019/01/27,Big Bash League,T20,Melbourne Cricket Ground,Melbourne,Brisbane Heat,field,MP Stoinis,135,Melbourne Stars,,5
+1152553,male,2018/19,2019/01/28,Big Bash League,T20,Perth Stadium,Perth,Perth Scorchers,field,CP Tremain,158,Melbourne Renegades,,78
+1152554,male,2018/19,2019/01/29,Big Bash League,T20,Bellerive Oval,Hobart,Hobart Hurricanes,field,DJM Short,146,Hobart Hurricanes,9,
+1152555,male,2018/19,2019/01/29,Big Bash League,T20,Sydney Cricket Ground,Sydney,Sydney Sixers,field,BJ Dwarshuis,125,Sydney Sixers,8,
+1152556,male,2018/19,2019/01/30,Big Bash League,T20,Docklands Stadium,Melbourne,Melbourne Renegades,bat,CJ Boyce,141,Melbourne Renegades,,27
+1152557,male,2018/19,2019/01/31,Big Bash League,T20,Aurora Stadium,Launceston,Adelaide Strikers,field,J Weatherald,170,Adelaide Strikers,7,
+1152558,male,2018/19,2019/02/01,Big Bash League,T20,"Brisbane Cricket Ground, Woolloongabba",Brisbane,Brisbane Heat,field,Mujeeb Ur Rahman,129,Brisbane Heat,6,
+1152559,male,2018/19,2019/02/02,Big Bash League,T20,Sydney Cricket Ground,Sydney,Sydney Sixers,field,DP Hughes,84,Sydney Sixers,9,
+1152560,male,2018/19,2019/02/03,Big Bash League,T20,Adelaide Oval,Adelaide,Brisbane Heat,field,MT Renshaw,177,Brisbane Heat,6,
+1152561,male,2018/19,2019/02/03,Big Bash League,T20,Perth Stadium,Perth,Melbourne Stars,field,AJ Turner,183,Perth Scorchers,,27
+1152562,male,2018/19,2019/02/07,Big Bash League,T20,Bellerive Oval,Hobart,Melbourne Renegades,field,MS Wade,184,Hobart Hurricanes,,16
+1152563,male,2018/19,2019/02/08,Big Bash League,T20,"Brisbane Cricket Ground, Woolloongabba",Brisbane,Brisbane Heat,field,BCJ Cutting,157,Brisbane Heat,10,
+1152564,male,2018/19,2019/02/09,Big Bash League,T20,Adelaide Oval,Adelaide,Perth Scorchers,bat,JW Wells,175,Adelaide Strikers,5,
+1152565,male,2018/19,2019/02/09,Big Bash League,T20,Manuka Oval,Canberra,Sydney Thunder,field,PJ Cummins,166,Sydney Thunder,4,
+1152566,male,2018/19,2019/02/10,Big Bash League,T20,Melbourne Cricket Ground,Melbourne,Sydney Sixers,field,GJ Maxwell,169,Melbourne Stars,,94
+1152567,male,2018/19,2019/02/14,Big Bash League,T20,Bellerive Oval,Hobart,Melbourne Stars,field,DJ Worrall,154,Melbourne Stars,6,
+1152568,male,2018/19,2019/02/15,Big Bash League,T20,Docklands Stadium,Melbourne,Melbourne Renegades,field,DT Christian,181,Melbourne Renegades,3,
+1152569,male,2018/19,2019/02/17,Big Bash League,T20,Docklands Stadium,Melbourne,Melbourne Stars,field,DT Christian,146,Melbourne Renegades,,13
+1195573,male,2019/20,2019/12/17,Big Bash League,T20,"Brisbane Cricket Ground, Woolloongabba",Brisbane,Sydney Thunder,bat,CJ Ferguson,173,Sydney Thunder,,29
+1195574,male,2019/20,2019/12/18,Big Bash League,T20,Sydney Cricket Ground,Sydney,Sydney Sixers,field,JR Philippe,132,Sydney Sixers,8,
+1195575,male,2019/20,2019/12/19,Big Bash League,T20,"Simonds Stadium, South Geelong, Victoria",Geelong,Melbourne Renegades,bat,AD Hales,170,Sydney Thunder,6,
+1195576,male,2019/20,2019/12/20,Big Bash League,T20,Traeger Park,Alice Springs,Hobart Hurricanes,bat,Qais Ahmad,130,Hobart Hurricanes,,25
+1195577,male,2019/20,2019/12/20,Big Bash League,T20,Carrara Oval,Carrara,Brisbane Heat,field,GJ Maxwell,168,Melbourne Stars,,22
+1195578,male,2019/20,2019/12/21,Big Bash League,T20,Manuka Oval,Canberra,Sydney Thunder,field,,162,,,
+1195579,male,2019/20,2019/12/21,Big Bash League,T20,Perth Stadium,Perth,Melbourne Renegades,field,MR Marsh,197,Perth Scorchers,,11
+1195580,male,2019/20,2019/12/22,Big Bash League,T20,Ted Summerton Reserve,Moe,Melbourne Stars,bat,Haris Rauf,164,Melbourne Stars,,52
+1195581,male,2019/20,2019/12/22,Big Bash League,T20,Sydney Cricket Ground,Sydney,Sydney Sixers,field,CA Lynn,210,Brisbane Heat,,48
+1195582,male,2019/20,2019/12/23,Big Bash League,T20,Adelaide Oval,Adelaide,Perth Scorchers,field,J Weatherald,199,Adelaide Strikers,,15
+1195583,male,2019/20,2019/12/24,Big Bash League,T20,Bellerive Oval,Hobart,Melbourne Renegades,bat,RP Meredith,148,Hobart Hurricanes,7,
+1195584,male,2019/20,2019/12/26,Big Bash League,T20,Perth Stadium,Perth,Perth Scorchers,field,TK Curran,175,Sydney Sixers,,48
+1195585,male,2019/20,2019/12/27,Big Bash League,T20,Carrara Oval,Carrara,Melbourne Stars,field,JW Wells,175,Adelaide Strikers,,5
+1195586,male,2019/20,2019/12/28,Big Bash League,T20,Sydney Cricket Ground,Sydney,Sydney Thunder,bat,TK Curran,150,,,
+1195587,male,2019/20,2019/12/29,Big Bash League,T20,Docklands Stadium,Melbourne,Adelaide Strikers,bat,Rashid Khan,156,Adelaide Strikers,,18
+1195588,male,2019/20,2019/12/30,Big Bash League,T20,Aurora Stadium,Launceston,Melbourne Stars,field,NM Coulter-Nile,52,Melbourne Stars,,4
+1195589,male,2019/20,2019/12/31,Big Bash League,T20,Adelaide Oval,Adelaide,Sydney Thunder,bat,CJ Ferguson,169,Sydney Thunder,,3
+1195590,male,2019/20,2020/01/01,Big Bash League,T20,Carrara Oval,Carrara,Perth Scorchers,bat,Fawad Ahmed,150,Perth Scorchers,,40
+1195591,male,2019/20,2020/01/02,Big Bash League,T20,Sydney Showground Stadium,Sydney,Sydney Thunder,bat,NCR Larkin,143,Melbourne Stars,3,
+1195592,male,2019/20,2020/01/02,Big Bash League,T20,Docklands Stadium,Melbourne,Melbourne Renegades,bat,JM Vince,154,Sydney Sixers,6,
+1195593,male,2019/20,2020/01/03,Big Bash League,T20,Bellerive Oval,Hobart,Hobart Hurricanes,field,CA Lynn,213,Brisbane Heat,,31
+1195594,male,2019/20,2020/01/04,Big Bash League,T20,Melbourne Cricket Ground,Melbourne,Melbourne Stars,field,A Zampa,143,Melbourne Stars,8,
+1195595,male,2019/20,2020/01/05,Big Bash League,T20,International Sports Stadium,Coffs Harbour,Adelaide Strikers,bat,JR Philippe,177,Sydney Sixers,7,
+1195596,male,2019/20,2020/01/05,Big Bash League,T20,Perth Stadium,Perth,Hobart Hurricanes,bat,DJM Short,181,Hobart Hurricanes,,8
+1195597,male,2019/20,2020/01/06,Big Bash League,T20,Sydney Showground Stadium,Sydney,Brisbane Heat,bat,T Banton,77,Brisbane Heat,,16
+1195598,male,2019/20,2020/01/07,Big Bash League,T20,"Simonds Stadium, South Geelong, Victoria",Geelong,Perth Scorchers,field,LS Livingstone,176,Perth Scorchers,6,
+1195599,male,2019/20,2020/01/08,Big Bash League,T20,Adelaide Oval,Adelaide,Sydney Sixers,field,TK Curran,136,Sydney Sixers,2,
+1195600,male,2019/20,2020/01/08,Big Bash League,T20,Melbourne Cricket Ground,Melbourne,Melbourne Stars,field,Haris Rauf,146,Melbourne Stars,6,
+1195601,male,2019/20,2020/01/09,Big Bash League,T20,"Brisbane Cricket Ground, Woolloongabba",Brisbane,Hobart Hurricanes,bat,BCJ Cutting,127,Brisbane Heat,5,
+1195602,male,2019/20,2020/01/10,Big Bash League,T20,Docklands Stadium,Melbourne,Melbourne Stars,field,GJ Maxwell,169,Melbourne Stars,7,
+1195603,male,2019/20,2020/01/11,Big Bash League,T20,Sydney Showground Stadium,Sydney,Sydney Thunder,field,AD Hales,163,Sydney Thunder,4,
+1195604,male,2019/20,2020/01/11,Big Bash League,T20,Perth Stadium,Perth,Perth Scorchers,bat,MR Marsh,214,Perth Scorchers,,34
+1195605,male,2019/20,2020/01/12,Big Bash League,T20,Adelaide Oval,Adelaide,Adelaide Strikers,bat,JW Wells,174,Adelaide Strikers,,63
+1195606,male,2019/20,2020/01/12,Big Bash League,T20,Melbourne Cricket Ground,Melbourne,Sydney Sixers,field,MP Stoinis,220,Melbourne Stars,,44
+1195607,male,2019/20,2020/01/13,Big Bash League,T20,Bellerive Oval,Hobart,Hobart Hurricanes,field,JP Inglis,176,Perth Scorchers,,77
+1195608,male,2019/20,2020/01/14,Big Bash League,T20,"Brisbane Cricket Ground, Woolloongabba",Brisbane,Adelaide Strikers,bat,JL Pattinson,111,Brisbane Heat,7,
+1195609,male,2019/20,2020/01/15,Big Bash League,T20,Manuka Oval,Canberra,Melbourne Renegades,bat,SB Harper,135,Melbourne Renegades,,12
+1195610,male,2019/20,2020/01/15,Big Bash League,T20,Perth Stadium,Perth,Perth Scorchers,bat,JR Coleman,87,Melbourne Stars,8,
+1195611,male,2019/20,2020/01/16,Big Bash League,T20,Sydney Cricket Ground,Sydney,Hobart Hurricanes,field,,,,,
+1195612,male,2019/20,2020/01/17,Big Bash League,T20,Adelaide Oval,Adelaide,Brisbane Heat,bat,LN O'Connor,101,Adelaide Strikers,10,
+1195613,male,2019/20,2020/01/18,Big Bash League,T20,Melbourne Cricket Ground,Melbourne,Melbourne Stars,bat,GJ Maxwell,142,Melbourne Stars,,10
+1195614,male,2019/20,2020/01/18,Big Bash League,T20,Sydney Showground Stadium,Sydney,Sydney Thunder,field,CH Morris,25,Sydney Thunder,,4
+1195615,male,2019/20,2020/01/19,Big Bash League,T20,Aurora Stadium,Launceston,Hobart Hurricanes,field,TM Head,187,Adelaide Strikers,,10
+1195616,male,2019/20,2020/01/19,Big Bash League,T20,"Brisbane Cricket Ground, Woolloongabba",Brisbane,Brisbane Heat,field,CJ Boyce,165,Melbourne Renegades,,44
+1195617,male,2019/20,2020/01/20,Big Bash League,T20,Sydney Cricket Ground,Sydney,Melbourne Stars,field,MC Henriques,147,Sydney Sixers,,21
+1195618,male,2019/20,2020/01/20,Big Bash League,T20,Perth Stadium,Perth,Sydney Thunder,bat,LS Livingstone,154,Perth Scorchers,8,
+1195619,male,2019/20,2020/01/21,Big Bash League,T20,Docklands Stadium,Melbourne,Melbourne Renegades,field,M Wright,191,Hobart Hurricanes,,4
+1195620,male,2019/20,2020/01/22,Big Bash League,T20,Adelaide Oval,Adelaide,Melbourne Stars,field,JW Wells,163,Adelaide Strikers,,11
+1195621,male,2019/20,2020/01/23,Big Bash League,T20,"Brisbane Cricket Ground, Woolloongabba",Brisbane,Sydney Sixers,field,SNJ O'Keefe,127,Sydney Sixers,8,
+1195622,male,2019/20,2020/01/24,Big Bash League,T20,Bellerive Oval,Hobart,Hobart Hurricanes,bat,DJM Short,186,Hobart Hurricanes,,57
+1195623,male,2019/20,2020/01/24,Big Bash League,T20,Perth Stadium,Perth,Adelaide Strikers,bat,WA Agar,182,Adelaide Strikers,,16
+1195624,male,2019/20,2020/01/25,Big Bash League,T20,Sydney Cricket Ground,Sydney,Sydney Sixers,field,SPD Smith,176,Sydney Sixers,7,
+1195625,male,2019/20,2020/01/25,Big Bash League,T20,Melbourne Cricket Ground,Melbourne,Brisbane Heat,bat,AB de Villiers,187,Brisbane Heat,,71
+1195626,male,2019/20,2020/01/26,Big Bash League,T20,Sydney Showground Stadium,Sydney,Perth Scorchers,bat,AD Hales,96,Sydney Thunder,7,
+1195627,male,2019/20,2020/01/26,Big Bash League,T20,Adelaide Oval,Adelaide,Hobart Hurricanes,bat,MS Wade,218,Hobart Hurricanes,,10
+1195628,male,2019/20,2020/01/27,Big Bash League,T20,Docklands Stadium,Melbourne,Brisbane Heat,bat,AJ Finch,155,Melbourne Renegades,7,
+1195629,male,2019/20,2020/01/30,Big Bash League,T20,Bellerive Oval,Hobart,Sydney Thunder,bat,JD Cook,198,Sydney Thunder,,57
+1195630,male,2019/20,2020/01/31,Big Bash League,T20,Melbourne Cricket Ground,Melbourne,Melbourne Stars,field,SNJ O'Keefe,143,Sydney Sixers,,43
+1195631,male,2019/20,2020/02/01,Big Bash League,T20,Adelaide Oval,Adelaide,Adelaide Strikers,field,AD Hales,152,Sydney Thunder,,8
+1195632,male,2019/20,2020/02/06,Big Bash League,T20,Melbourne Cricket Ground,Melbourne,Melbourne Stars,bat,NCR Larkin,195,Melbourne Stars,,28
+1195633,male,2019/20,2020/02/08,Big Bash League,T20,Sydney Cricket Ground,Sydney,Melbourne Stars,field,JR Philippe,117,Sydney Sixers,,19
+1226826,male,2020/21,2021/01/08,Big Bash League,T20,Adelaide Oval,Adelaide,Adelaide Strikers,bat,Mohammad Nabi,178,Melbourne Renegades,6,
+1226827,male,2020/21,2021/01/24,Big Bash League,T20,Melbourne Cricket Ground,Melbourne,Sydney Sixers,field,MS Wade,189,Hobart Hurricanes,,7
+1226828,male,2020/21,2020/12/12,Big Bash League,T20,Manuka Oval,Canberra,Melbourne Stars,bat,A Zampa,170,Melbourne Stars,,22
+1226829,male,2020/21,2021/01/06,Big Bash League,T20,Perth Stadium,Perth,Sydney Sixers,field,MR Marsh,184,Perth Scorchers,,86
+1226830,male,2020/21,2020/12/19,Big Bash League,T20,Bellerive Oval,Hobart,Hobart Hurricanes,field,BR McDermott,158,Hobart Hurricanes,6,
+1226831,male,2020/21,2020/12/22,Big Bash League,T20,Manuka Oval,Canberra,Sydney Thunder,field,CJ Ferguson,153,Sydney Thunder,7,
+1226832,male,2020/21,2021/01/02,Big Bash League,T20,Brisbane Cricket Ground,Brisbane,Sydney Sixers,bat,MT Steketee,166,Brisbane Heat,4,
+1226833,male,2020/21,2021/01/05,Big Bash League,T20,Adelaide Oval,Adelaide,Adelaide Strikers,bat,RJ Gibson,172,Adelaide Strikers,,60
+1226834,male,2020/21,2021/01/22,Big Bash League,T20,Docklands Stadium,Melbourne,Perth Scorchers,bat,JA Richardson,180,Perth Scorchers,,22
+1226835,male,2020/21,2021/01/07,Big Bash League,T20,Carrara Oval,Carrara,Melbourne Stars,field,CA Lynn,129,Brisbane Heat,,17
+1226836,male,2020/21,2021/01/25,Big Bash League,T20,Adelaide Oval,Adelaide,Sydney Thunder,field,AD Hales,116,Sydney Thunder,9,
+1226837,male,2020/21,2020/12/13,Big Bash League,T20,Bellerive Oval,Hobart,Melbourne Renegades,field,JR Philippe,206,Sydney Sixers,,145
+1226838,male,2020/21,2021/01/19,Big Bash League,T20,Docklands Stadium,Melbourne,Brisbane Heat,field,C Munro,175,Perth Scorchers,,59
+1226839,male,2020/21,2021/01/15,Big Bash League,T20,Melbourne Cricket Ground,Melbourne,Adelaide Strikers,field,ADS Fletcher,180,Melbourne Stars,,111
+1226840,male,2020/21,2021/01/18,Big Bash League,T20,Manuka Oval,Canberra,Hobart Hurricanes,field,BR McDermott,178,Hobart Hurricanes,6,
+1226841,male,2020/21,2020/12/12,Big Bash League,T20,Bellerive Oval,Hobart,Perth Scorchers,bat,JK Lalor,131,Melbourne Renegades,7,
+1226842,male,2020/21,2021/01/03,Big Bash League,T20,Carrara Oval,Carrara,Sydney Sixers,field,JR Philippe,151,Sydney Sixers,7,
+1226843,male,2020/21,2021/01/14,Big Bash League,T20,Manuka Oval,Canberra,Brisbane Heat,field,JA Burns,150,Brisbane Heat,5,
+1226844,male,2020/21,2021/01/02,Big Bash League,T20,Bellerive Oval,Hobart,Melbourne Stars,field,SM Boland,165,Hobart Hurricanes,,21
+1226845,male,2020/21,2020/12/28,Big Bash League,T20,Adelaide Oval,Adelaide,Perth Scorchers,field,Rashid Khan,166,Adelaide Strikers,,71
+1226846,male,2020/21,2020/12/26,Big Bash League,T20,Carrara Oval,Carrara,Sydney Sixers,field,DP Hughes,194,Sydney Sixers,1,
+1226847,male,2020/21,2021/01/24,Big Bash League,T20,Adelaide Oval,Adelaide,Adelaide Strikers,bat,PM Siddle,160,Adelaide Strikers,,6
+1226848,male,2020/21,2021/01/23,Big Bash League,T20,Docklands Stadium,Melbourne,Brisbane Heat,bat,M Labuschagne,174,Brisbane Heat,,26
+1226849,male,2020/21,2021/01/23,Big Bash League,T20,Melbourne Cricket Ground,Melbourne,Melbourne Stars,field,JJ Roy,183,Perth Scorchers,,11
+1226850,male,2020/21,2020/12/13,Big Bash League,T20,Bellerive Oval,Hobart,Adelaide Strikers,field,DJM Short,175,Hobart Hurricanes,,11
+1226851,male,2020/21,2021/01/04,Big Bash League,T20,Brisbane Cricket Ground,Brisbane,Sydney Thunder,bat,JA Burns,175,Brisbane Heat,5,
+1226852,male,2020/21,2020/12/10,Big Bash League,T20,Bellerive Oval,Hobart,Sydney Sixers,field,TH David,179,Hobart Hurricanes,,16
+1226853,male,2020/21,2021/01/03,Big Bash League,T20,Perth Stadium,Perth,Melbourne Renegades,field,JP Inglis,186,Perth Scorchers,,96
+1226854,male,2020/21,2020/12/29,Big Bash League,T20,Manuka Oval,Canberra,Melbourne Stars,field,AD Hales,220,Sydney Thunder,,75
+1226855,male,2020/21,2021/01/10,Big Bash League,T20,Carrara Oval,Carrara,Sydney Sixers,field,DT Christian,149,Sydney Sixers,3,
+1226856,male,2020/21,2021/01/01,Big Bash League,T20,Carrara Oval,Carrara,Sydney Thunder,field,AD Hales,111,Sydney Thunder,,7
+1226857,male,2020/21,2021/01/12,Big Bash League,T20,Perth Stadium,Perth,Hobart Hurricanes,bat,JJ Roy,140,Perth Scorchers,9,
+1226858,male,2020/21,2021/01/26,Big Bash League,T20,Melbourne Cricket Ground,Melbourne,Sydney Sixers,field,BJ Dwarshuis,178,Sydney Sixers,5,
+1226859,male,2020/21,2021/01/21,Big Bash League,T20,Adelaide Oval,Adelaide,Adelaide Strikers,bat,AT Carey,198,Adelaide Strikers,,82
+1226860,male,2020/21,2021/01/26,Big Bash League,T20,Melbourne Cricket Ground,Melbourne,Hobart Hurricanes,field,Z Evans,151,Melbourne Renegades,,11
+1226861,male,2020/21,2021/01/13,Big Bash League,T20,Manuka Oval,Canberra,Sydney Sixers,field,SNJ O'Keefe,129,Sydney Sixers,5,
+1226862,male,2020/21,2021/01/26,Big Bash League,T20,Adelaide Oval,Adelaide,Perth Scorchers,field,M Labuschagne,182,Brisbane Heat,,6
+1226863,male,2020/21,2020/12/15,Big Bash League,T20,Aurora Stadium,Launceston,Adelaide Strikers,field,PM Siddle,147,Adelaide Strikers,5,
+1226864,male,2020/21,2021/01/17,Big Bash League,T20,Melbourne Cricket Ground,Melbourne,Melbourne Renegades,bat,LC Hatcher,151,Melbourne Stars,6,
+1226865,male,2020/21,2021/01/16,Big Bash League,T20,Manuka Oval,Canberra,Perth Scorchers,bat,JR Philippe,164,Sydney Sixers,7,
+1226866,male,2020/21,2020/12/14,Big Bash League,T20,Manuka Oval,Canberra,Brisbane Heat,bat,DR Sams,179,Sydney Thunder,4,
+1226867,male,2020/21,2020/12/16,Big Bash League,T20,Aurora Stadium,Launceston,Melbourne Stars,field,,76,,,
+1226868,male,2020/21,2020/12/27,Big Bash League,T20,Brisbane Cricket Ground,Brisbane,Brisbane Heat,field,L Gregory,149,Brisbane Heat,4,
+1226869,male,2020/21,2021/01/20,Big Bash League,T20,Docklands Stadium,Melbourne,Melbourne Stars,bat,MW Harvey,159,Melbourne Renegades,5,
+1226870,male,2020/21,2020/12/31,Big Bash League,T20,Adelaide Oval,Adelaide,Perth Scorchers,field,JA Richardson,147,Perth Scorchers,7,
+1226871,male,2020/21,2021/01/07,Big Bash League,T20,Perth Stadium,Perth,Hobart Hurricanes,field,N McAndrew,168,Sydney Thunder,,39
+1226872,male,2020/21,2020/12/11,Big Bash League,T20,Manuka Oval,Canberra,Melbourne Stars,field,NM Coulter-Nile,126,Melbourne Stars,6,
+1226873,male,2020/21,2020/12/20,Big Bash League,T20,Bellerive Oval,Hobart,Adelaide Strikers,field,DT Christian,178,Sydney Sixers,,38
+1226874,male,2020/21,2020/12/26,Big Bash League,T20,Manuka Oval,Canberra,Melbourne Renegades,field,O Davies,210,Sydney Thunder,,129
+1226875,male,2020/21,2020/12/30,Big Bash League,T20,Brisbane Cricket Ground,Brisbane,Brisbane Heat,field,Mujeeb Ur Rahman,151,Hobart Hurricanes,,1
+1226876,male,2020/21,2021/01/11,Big Bash League,T20,Adelaide Oval,Adelaide,Melbourne Stars,bat,WA Agar,150,Adelaide Strikers,5,
+1226877,male,2020/21,2020/12/29,Big Bash League,T20,Carrara Oval,Carrara,Melbourne Renegades,bat,JO Holder,169,Sydney Sixers,2,
+1226878,male,2020/21,2021/01/09,Big Bash League,T20,Perth Stadium,Perth,Sydney Thunder,field,JA Richardson,186,Perth Scorchers,,17
+1226879,male,2020/21,2021/01/04,Big Bash League,T20,Bellerive Oval,Hobart,Hobart Hurricanes,field,MP Stoinis,184,Melbourne Stars,,10
+1226880,male,2020/21,2021/01/22,Big Bash League,T20,Adelaide Oval,Adelaide,Sydney Sixers,field,AD Hales,233,Sydney Thunder,,46
+1226881,male,2020/21,2020/12/23,Big Bash League,T20,Brisbane Cricket Ground,Brisbane,Brisbane Heat,field,JJ Peirson,151,Adelaide Strikers,,2
+1226882,male,2020/21,2021/02/06,Big Bash League,T20,Sydney Cricket Ground,Sydney,Perth Scorchers,field,JM Vince,189,Sydney Sixers,,27
+1226883,male,2020/21,2021/01/29,Big Bash League,T20,Brisbane Cricket Ground,Brisbane,Adelaide Strikers,bat,JJ Peirson,131,Brisbane Heat,6,
+1226884,male,2020/21,2021/01/30,Big Bash League,T20,Manuka Oval,Canberra,Perth Scorchers,bat,JM Vince,168,Sydney Sixers,9,
+1226885,male,2020/21,2021/01/31,Big Bash League,T20,Manuka Oval,Canberra,Brisbane Heat,field,SD Heazlett,159,Brisbane Heat,7,
+1226886,male,2020/21,2021/02/04,Big Bash League,T20,Manuka Oval,Canberra,Brisbane Heat,field,LS Livingstone,200,Perth Scorchers,,49
+1269638,male,2021/22,2021/12/05,Big Bash League,T20,Sydney Cricket Ground,Sydney,Melbourne Stars,field,JR Philippe,214,Sydney Sixers,,152
+1269639,male,2021/22,2021/12/06,Big Bash League,T20,"Manuka Oval, Canberra",Canberra,Sydney Thunder,field,AI Ross,141,Sydney Thunder,7,
+1269640,male,2021/22,2021/12/07,Big Bash League,T20,"Docklands Stadium, Melbourne",Melbourne,Melbourne Renegades,bat,Zahir Khan,154,Melbourne Renegades,,2
+1269641,male,2021/22,2021/12/08,Big Bash League,T20,"Aurora Stadium, Launceston",Launceston,Hobart Hurricanes,field,MC Henriques,145,Sydney Sixers,,14
+1269642,male,2021/22,2021/12/08,Big Bash League,T20,Perth Stadium,Perth,Perth Scorchers,bat,M Kelly,158,Perth Scorchers,,6
+1269643,male,2021/22,2021/12/09,Big Bash League,T20,Adelaide Oval,Adelaide,Adelaide Strikers,bat,WA Agar,150,Adelaide Strikers,,49
+1269644,male,2021/22,2021/12/10,Big Bash League,T20,Melbourne Cricket Ground,Melbourne,Sydney Thunder,field,NCR Larkin,166,Melbourne Stars,,4
+1269645,male,2021/22,2021/12/11,Big Bash League,T20,Sydney Cricket Ground,Sydney,Hobart Hurricanes,bat,MS Wade,196,Hobart Hurricanes,,44
+1269646,male,2021/22,2021/12/11,Big Bash League,T20,Sydney Showground Stadium,Sydney,Perth Scorchers,bat,C Munro,196,Perth Scorchers,,49
+1269647,male,2021/22,2021/12/12,Big Bash League,T20,Sydney Showground Stadium,Sydney,Melbourne Stars,field,AD Russell,152,Melbourne Stars,6,
+1269648,male,2021/22,2021/12/13,Big Bash League,T20,Carrara Oval,Carrara,Brisbane Heat,field,JJ Bazley,141,Brisbane Heat,5,
+1269649,male,2021/22,2021/12/14,Big Bash League,T20,"Bellerive Oval, Hobart",Hobart,Perth Scorchers,bat,MR Marsh,183,Perth Scorchers,,53
+1269650,male,2021/22,2021/12/15,Big Bash League,T20,Melbourne Cricket Ground,Melbourne,Sydney Sixers,field,JR Philippe,178,Sydney Sixers,7,
+1269651,male,2021/22,2021/12/19,Big Bash League,T20,"Brisbane Cricket Ground, Woolloongabba, Brisbane",Brisbane,Brisbane Heat,field,S Mahmood,197,Sydney Thunder,,53
+1269652,male,2021/22,2021/12/20,Big Bash League,T20,"Bellerive Oval, Hobart",Hobart,Perth Scorchers,bat,KR Patterson,168,Perth Scorchers,,42
+1269653,male,2021/22,2021/12/21,Big Bash League,T20,Sydney Cricket Ground,Sydney,Adelaide Strikers,bat,SA Abbott,148,Sydney Sixers,4,
+1269654,male,2021/22,2021/12/22,Big Bash League,T20,"Docklands Stadium, Melbourne",Melbourne,Perth Scorchers,bat,MR Marsh,207,Perth Scorchers,,21
+1269655,male,2021/22,2021/12/23,Big Bash League,T20,Adelaide Oval,Adelaide,Brisbane Heat,bat,BM Duckett,209,Brisbane Heat,,39
+1269656,male,2021/22,2021/12/24,Big Bash League,T20,"Bellerive Oval, Hobart",Hobart,Hobart Hurricanes,bat,NT Ellis,181,Hobart Hurricanes,,24
+1269657,male,2021/22,2021/12/26,Big Bash League,T20,Sydney Showground Stadium,Sydney,Sydney Thunder,field,DT Christian,173,Sydney Sixers,,30
+1269658,male,2021/22,2021/12/26,Big Bash League,T20,"Docklands Stadium, Melbourne",Melbourne,Melbourne Renegades,bat,MR Marsh,152,Perth Scorchers,8,
+1269659,male,2021/22,2021/12/27,Big Bash League,T20,"Bellerive Oval, Hobart",Hobart,Adelaide Strikers,bat,BR McDermott,176,Hobart Hurricanes,7,
+1269660,male,2021/22,2021/12/27,Big Bash League,T20,"Brisbane Cricket Ground, Woolloongabba, Brisbane",Brisbane,Brisbane Heat,field,JM Clarke,208,Melbourne Stars,,20
+1269661,male,2021/22,2021/12/28,Big Bash League,T20,"Manuka Oval, Canberra",Canberra,Perth Scorchers,field,SW Billings,201,Sydney Thunder,,34
+1269662,male,2021/22,2021/12/29,Big Bash League,T20,Sydney Cricket Ground,Sydney,Brisbane Heat,bat,SA Abbott,106,Sydney Sixers,2,
+1269663,male,2021/22,2021/12/29,Big Bash League,T20,"Docklands Stadium, Melbourne",Melbourne,Melbourne Renegades,field,BR McDermott,207,Hobart Hurricanes,,85
+1269664,male,2021/22,2022/01/11,Big Bash League,T20,"GMHBA Stadium, South Geelong, Victoria",Geelong,Perth Scorchers,bat,LJ Evans,197,Perth Scorchers,,47
+1269665,male,2021/22,2021/12/31,Big Bash League,T20,Adelaide Oval,Adelaide,Sydney Thunder,bat,JJS Sangha,188,Sydney Thunder,,22
+1269666,male,2021/22,2022/01/01,Big Bash League,T20,"Bellerive Oval, Hobart",Hobart,Hobart Hurricanes,field,XC Bartlett,151,Brisbane Heat,,14
+1269668,male,2021/22,2022/01/02,Big Bash League,T20,"Junction Oval, Melbourne",Melbourne,Perth Scorchers,bat,P Hatzoglou,181,Perth Scorchers,,50
+1269669,male,2021/22,2022/01/02,Big Bash League,T20,Sydney Showground Stadium,Sydney,Sydney Thunder,bat,M Gilkes,173,Sydney Thunder,,28
+1269670,male,2021/22,2022/01/03,Big Bash League,T20,Melbourne Cricket Ground,Melbourne,Melbourne Stars,bat,KW Richardson,127,Melbourne Renegades,5,
+1269671,male,2021/22,2022/01/21,Big Bash League,T20,Melbourne Cricket Ground,Melbourne,Adelaide Strikers,bat,MW Short,189,Adelaide Strikers,,22
+1269672,male,2021/22,2022/01/05,Big Bash League,T20,Adelaide Oval,Adelaide,Adelaide Strikers,field,MW Short,127,Adelaide Strikers,7,
+1269673,male,2021/22,2022/01/06,Big Bash League,T20,Carrara Oval,Carrara,Perth Scorchers,bat,GS Sandhu,135,Sydney Thunder,6,
+1269674,male,2021/22,2022/01/06,Big Bash League,T20,"GMHBA Stadium, South Geelong, Victoria",Geelong,Melbourne Renegades,field,SE Marsh,129,Melbourne Renegades,5,
+1269675,male,2021/22,2022/01/04,Big Bash League,T20,Carrara Oval,Carrara,Perth Scorchers,bat,AM Hardie,144,Perth Scorchers,,10
+1269676,male,2021/22,2022/01/15,Big Bash League,T20,Adelaide Oval,Adelaide,Melbourne Stars,field,HTRY Thornton,156,Adelaide Strikers,,23
+1269677,male,2021/22,2022/01/08,Big Bash League,T20,"Docklands Stadium, Melbourne",Melbourne,Melbourne Renegades,field,DR Sams,210,Sydney Thunder,,129
+1269678,male,2021/22,2022/01/08,Big Bash League,T20,"Brisbane Cricket Ground, Woolloongabba, Brisbane",Brisbane,Hobart Hurricanes,field,BR McDermott,145,Hobart Hurricanes,8,
+1269679,male,2021/22,2022/01/09,Big Bash League,T20,"International Sports Stadium, Coffs Harbour",Coffs Harbour,Sydney Sixers,bat,AJ Turner,152,Perth Scorchers,5,
+1269680,male,2021/22,2022/01/10,Big Bash League,T20,Melbourne Cricket Ground,Melbourne,Melbourne Stars,field,JM Clarke,140,Melbourne Stars,5,
+1269681,male,2021/22,2022/01/10,Big Bash League,T20,Melbourne Cricket Ground,Melbourne,Hobart Hurricanes,bat,AD Hales,140,Sydney Thunder,9,
+1269682,male,2021/22,2022/01/11,Big Bash League,T20,"GMHBA Stadium, South Geelong, Victoria",Geelong,Sydney Sixers,bat,BJ Dwarshuis,151,Sydney Sixers,,45
+1269683,male,2021/22,2022/01/12,Big Bash League,T20,"Brisbane Cricket Ground, Woolloongabba, Brisbane",Brisbane,Adelaide Strikers,bat,Rashid Khan,162,Adelaide Strikers,,71
+1269684,male,2021/22,2022/01/13,Big Bash League,T20,"Docklands Stadium, Melbourne",Melbourne,Hobart Hurricanes,bat,RP Meredith,178,Hobart Hurricanes,,9
+1269685,male,2021/22,2022/01/13,Big Bash League,T20,"Docklands Stadium, Melbourne",Melbourne,Melbourne Renegades,bat,GJ Maxwell,123,Melbourne Stars,6,
+1269686,male,2021/22,2022/01/14,Big Bash League,T20,Adelaide Oval,Adelaide,Adelaide Strikers,field,Fawad Ahmed,128,Adelaide Strikers,6,
+1269687,male,2021/22,2022/01/15,Big Bash League,T20,Sydney Cricket Ground,Sydney,Sydney Thunder,field,SNJ O'Keefe,198,Sydney Sixers,,60
+1269688,male,2021/22,2022/01/16,Big Bash League,T20,Melbourne Cricket Ground,Melbourne,Brisbane Heat,bat,GJ Maxwell,150,Melbourne Stars,8,
+1269689,male,2021/22,2022/01/17,Big Bash League,T20,Adelaide Oval,Adelaide,Sydney Sixers,bat,IA Cockbain,162,Adelaide Strikers,8,
+1269690,male,2021/22,2022/01/17,Big Bash League,T20,"Docklands Stadium, Melbourne",Melbourne,Brisbane Heat,bat,MR Marsh,156,Perth Scorchers,6,
+1269691,male,2021/22,2022/01/18,Big Bash League,T20,"Docklands Stadium, Melbourne",Melbourne,Hobart Hurricanes,bat,AJ Finch,183,Hobart Hurricanes,,6
+1269692,male,2021/22,2022/01/19,Big Bash League,T20,"Brisbane Cricket Ground, Woolloongabba, Brisbane",Brisbane,Brisbane Heat,field,DP Hughes,179,Sydney Sixers,,27
+1269693,male,2021/22,2022/01/19,Big Bash League,T20,Melbourne Cricket Ground,Melbourne,Hobart Hurricanes,field,GJ Maxwell,274,Melbourne Stars,,106
+1269694,male,2021/22,2022/01/19,Big Bash League,T20,Melbourne Cricket Ground,Melbourne,Melbourne Renegades,field,CJ Boyce,171,Sydney Thunder,,1
+1269695,male,2021/22,2022/01/22,Big Bash League,T20,"Docklands Stadium, Melbourne",Melbourne,Perth Scorchers,bat,JP Inglis,190,Perth Scorchers,,48
+1269696,male,2021/22,2022/01/23,Big Bash League,T20,Melbourne Cricket Ground,Melbourne,Adelaide Strikers,bat,IA Cockbain,185,Adelaide Strikers,,6
+1269697,male,2021/22,2022/01/26,Big Bash League,T20,Sydney Cricket Ground,Sydney,Sydney Sixers,field,H Kerr,168,Sydney Sixers,4,
+1269698,male,2021/22,2022/01/28,Big Bash League,T20,"Docklands Stadium, Melbourne",Melbourne,Sydney Sixers,field,LJ Evans,172,Perth Scorchers,,79
+1324624,male,2022/23,2022/12/13,Big Bash League,T20,"Manuka Oval, Canberra",Canberra,Sydney Thunder,field,GS Sandhu,123,Sydney Thunder,1,
+1324625,male,2022/23,2022/12/14,Big Bash League,T20,Adelaide Oval,Adelaide,Adelaide Strikers,bat,MW Short,185,Adelaide Strikers,,51
+1324626,male,2022/23,2022/12/15,Big Bash League,T20,"Cazaly's Stadium, Cairns",Cairns,Brisbane Heat,field,NJ Maddinson,167,Melbourne Renegades,,22
+1324627,male,2022/23,2022/12/16,Big Bash League,T20,Melbourne Cricket Ground,Melbourne,Hobart Hurricanes,field,JM Clarke,184,Melbourne Stars,,38
+1324628,male,2022/23,2022/12/16,Big Bash League,T20,Sydney Showground Stadium,Sydney,Adelaide Strikers,bat,HTRY Thornton,140,Adelaide Strikers,,124
+1324629,male,2022/23,2022/12/17,Big Bash League,T20,Perth Stadium,Perth,Perth Scorchers,bat,JA Richardson,156,Perth Scorchers,,38
+1324630,male,2022/23,2022/12/18,Big Bash League,T20,"Docklands Stadium, Melbourne",Melbourne,Sydney Thunder,bat,AJ Finch,175,Melbourne Renegades,4,
+1324631,male,2022/23,2022/12/19,Big Bash League,T20,"University of Tasmania Stadium, Launceston",Launceston,Hobart Hurricanes,bat,PG Dooley,173,Hobart Hurricanes,,8
+1324632,male,2022/23,2022/12/20,Big Bash League,T20,Adelaide Oval,Adelaide,Sydney Thunder,bat,MW Short,151,Adelaide Strikers,6,
+1324633,male,2022/23,2022/12/21,Big Bash League,T20,"GMHBA Stadium, South Geelong, Victoria",Geelong,Brisbane Heat,bat,AD Russell,138,Melbourne Renegades,4,
+1324634,male,2022/23,2022/12/22,Big Bash League,T20,Sydney Cricket Ground,Sydney,Sydney Sixers,bat,JR Philippe,138,Sydney Sixers,,6
+1324635,male,2022/23,2022/12/23,Big Bash League,T20,"Junction Oval, Melbourne",Melbourne,Perth Scorchers,bat,JP Inglis,230,Perth Scorchers,,61
+1324636,male,2022/23,2022/12/23,Big Bash League,T20,"Brisbane Cricket Ground, Woolloongabba, Brisbane",Brisbane,Brisbane Heat,bat,SW Billings,167,Brisbane Heat,,6
+1324637,male,2022/23,2022/12/24,Big Bash League,T20,"Bellerive Oval, Hobart",Hobart,Hobart Hurricanes,bat,RP Meredith,123,Hobart Hurricanes,,8
+1324638,male,2022/23,2022/12/26,Big Bash League,T20,Sydney Cricket Ground,Sydney,Sydney Sixers,field,MC Henriques,151,Sydney Sixers,7,
+1324639,male,2022/23,2022/12/26,Big Bash League,T20,Perth Stadium,Perth,Adelaide Strikers,bat,AJ Turner,134,Perth Scorchers,3,
+1324640,male,2022/23,2022/12/27,Big Bash League,T20,Sydney Showground Stadium,Sydney,Brisbane Heat,bat,M Gilkes,122,Sydney Thunder,10,
+1324641,male,2022/23,2022/12/28,Big Bash League,T20,Sydney Cricket Ground,Sydney,Melbourne Renegades,field,BJ Dwarshuis,150,Sydney Sixers,,34
+1324642,male,2022/23,2022/12/29,Big Bash League,T20,Carrara Oval,Carrara,Brisbane Heat,field,DR Sams,183,Sydney Thunder,,11
+1324643,male,2022/23,2022/12/29,Big Bash League,T20,Perth Stadium,Perth,Melbourne Stars,bat,JA Richardson,136,Perth Scorchers,6,
+1324644,male,2022/23,2022/12/30,Big Bash League,T20,"GMHBA Stadium, South Geelong, Victoria",Geelong,Melbourne Renegades,bat,CJ Jordan,125,Sydney Sixers,6,
+1324645,male,2022/23,2022/12/31,Big Bash League,T20,"Lavington Sports Oval, Albury",Albury,Hobart Hurricanes,field,O Davies,229,Sydney Thunder,,62
+1324646,male,2022/23,2022/12/31,Big Bash League,T20,Adelaide Oval,Adelaide,Melbourne Stars,bat,MP Stoinis,187,Melbourne Stars,,8
+1324647,male,2022/23,2023/01/01,Big Bash League,T20,"Docklands Stadium, Melbourne",Melbourne,Melbourne Renegades,bat,AJ Tye,156,Perth Scorchers,5,
+1324648,male,2022/23,2023/01/01,Big Bash League,T20,"Brisbane Cricket Ground, Woolloongabba, Brisbane",Brisbane,Brisbane Heat,bat,J Brown,225,Brisbane Heat,,15
+1324649,male,2022/23,2023/01/02,Big Bash League,T20,"Bellerive Oval, Hobart",Hobart,Adelaide Strikers,bat,CP Jewell,178,Hobart Hurricanes,7,
+1324650,male,2022/23,2023/01/03,Big Bash League,T20,Melbourne Cricket Ground,Melbourne,Melbourne Stars,field,TS Rogers,142,Melbourne Renegades,,33
+1324651,male,2022/23,2023/01/04,Big Bash League,T20,"North Sydney Oval, Sydney",Sydney,Sydney Sixers,field,,,,,
+1324652,male,2022/23,2023/01/04,Big Bash League,T20,Perth Stadium,Perth,Perth Scorchers,bat,O Davies,143,Sydney Thunder,6,
+1324653,male,2022/23,2023/01/05,Big Bash League,T20,Adelaide Oval,Adelaide,Adelaide Strikers,field,MW Short,230,Adelaide Strikers,7,
+1324654,male,2022/23,2023/01/06,Big Bash League,T20,Melbourne Cricket Ground,Melbourne,Sydney Sixers,field,JM Vince,174,Sydney Sixers,6,
+1324655,male,2022/23,2023/01/07,Big Bash League,T20,"Docklands Stadium, Melbourne",Melbourne,Melbourne Renegades,field,SB Harper,163,Melbourne Renegades,6,
+1324656,male,2022/23,2023/01/07,Big Bash League,T20,Perth Stadium,Perth,Perth Scorchers,field,CT Bancroft,172,Perth Scorchers,7,
+1324657,male,2022/23,2023/01/08,Big Bash League,T20,Sydney Showground Stadium,Sydney,Sydney Sixers,field,SA Abbott,134,Sydney Sixers,7,
+1324658,male,2022/23,2023/01/09,Big Bash League,T20,"Bellerive Oval, Hobart",Hobart,Hobart Hurricanes,field,NT Ellis,132,Hobart Hurricanes,2,
+1324659,male,2022/23,2023/01/10,Big Bash League,T20,Adelaide Oval,Adelaide,Melbourne Renegades,field,CA Lynn,203,Adelaide Strikers,,20
+1324660,male,2022/23,2023/01/11,Big Bash League,T20,"Brisbane Cricket Ground, Woolloongabba, Brisbane",Brisbane,Perth Scorchers,field,JP Behrendorff,156,Perth Scorchers,8,
+1324661,male,2022/23,2023/01/12,Big Bash League,T20,Melbourne Cricket Ground,Melbourne,Melbourne Stars,field,LC Hatcher,109,Melbourne Stars,9,
+1324662,male,2022/23,2023/01/13,Big Bash League,T20,Sydney Showground Stadium,Sydney,Perth Scorchers,field,AJ Tye,112,Perth Scorchers,9,
+1324663,male,2022/23,2023/01/14,Big Bash League,T20,Adelaide Oval,Adelaide,Adelaide Strikers,field,MP Kuhnemann,155,Brisbane Heat,,17
+1324664,male,2022/23,2023/01/14,Big Bash League,T20,"Docklands Stadium, Melbourne",Melbourne,Melbourne Stars,field,KW Richardson,163,Melbourne Renegades,,6
+1324665,male,2022/23,2023/01/15,Big Bash League,T20,"Bellerive Oval, Hobart",Hobart,Sydney Thunder,bat,NT Ellis,136,Hobart Hurricanes,5,
+1324666,male,2022/23,2023/01/15,Big Bash League,T20,Sydney Cricket Ground,Sydney,Perth Scorchers,field,SA Abbott,152,Sydney Sixers,,6
+1324667,male,2022/23,2023/01/16,Big Bash League,T20,Melbourne Cricket Ground,Melbourne,Brisbane Heat,field,MT Renshaw,160,Brisbane Heat,3,
+1324668,male,2022/23,2023/01/17,Big Bash League,T20,"International Sports Stadium, Coffs Harbour",Coffs Harbour,Adelaide Strikers,field,SPD Smith,204,Sydney Sixers,,59
+1324669,male,2022/23,2023/01/18,Big Bash League,T20,Perth Stadium,Perth,Hobart Hurricanes,bat,AM Hardie,147,Perth Scorchers,7,
+1324670,male,2022/23,2023/01/19,Big Bash League,T20,"Manuka Oval, Canberra",Canberra,Melbourne Renegades,bat,M Gilkes,143,Sydney Thunder,8,
+1324671,male,2022/23,2023/01/20,Big Bash League,T20,Adelaide Oval,Adelaide,Adelaide Strikers,bat,DA Payne,93,Perth Scorchers,7,
+1324672,male,2022/23,2023/01/20,Big Bash League,T20,"Brisbane Cricket Ground, Woolloongabba, Brisbane",Brisbane,Hobart Hurricanes,field,MG Neser,163,Brisbane Heat,,12
+1324673,male,2022/23,2023/01/21,Big Bash League,T20,Sydney Cricket Ground,Sydney,Sydney Sixers,bat,SPD Smith,188,Sydney Sixers,,125
+1324674,male,2022/23,2023/01/22,Big Bash League,T20,"Brisbane Cricket Ground, Woolloongabba, Brisbane",Brisbane,Brisbane Heat,bat,SR Hain,189,Brisbane Heat,,4
+1324675,male,2022/23,2023/01/22,Big Bash League,T20,Perth Stadium,Perth,Melbourne Renegades,field,CT Bancroft,213,Perth Scorchers,,10
+1324676,male,2022/23,2023/01/23,Big Bash League,T20,"Bellerive Oval, Hobart",Hobart,Hobart Hurricanes,field,SPD Smith,181,Sydney Sixers,,24
+1324677,male,2022/23,2023/01/24,Big Bash League,T20,"Docklands Stadium, Melbourne",Melbourne,Melbourne Renegades,field,AJ Finch,143,Melbourne Renegades,6,
+1324678,male,2022/23,2023/01/25,Big Bash League,T20,"University of Tasmania Stadium, Launceston",Launceston,Brisbane Heat,field,NT Ellis,121,Hobart Hurricanes,,2
+1324679,male,2022/23,2023/01/25,Big Bash League,T20,Melbourne Cricket Ground,Melbourne,Sydney Thunder,field,CJ Green,120,Sydney Thunder,3,
+1324680,male,2022/23,2023/01/27,Big Bash League,T20,Sydney Showground Stadium,Sydney,Sydney Thunder,field,UT Khawaja,61,Brisbane Heat,,8
+1324681,male,2022/23,2023/01/28,Big Bash League,T20,Perth Stadium,Perth,Sydney Sixers,bat,AJ Turner,152,Perth Scorchers,7,
+1324682,male,2022/23,2023/01/29,Big Bash League,T20,"Docklands Stadium, Melbourne",Melbourne,Brisbane Heat,field,XC Bartlett,163,Brisbane Heat,7,
+1324683,male,2022/23,2023/02/02,Big Bash League,T20,Sydney Cricket Ground,Sydney,Sydney Sixers,bat,MG Neser,117,Brisbane Heat,4,
+1324684,male,2022/23,2023/02/04,Big Bash League,T20,Perth Stadium,Perth,Brisbane Heat,bat,AJ Turner,176,Perth Scorchers,5,
+1386094,male,2023/24,2023/12/07,Big Bash League,T20,"Brisbane Cricket Ground, Woolloongabba, Brisbane",Brisbane,Melbourne Stars,field,C Munro,215,Brisbane Heat,,103
+1386095,male,2023/24,2023/12/08,Big Bash League,T20,Sydney Cricket Ground,Sydney,Melbourne Renegades,field,SPD Smith,176,Sydney Sixers,,8
+1386097,male,2023/24,2023/12/10,Big Bash League,T20,"GMHBA Stadium, South Geelong, Victoria",Geelong,Melbourne Renegades,field,,,,,
+1386098,male,2023/24,2023/12/11,Big Bash League,T20,"University of Tasmania Stadium, Launceston",Launceston,Hobart Hurricanes,bat,DP Hughes,136,Sydney Sixers,6,
+1386099,male,2023/24,2023/12/12,Big Bash League,T20,"Manuka Oval, Canberra",Canberra,Sydney Thunder,field,MJ Swepson,152,Brisbane Heat,,20
+1386100,male,2023/24,2023/12/13,Big Bash League,T20,Melbourne Cricket Ground,Melbourne,Perth Scorchers,field,H McKenzie,102,Perth Scorchers,7,
+1386101,male,2023/24,2023/12/19,Big Bash League,T20,Adelaide Oval,Adelaide,Sydney Thunder,bat,MW Short,201,Adelaide Strikers,6,
+1386102,male,2023/24,2023/12/20,Big Bash League,T20,Perth Stadium,Perth,Hobart Hurricanes,bat,JP Behrendorff,173,Perth Scorchers,9,
+1386103,male,2023/24,2023/12/21,Big Bash League,T20,"Docklands Stadium, Melbourne",Melbourne,Brisbane Heat,field,PI Walter,163,Brisbane Heat,6,
+1386104,male,2023/24,2023/12/22,Big Bash League,T20,Sydney Cricket Ground,Sydney,Adelaide Strikers,field,JC Silk,156,Sydney Sixers,,1
+1386105,male,2023/24,2023/12/23,Big Bash League,T20,"Lavington Sports Oval, Albury",Albury,Melbourne Stars,bat,Zaman Khan,173,Sydney Thunder,5,
+1386106,male,2023/24,2023/12/23,Big Bash League,T20,"Bellerive Oval, Hobart",Hobart,Hobart Hurricanes,field,MS Wade,184,Hobart Hurricanes,6,
+1386107,male,2023/24,2023/12/26,Big Bash League,T20,Sydney Cricket Ground,Sydney,Melbourne Stars,field,HWR Cartwright,155,Melbourne Stars,4,
+1386108,male,2023/24,2023/12/26,Big Bash League,T20,Perth Stadium,Perth,Melbourne Renegades,field,JP Inglis,163,Perth Scorchers,,13
+1386109,male,2023/24,2023/12/27,Big Bash League,T20,"Brisbane Cricket Ground, Woolloongabba, Brisbane",Brisbane,Brisbane Heat,bat,NA McSweeney,173,Brisbane Heat,,15
+1386110,male,2023/24,2023/12/28,Big Bash League,T20,"Bellerive Oval, Hobart",Hobart,Melbourne Stars,field,GJ Maxwell,67,Melbourne Stars,7,
+1386111,male,2023/24,2023/12/29,Big Bash League,T20,"Docklands Stadium, Melbourne",Melbourne,Adelaide Strikers,bat,J Fraser-McGurk,178,Melbourne Renegades,4,
+1386112,male,2023/24,2023/12/30,Big Bash League,T20,Sydney Showground Stadium,Sydney,Sydney Thunder,bat,,152,,,
+1386113,male,2023/24,2023/12/31,Big Bash League,T20,Adelaide Oval,Adelaide,Melbourne Stars,field,MP Stoinis,206,Melbourne Stars,7,
+1386114,male,2023/24,2024/01/01,Big Bash League,T20,"Bellerive Oval, Hobart",Hobart,Hobart Hurricanes,field,CJ Jordan,151,Hobart Hurricanes,7,
+1386116,male,2023/24,2024/01/02,Big Bash League,T20,Melbourne Cricket Ground,Melbourne,Melbourne Stars,field,GJ Maxwell,98,Melbourne Stars,8,
+1386117,male,2023/24,2024/01/03,Big Bash League,T20,"International Sports Stadium, Coffs Harbour",Coffs Harbour,Brisbane Heat,field,PI Walter,102,Brisbane Heat,,3
+1386118,male,2023/24,2024/01/03,Big Bash League,T20,Perth Stadium,Perth,Adelaide Strikers,field,LJ Evans,212,Perth Scorchers,,42
+1386119,male,2023/24,2024/01/04,Big Bash League,T20,"Docklands Stadium, Melbourne",Melbourne,Hobart Hurricanes,field,SR Hain,148,Hobart Hurricanes,6,
+1386120,male,2023/24,2024/01/05,Big Bash League,T20,Adelaide Oval,Adelaide,Adelaide Strikers,field,MW Short,154,Adelaide Strikers,9,
+1386121,male,2023/24,2024/01/06,Big Bash League,T20,Melbourne Cricket Ground,Melbourne,Sydney Sixers,field,JM Vince,157,Sydney Sixers,7,
+1386122,male,2023/24,2024/01/07,Big Bash League,T20,"Brisbane Cricket Ground, Woolloongabba, Brisbane",Brisbane,Hobart Hurricanes,field,XC Bartlett,118,Brisbane Heat,,1
+1386123,male,2023/24,2024/01/08,Big Bash League,T20,Sydney Showground Stadium,Sydney,Perth Scorchers,field,AC Agar,138,Perth Scorchers,7,
+1386124,male,2023/24,2024/01/09,Big Bash League,T20,Adelaide Oval,Adelaide,Adelaide Strikers,field,CJ Boyce,166,Adelaide Strikers,5,
+1386125,male,2023/24,2024/01/10,Big Bash League,T20,"Brisbane Cricket Ground, Woolloongabba, Brisbane",Brisbane,Brisbane Heat,bat,MG Neser,192,Brisbane Heat,,23
+1386126,male,2023/24,2024/01/11,Big Bash League,T20,"Bellerive Oval, Hobart",Hobart,Adelaide Strikers,field,J Weatherald,168,Adelaide Strikers,8,
+1386127,male,2023/24,2024/01/12,Big Bash League,T20,Sydney Cricket Ground,Sydney,Sydney Thunder,field,SNJ O'Keefe,152,Sydney Sixers,,19
+1386128,male,2023/24,2024/01/13,Big Bash League,T20,Perth Stadium,Perth,Perth Scorchers,bat,NR Hobson,164,Perth Scorchers,,35
+1386129,male,2023/24,2024/01/13,Big Bash League,T20,"Docklands Stadium, Melbourne",Melbourne,Melbourne Renegades,field,SE Marsh,138,Melbourne Renegades,6,
+1386130,male,2023/24,2024/01/14,Big Bash League,T20,"Manuka Oval, Canberra",Canberra,Sydney Thunder,bat,L Pope,141,Adelaide Strikers,9,
+1386131,male,2023/24,2024/01/15,Big Bash League,T20,Melbourne Cricket Ground,Melbourne,Melbourne Stars,field,NT Ellis,188,Hobart Hurricanes,,7
+1386132,male,2023/24,2024/01/16,Big Bash League,T20,Perth Stadium,Perth,Perth Scorchers,bat,DP Hughes,198,Sydney Sixers,3,
+1386134,male,2023/24,2024/01/19,Big Bash League,T20,Carrara Oval,Carrara,Brisbane Heat,field,BJ Dwarshuis,153,Sydney Sixers,,39
+1386135,male,2023/24,2024/01/20,Big Bash League,T20,Perth Stadium,Perth,Perth Scorchers,field,L Pope,156,Adelaide Strikers,,50
+1386136,male,2023/24,2024/01/22,Big Bash League,T20,Carrara Oval,Carrara,Brisbane Heat,bat,J Brown,215,Brisbane Heat,,54
+1386137,male,2023/24,2024/01/24,Big Bash League,T20,Sydney Cricket Ground,Sydney,Sydney Sixers,field,SH Johnson,167,Brisbane Heat,,54
+1443057,male,2024/25,2024/12/15,Big Bash League,T20,Perth Stadium,Perth,Melbourne Stars,bat,JA Richardson,147,Perth Scorchers,6,
+1443058,male,2024/25,2024/12/16,Big Bash League,T20,Sydney Cricket Ground,Sydney,Sydney Sixers,field,MC Henriques,170,Sydney Sixers,5,
+1443059,male,2024/25,2024/12/17,Big Bash League,T20,"Manuka Oval, Canberra",Canberra,Sydney Thunder,field,DR Sams,183,Sydney Thunder,2,
+1443060,male,2024/25,2024/12/18,Big Bash League,T20,Melbourne Cricket Ground,Melbourne,Brisbane Heat,field,JJ Peirson,163,Brisbane Heat,8,
+1443061,male,2024/25,2024/12/19,Big Bash League,T20,"GMHBA Stadium, South Geelong, Victoria",Geelong,Melbourne Renegades,field,TS Rogers,75,Melbourne Renegades,6,
+1443062,male,2024/25,2024/12/20,Big Bash League,T20,Adelaide Oval,Adelaide,Melbourne Stars,field,L Pope,166,Adelaide Strikers,,15
+1443063,male,2024/25,2024/12/21,Big Bash League,T20,"Bellerive Oval, Hobart",Hobart,Hobart Hurricanes,field,MJ Owen,156,Hobart Hurricanes,8,
+1443064,male,2024/25,2024/12/21,Big Bash League,T20,Sydney Showground Stadium,Sydney,Sydney Sixers,field,BJ Dwarshuis,164,Sydney Sixers,5,
+1443065,male,2024/25,2024/12/22,Big Bash League,T20,"Brisbane Cricket Ground, Woolloongabba, Brisbane",Brisbane,Brisbane Heat,field,NA McSweeney,175,Brisbane Heat,3,
+1443066,male,2024/25,2024/12/23,Big Bash League,T20,"Docklands Stadium, Melbourne",Melbourne,Melbourne Renegades,field,TS Rogers,144,Melbourne Renegades,2,
+1443067,male,2024/25,2024/12/26,Big Bash League,T20,Sydney Cricket Ground,Sydney,Sydney Sixers,field,JM Vince,195,Sydney Sixers,8,
+1443068,male,2024/25,2024/12/26,Big Bash League,T20,Perth Stadium,Perth,Brisbane Heat,field,NR Hobson,166,Perth Scorchers,,33
+1443069,male,2024/25,2024/12/27,Big Bash League,T20,Adelaide Oval,Adelaide,Adelaide Strikers,field,BR McDermott,215,Hobart Hurricanes,,11
+1443070,male,2024/25,2024/12/28,Big Bash League,T20,"Manuka Oval, Canberra",Canberra,Melbourne Stars,field,SW Billings,183,Sydney Thunder,,18
+1443071,male,2024/25,2024/12/29,Big Bash League,T20,"Brisbane Cricket Ground, Woolloongabba, Brisbane",Brisbane,Sydney Sixers,field,BJ Dwarshuis,139,Sydney Sixers,8,
+1443072,male,2024/25,2024/12/30,Big Bash League,T20,Sydney Showground Stadium,Sydney,Melbourne Renegades,field,DA Warner,157,Sydney Thunder,,8
+1443073,male,2024/25,2024/12/31,Big Bash League,T20,Adelaide Oval,Adelaide,Perth Scorchers,field,C Connolly,143,Perth Scorchers,7,
+1443074,male,2024/25,2025/01/01,Big Bash League,T20,"Bellerive Oval, Hobart",Hobart,Sydney Sixers,field,Nikhil Chaudhary,162,Hobart Hurricanes,,50
+1443075,male,2024/25,2025/01/01,Big Bash League,T20,"Brisbane Cricket Ground, Woolloongabba, Brisbane",Brisbane,Melbourne Stars,field,MP Stoinis,150,Melbourne Stars,5,
+1443076,male,2024/25,2025/01/02,Big Bash League,T20,"Docklands Stadium, Melbourne",Melbourne,Adelaide Strikers,field,CA Lynn,143,Adelaide Strikers,5,
+1443078,male,2024/25,2025/01/03,Big Bash League,T20,Perth Stadium,Perth,Sydney Thunder,field,SE Rutherford,178,Sydney Thunder,4,
+1443079,male,2024/25,2025/01/04,Big Bash League,T20,Melbourne Cricket Ground,Melbourne,Melbourne Stars,field,BM Duckett,169,Melbourne Stars,5,
+1443080,male,2024/25,2025/01/05,Big Bash League,T20,"Bellerive Oval, Hobart",Hobart,Adelaide Strikers,bat,TH David,187,Hobart Hurricanes,5,
+1443081,male,2024/25,2025/01/06,Big Bash League,T20,"Brisbane Cricket Ground, Woolloongabba, Brisbane",Brisbane,Brisbane Heat,field,M Bryant,174,Brisbane Heat,5,
+1443082,male,2024/25,2025/01/07,Big Bash League,T20,Perth Stadium,Perth,Melbourne Renegades,field,TS Rogers,148,Melbourne Renegades,4,
+1443084,male,2024/25,2025/01/09,Big Bash League,T20,Melbourne Cricket Ground,Melbourne,Sydney Sixers,field,GJ Maxwell,157,Melbourne Stars,,16
+1443085,male,2024/25,2025/01/10,Big Bash League,T20,"Bellerive Oval, Hobart",Hobart,Hobart Hurricanes,field,TH David,165,Hobart Hurricanes,6,
+1443086,male,2024/25,2025/01/11,Big Bash League,T20,Sydney Cricket Ground,Sydney,Perth Scorchers,field,SPD Smith,221,Sydney Sixers,,14
+1443087,male,2024/25,2025/01/11,Big Bash League,T20,Adelaide Oval,Adelaide,Brisbane Heat,field,MW Short,252,Adelaide Strikers,,56
+1443088,male,2024/25,2025/01/12,Big Bash League,T20,"Docklands Stadium, Melbourne",Melbourne,Melbourne Renegades,field,GJ Maxwell,166,Melbourne Stars,,42
+1443089,male,2024/25,2025/01/13,Big Bash League,T20,Sydney Showground Stadium,Sydney,Perth Scorchers,field,TD Andrews,159,Sydney Thunder,,61
+1443090,male,2024/25,2025/01/14,Big Bash League,T20,"Bellerive Oval, Hobart",Hobart,Hobart Hurricanes,field,JG Bethell,155,Hobart Hurricanes,4,
+1443091,male,2024/25,2025/01/15,Big Bash League,T20,Adelaide Oval,Adelaide,Sydney Sixers,field,SPD Smith,183,Sydney Sixers,3,
+1443092,male,2024/25,2025/01/16,Big Bash League,T20,"Brisbane Cricket Ground, Woolloongabba, Brisbane",Brisbane,Hobart Hurricanes,field,CP Jewell,202,Hobart Hurricanes,5,
+1443093,male,2024/25,2025/01/17,Big Bash League,T20,Sydney Cricket Ground,Sydney,Sydney Sixers,field,,,,,
+1443094,male,2024/25,2025/01/18,Big Bash League,T20,"Docklands Stadium, Melbourne",Melbourne,Melbourne Renegades,field,J Fraser-McGurk,197,Melbourne Renegades,3,
+1443095,male,2024/25,2025/01/18,Big Bash League,T20,Perth Stadium,Perth,Perth Scorchers,field,JP Behrendorff,162,Perth Scorchers,5,
+1443096,male,2024/25,2025/01/19,Big Bash League,T20,Melbourne Cricket Ground,Melbourne,Hobart Hurricanes,field,GJ Maxwell,220,Melbourne Stars,,40
+1443097,male,2024/25,2025/01/21,Big Bash League,T20,"Bellerive Oval, Hobart",Hobart,Sydney Sixers,field,RP Meredith,174,Hobart Hurricanes,,12
+1443098,male,2024/25,2025/01/22,Big Bash League,T20,Sydney Showground Stadium,Sydney,Melbourne Stars,field,N McAndrew,136,Sydney Thunder,,21
+1443099,male,2024/25,2025/01/24,Big Bash League,T20,Sydney Cricket Ground,Sydney,Sydney Thunder,field,SW Billings,152,Sydney Thunder,4,
+1443100,male,2024/25,2025/01/27,Big Bash League,T20,"Bellerive Oval, Hobart",Hobart,Hobart Hurricanes,field,MJ Owen,183,Hobart Hurricanes,7,
+1493238,male,2025/26,2025/12/14,Big Bash League,T20,Perth Stadium,Perth,Perth Scorchers,field,C Connolly,114,Perth Scorchers,5,
+1493239,male,2025/26,2025/12/15,Big Bash League,T20,"GMHBA Stadium, South Geelong, Victoria",Geelong,Brisbane Heat,field,TL Seifert,213,Melbourne Renegades,,14
+1493240,male,2025/26,2025/12/16,Big Bash League,T20,"Bellerive Oval, Hobart",Hobart,Hobart Hurricanes,field,CJ Jordan,181,Hobart Hurricanes,4,
+1493241,male,2025/26,2025/12/17,Big Bash League,T20,Sydney Cricket Ground,Sydney,Adelaide Strikers,field,J Overton,160,Adelaide Strikers,3,
+1493242,male,2025/26,2025/12/18,Big Bash League,T20,Melbourne Cricket Ground,Melbourne,Melbourne Stars,field,MP Stoinis,159,Melbourne Stars,8,
+1493243,male,2025/26,2025/12/19,Big Bash League,T20,"Brisbane Cricket Ground, Woolloongabba, Brisbane",Brisbane,Brisbane Heat,field,MT Renshaw,258,Brisbane Heat,8,
+1493244,male,2025/26,2025/12/20,Big Bash League,T20,Sydney Showground Stadium,Sydney,Sydney Thunder,field,JR Philippe,199,Sydney Sixers,,47
+1493245,male,2025/26,2025/12/21,Big Bash League,T20,"GMHBA Stadium, South Geelong, Victoria",Geelong,Hobart Hurricanes,field,CJ Jordan,146,Hobart Hurricanes,7,
+1493246,male,2025/26,2025/12/22,Big Bash League,T20,"Manuka Oval, Canberra",Canberra,Brisbane Heat,field,M Gilkes,194,Sydney Thunder,,34
+1493247,male,2025/26,2025/12/23,Big Bash League,T20,Adelaide Oval,Adelaide,Melbourne Stars,field,TK Curran,156,Melbourne Stars,6,
+1493248,male,2025/26,2025/12/26,Big Bash League,T20,Sydney Cricket Ground,Sydney,Melbourne Stars,field,SB Harper,145,Melbourne Stars,7,
+1493249,male,2025/26,2025/12/26,Big Bash League,T20,Perth Stadium,Perth,Hobart Hurricanes,field,TH David,151,Hobart Hurricanes,4,
+1493250,male,2025/26,2025/12/27,Big Bash League,T20,"Brisbane Cricket Ground, Woolloongabba, Brisbane",Brisbane,Adelaide Strikers,field,XC Bartlett,180,Brisbane Heat,,7
+1493251,male,2025/26,2025/12/28,Big Bash League,T20,"Manuka Oval, Canberra",Canberra,Melbourne Stars,field,Haris Rauf,129,Melbourne Stars,9,
+1493252,male,2025/26,2025/12/29,Big Bash League,T20,"Bellerive Oval, Hobart",Hobart,Hobart Hurricanes,field,NT Ellis,163,Hobart Hurricanes,4,
+1493253,male,2025/26,2025/12/30,Big Bash League,T20,Sydney Showground Stadium,Sydney,Sydney Thunder,field,AJ Turner,203,Perth Scorchers,,71
+1493254,male,2025/26,2025/12/31,Big Bash League,T20,Adelaide Oval,Adelaide,Adelaide Strikers,field,L Scott,122,Adelaide Strikers,7,
+1493255,male,2025/26,2026/01/01,Big Bash League,T20,"Docklands Stadium, Melbourne",Melbourne,Sydney Sixers,field,SA Abbott,165,Sydney Sixers,6,
+1493256,male,2025/26,2026/01/01,Big Bash League,T20,"Bellerive Oval, Hobart",Hobart,Hobart Hurricanes,field,MR Marsh,230,Perth Scorchers,,40
+1493257,male,2025/26,2026/01/02,Big Bash League,T20,"Brisbane Cricket Ground, Woolloongabba, Brisbane",Brisbane,Brisbane Heat,field,M Bryant,196,Brisbane Heat,4,
+1493258,male,2025/26,2026/01/03,Big Bash League,T20,Sydney Showground Stadium,Sydney,Hobart Hurricanes,field,DA Warner,206,Hobart Hurricanes,6,
+1493259,male,2025/26,2026/01/04,Big Bash League,T20,Melbourne Cricket Ground,Melbourne,Melbourne Renegades,field,J Brown,174,Melbourne Renegades,4,
+1493260,male,2025/26,2026/01/04,Big Bash League,T20,Perth Stadium,Perth,Adelaide Strikers,field,JS Paris,154,Perth Scorchers,,33
+1493261,male,2025/26,2026/01/05,Big Bash League,T20,"International Sports Stadium, Coffs Harbour",Coffs Harbour,Sydney Sixers,field,JA Davies,115,Sydney Sixers,3,
+1493262,male,2025/26,2026/01/06,Big Bash League,T20,Adelaide Oval,Adelaide,Sydney Thunder,field,J Overton,166,Adelaide Strikers,,6
+1493263,male,2025/26,2026/01/07,Big Bash League,T20,Perth Stadium,Perth,Melbourne Renegades,field,OJ Peake,128,Melbourne Renegades,4,
+1493264,male,2025/26,2026/01/08,Big Bash League,T20,Melbourne Cricket Ground,Melbourne,Sydney Sixers,field,JA Davies,129,Sydney Sixers,6,
+1493265,male,2025/26,2026/01/09,Big Bash League,T20,"Bellerive Oval, Hobart",Hobart,Adelaide Strikers,field,NT Ellis,179,Hobart Hurricanes,,37
+1493266,male,2025/26,2026/01/10,Big Bash League,T20,"Brisbane Cricket Ground, Woolloongabba, Brisbane",Brisbane,Sydney Thunder,bat,UT Khawaja,181,Brisbane Heat,7,
+1493267,male,2025/26,2026/01/10,Big Bash League,T20,"Docklands Stadium, Melbourne",Melbourne,Melbourne Stars,field,SB Harper,167,Melbourne Stars,8,
+1493268,male,2025/26,2026/01/11,Big Bash League,T20,Sydney Cricket Ground,Sydney,Hobart Hurricanes,field,,,,,
+1493269,male,2025/26,2026/01/11,Big Bash League,T20,Adelaide Oval,Adelaide,Adelaide Strikers,field,MR Marsh,233,Perth Scorchers,,32
+1493270,male,2025/26,2026/01/12,Big Bash League,T20,Sydney Showground Stadium,Sydney,Sydney Thunder,field,CJ Green,140,Sydney Thunder,4,
+1493271,male,2025/26,2026/01/13,Big Bash League,T20,Melbourne Cricket Ground,Melbourne,Melbourne Stars,field,TK Curran,84,Melbourne Stars,6,
+1493272,male,2025/26,2026/01/14,Big Bash League,T20,"Bellerive Oval, Hobart",Hobart,Hobart Hurricanes,field,MP Kuhnemann,161,Brisbane Heat,,3
+1493273,male,2025/26,2026/01/15,Big Bash League,T20,"Docklands Stadium, Melbourne",Melbourne,Melbourne Renegades,field,FH Allen,220,Perth Scorchers,,50
+1493274,male,2025/26,2026/01/16,Big Bash League,T20,Sydney Cricket Ground,Sydney,Sydney Sixers,field,SPD Smith,190,Sydney Sixers,5,
+1493275,male,2025/26,2026/01/17,Big Bash League,T20,Adelaide Oval,Adelaide,Adelaide Strikers,field,T Shamsi,100,Adelaide Strikers,8,
+1493276,male,2025/26,2026/01/17,Big Bash League,T20,Perth Stadium,Perth,Perth Scorchers,field,JA Richardson,131,Perth Scorchers,6,
+1493277,male,2025/26,2026/01/18,Big Bash League,T20,"Brisbane Cricket Ground, Woolloongabba, Brisbane",Brisbane,Sydney Sixers,field,SM Curran,172,Sydney Sixers,5,
+1493278,male,2025/26,2026/01/20,Big Bash League,T20,Perth Stadium,Perth,Sydney Sixers,field,FH Allen,148,Perth Scorchers,,48
+1493279,male,2025/26,2026/01/21,Big Bash League,T20,"Bellerive Oval, Hobart",Hobart,Melbourne Stars,field,BJ Webster,85,Hobart Hurricanes,,3
+1493280,male,2025/26,2026/01/23,Big Bash League,T20,Sydney Cricket Ground,Sydney,Hobart Hurricanes,field,JA Davies,199,Sydney Sixers,,57
+1493281,male,2025/26,2026/01/25,Big Bash League,T20,Perth Stadium,Perth,Perth Scorchers,field,DA Payne,133,Perth Scorchers,6,
+524915,male,2011/12,2011/12/16,Big Bash League,T20,Sydney Cricket Ground,,Brisbane Heat,bat,BJ Haddin,140,Sydney Sixers,7,
+524916,male,2011/12,2011/12/17,Big Bash League,T20,Melbourne Cricket Ground,,Sydney Thunder,field,DA Warner,154,Sydney Thunder,6,
+524917,male,2011/12,2011/12/18,Big Bash League,T20,Adelaide Oval,,Melbourne Renegades,field,M Klinger,190,Adelaide Strikers,,67
+524918,male,2011/12,2011/12/18,Big Bash League,T20,Western Australia Cricket Association Ground,Perth,Hobart Hurricanes,bat,BW Hilfenhaus,141,Hobart Hurricanes,,31
+524919,male,2011/12,2011/12/20,Big Bash League,T20,"Brisbane Cricket Ground, Woolloongabba",Brisbane,Melbourne Stars,bat,RJ Quiney,178,Melbourne Stars,,8
+524920,male,2011/12,2011/12/21,Big Bash League,T20,Bellerive Oval,Hobart,Hobart Hurricanes,bat,TR Birt,170,Hobart Hurricanes,,42
+524921,male,2011/12,2011/12/22,Big Bash League,T20,Docklands Stadium,Melbourne,Melbourne Renegades,bat,SE Marsh,189,Perth Scorchers,8,
+524922,male,2011/12,2011/12/23,Big Bash League,T20,Stadium Australia,Sydney,Adelaide Strikers,bat,CH Gayle,156,Sydney Thunder,6,
+524923,male,2011/12,2011/12/27,Big Bash League,T20,Sydney Cricket Ground,,Sydney Sixers,bat,DJ Bravo,167,Sydney Sixers,,2
+524924,male,2011/12,2011/12/28,Big Bash League,T20,Adelaide Oval,,Hobart Hurricanes,bat,XJ Doherty,172,Hobart Hurricanes,,14
+524925,male,2011/12,2011/12/29,Big Bash League,T20,Western Australia Cricket Association Ground,Perth,Perth Scorchers,bat,MJ North,163,Perth Scorchers,,10
+524926,male,2011/12,2011/12/30,Big Bash League,T20,Stadium Australia,Sydney,Melbourne Renegades,bat,Shahid Afridi,141,Melbourne Renegades,,6
+524927,male,2011/12,2012/01/01,Big Bash League,T20,Bellerive Oval,Hobart,Sydney Thunder,bat,Naved-ul-Hasan,139,Hobart Hurricanes,5,
+524928,male,2011/12,2012/01/02,Big Bash League,T20,Docklands Stadium,Melbourne,Sydney Sixers,bat,AB McDonald,162,Melbourne Renegades,8,
+524930,male,2011/12,2012/01/04,Big Bash League,T20,Melbourne Cricket Ground,,Perth Scorchers,bat,HH Gibbs,137,Perth Scorchers,,8
+524933,male,2011/12,2012/01/08,Big Bash League,T20,Stadium Australia,Sydney,Sydney Sixers,bat,MA Starc,47,Sydney Sixers,,17
+524934,male,2011/12,2012/01/08,Big Bash League,T20,Western Australia Cricket Association Ground,Perth,Perth Scorchers,bat,GB Hogg,185,Perth Scorchers,,42
+524935,male,2011/12,2012/01/09,Big Bash League,T20,Bellerive Oval,Hobart,Melbourne Stars,bat,LJ Wright,204,Melbourne Stars,,19
+524936,male,2011/12,2012/01/10,Big Bash League,T20,Adelaide Oval,,Sydney Sixers,bat,SNJ O'Keefe,152,Sydney Sixers,,64
+524938,male,2011/12,2012/01/12,Big Bash League,T20,Docklands Stadium,Melbourne,Brisbane Heat,bat,DL Vettori,169,Brisbane Heat,,12
+524939,male,2011/12,2012/01/17,Big Bash League,T20,"Brisbane Cricket Ground, Woolloongabba",Brisbane,Sydney Thunder,field,DT Christian,196,Brisbane Heat,,91
+524940,male,2011/12,2012/01/18,Big Bash League,T20,Bellerive Oval,Hobart,Melbourne Renegades,bat,OA Shah,174,Hobart Hurricanes,7,
+524941,male,2011/12,2012/01/18,Big Bash League,T20,Sydney Cricket Ground,,Sydney Sixers,bat,MA Starc,177,Sydney Sixers,,1
+524942,male,2011/12,2012/01/19,Big Bash League,T20,Melbourne Cricket Ground,,Adelaide Strikers,bat,CJ McKay,126,Melbourne Stars,6,
+524943,male,2011/12,2012/01/21,Big Bash League,T20,Western Australia Cricket Association Ground,Perth,Perth Scorchers,bat,MR Marsh,175,Perth Scorchers,,11
+524944,male,2011/12,2012/01/22,Big Bash League,T20,Bellerive Oval,Hobart,Sydney Sixers,bat,NJ Maddinson,154,Sydney Sixers,,7
+524945,male,2011/12,2012/01/28,Big Bash League,T20,Western Australia Cricket Association Ground,Perth,Perth Scorchers,bat,MC Henriques,157,Sydney Sixers,7,
+571232,male,2012/13,2012/12/07,Big Bash League,T20,Docklands Stadium,Melbourne,Melbourne Stars,bat,AJ Finch,168,Melbourne Renegades,8,
+571233,male,2012/13,2012/12/08,Big Bash League,T20,Sydney Cricket Ground,,Sydney Sixers,field,BJ Haddin,144,Sydney Sixers,7,
+571234,male,2012/13,2012/12/09,Big Bash League,T20,"Brisbane Cricket Ground, Woolloongabba",Brisbane,Brisbane Heat,bat,TR Birt,173,Hobart Hurricanes,8,
+571235,male,2012/13,2012/12/09,Big Bash League,T20,Western Australia Cricket Association Ground,Perth,Perth Scorchers,bat,PJ Hughes,163,Adelaide Strikers,6,
+571236,male,2012/13,2012/12/12,Big Bash League,T20,Western Australia Cricket Association Ground,Perth,Melbourne Stars,field,SL Malinga,20,Melbourne Stars,,24
+571237,male,2012/13,2012/12/13,Big Bash League,T20,Adelaide Oval,,Brisbane Heat,field,LA Pomersbach,186,Brisbane Heat,3,
+571238,male,2012/13,2012/12/14,Big Bash League,T20,Stadium Australia,Sydney,Melbourne Renegades,field,AW O'Brien,117,Melbourne Renegades,5,
+571239,male,2012/13,2012/12/15,Big Bash League,T20,Melbourne Cricket Ground,,Melbourne Stars,field,CJ McKay,135,Melbourne Stars,4,
+571240,male,2012/13,2012/12/16,Big Bash League,T20,Sydney Cricket Ground,,Perth Scorchers,field,MA Beer,114,Perth Scorchers,7,
+571241,male,2012/13,2012/12/18,Big Bash League,T20,"Brisbane Cricket Ground, Woolloongabba",Brisbane,Perth Scorchers,field,NM Coulter-Nile,51,Perth Scorchers,9,
+571242,male,2012/13,2012/12/19,Big Bash League,T20,Docklands Stadium,Melbourne,Melbourne Renegades,field,MN Samuels,103,Melbourne Renegades,7,
+571243,male,2012/13,2012/12/20,Big Bash League,T20,Stadium Australia,Sydney,Sydney Thunder,field,KW Richardson,178,Adelaide Strikers,,51
+571245,male,2012/13,2012/12/22,Big Bash League,T20,Docklands Stadium,Melbourne,Brisbane Heat,bat,BCJ Cutting,134,Melbourne Renegades,6,
+571247,male,2012/13,2012/12/23,Big Bash League,T20,Adelaide Oval,,Sydney Sixers,bat,TP Ludeman,136,Adelaide Strikers,9,
+571248,male,2012/13,2012/12/26,Big Bash League,T20,Sydney Cricket Ground,,Hobart Hurricanes,field,RT Ponting,155,Hobart Hurricanes,7,
+571249,male,2012/13,2012/12/27,Big Bash League,T20,Adelaide Oval,,Melbourne Stars,bat,BJ Hodge,176,Melbourne Stars,,8
+571250,male,2012/13,2012/12/28,Big Bash League,T20,Stadium Australia,Sydney,Sydney Thunder,bat,DT Christian,127,Brisbane Heat,5,
+571251,male,2012/13,2012/12/29,Big Bash League,T20,Western Australia Cricket Association Ground,Perth,Melbourne Renegades,field,SE Marsh,188,Perth Scorchers,,51
+571252,male,2012/13,2012/12/30,Big Bash League,T20,Stadium Australia,Sydney,Sydney Thunder,bat,DP Hughes,133,Sydney Sixers,4,
+571254,male,2012/13,2013/01/02,Big Bash League,T20,Docklands Stadium,Melbourne,Adelaide Strikers,field,M Muralitharan,156,Melbourne Renegades,,48
+571256,male,2012/13,2013/01/04,Big Bash League,T20,Western Australia Cricket Association Ground,Perth,Sydney Thunder,bat,JP Behrendorff,114,Perth Scorchers,9,
+571258,male,2012/13,2013/01/06,Big Bash League,T20,Melbourne Cricket Ground,,Melbourne Stars,bat,AJ Finch,147,Melbourne Renegades,9,
+571259,male,2012/13,2013/01/07,Big Bash League,T20,"Brisbane Cricket Ground, Woolloongabba",Brisbane,Brisbane Heat,bat,MJ Lumb,128,Sydney Sixers,5,
+571260,male,2012/13,2013/01/08,Big Bash League,T20,Melbourne Cricket Ground,,Melbourne Stars,bat,CH Gayle,146,Melbourne Stars,,13
+571262,male,2012/13,2013/01/10,Big Bash League,T20,Adelaide Oval,,Perth Scorchers,bat,SE Marsh,190,Perth Scorchers,,98
+571264,male,2012/13,2013/01/15,Big Bash League,T20,Docklands Stadium,Melbourne,Brisbane Heat,bat,LA Pomersbach,184,Brisbane Heat,,15
+571265,male,2012/13,2013/01/16,Big Bash League,T20,Western Australia Cricket Association Ground,Perth,Perth Scorchers,field,SE Marsh,139,Perth Scorchers,8,
+571266,male,2012/13,2013/01/19,Big Bash League,T20,Western Australia Cricket Association Ground,Perth,Brisbane Heat,bat,NM Hauritz,168,Brisbane Heat,,34
+654031,male,2013/14,2013/12/20,Big Bash League,T20,Melbourne Cricket Ground,,Melbourne Renegades,field,LJ Wright,209,Melbourne Stars,,76
+654033,male,2013/14,2013/12/21,Big Bash League,T20,Sydney Cricket Ground,,Sydney Sixers,field,NJ Maddinson,167,Sydney Sixers,6,
+654035,male,2013/14,2013/12/22,Big Bash League,T20,Bellerive Oval,Hobart,Hobart Hurricanes,field,,,,,
+654037,male,2013/14,2013/12/22,Big Bash League,T20,"Brisbane Cricket Ground, Woolloongabba",Brisbane,Perth Scorchers,bat,CA Lynn,152,Brisbane Heat,3,
+654039,male,2013/14,2013/12/26,Big Bash League,T20,Western Australia Cricket Association Ground,Perth,Perth Scorchers,bat,Yasir Arafat,118,Perth Scorchers,,6
+654041,male,2013/14,2013/12/27,Big Bash League,T20,Stadium Australia,Sydney,Sydney Thunder,field,MEK Hussey,154,Adelaide Strikers,,6
+654043,male,2013/14,2013/12/28,Big Bash League,T20,"Brisbane Cricket Ground, Woolloongabba",Brisbane,Brisbane Heat,bat,BR Dunk,210,Hobart Hurricanes,3,
+654045,male,2013/14,2013/12/29,Big Bash League,T20,Sydney Cricket Ground,,Sydney Sixers,field,GJ Maxwell,201,Melbourne Stars,,77
+654047,male,2013/14,2013/12/30,Big Bash League,T20,Docklands Stadium,Melbourne,Melbourne Renegades,bat,AJ Finch,211,Melbourne Renegades,,57
+654051,male,2013/14,2014/01/01,Big Bash League,T20,Bellerive Oval,Hobart,Melbourne Renegades,bat,JL Pattinson,163,Melbourne Renegades,,51
+654053,male,2013/14,2014/01/01,Big Bash League,T20,Stadium Australia,Sydney,Sydney Thunder,bat,BJ Hodge,156,Melbourne Stars,7,
+654055,male,2013/14,2014/01/02,Big Bash League,T20,"Brisbane Cricket Ground, Woolloongabba",Brisbane,Brisbane Heat,field,B Lee,141,Sydney Sixers,,4
+654057,male,2013/14,2014/01/03,Big Bash League,T20,Western Australia Cricket Association Ground,Perth,Sydney Thunder,bat,SM Katich,158,Perth Scorchers,6,
+654059,male,2013/14,2014/01/04,Big Bash League,T20,Docklands Stadium,Melbourne,Melbourne Renegades,bat,CL White,164,Melbourne Stars,9,
+654061,male,2013/14,2014/01/05,Big Bash League,T20,Adelaide Oval,,Adelaide Strikers,bat,MJ Lumb,150,Sydney Sixers,6,
+654063,male,2013/14,2014/01/07,Big Bash League,T20,Western Australia Cricket Association Ground,Perth,Perth Scorchers,bat,NM Coulter-Nile,154,Perth Scorchers,,6
+654065,male,2013/14,2014/01/08,Big Bash League,T20,Stadium Australia,Sydney,Brisbane Heat,bat,CA Lynn,166,Brisbane Heat,,48
+654067,male,2013/14,2014/01/09,Big Bash League,T20,Melbourne Cricket Ground,,Adelaide Strikers,bat,JP Faulkner,91,Melbourne Stars,8,
+654069,male,2013/14,2014/01/10,Big Bash League,T20,Sydney Cricket Ground,,Perth Scorchers,bat,Yasir Arafat,154,,,
+654071,male,2013/14,2014/01/11,Big Bash League,T20,Bellerive Oval,Hobart,Hobart Hurricanes,bat,BR Dunk,168,Hobart Hurricanes,,73
+654073,male,2013/14,2014/01/11,Big Bash League,T20,"Brisbane Cricket Ground, Woolloongabba",Brisbane,Brisbane Heat,bat,LJ Wright,145,Melbourne Stars,3,
+654075,male,2013/14,2014/01/14,Big Bash League,T20,Docklands Stadium,Melbourne,Melbourne Renegades,bat,GS Sandhu,105,Sydney Thunder,9,
+654077,male,2013/14,2014/01/15,Big Bash League,T20,Sydney Cricket Ground,,Sydney Sixers,bat,SPD Smith,180,Sydney Sixers,,7
+654079,male,2013/14,2014/01/16,Big Bash League,T20,Western Australia Cricket Association Ground,Perth,Perth Scorchers,bat,CJ Simmons,204,Perth Scorchers,,5
+654081,male,2013/14,2014/01/18,Big Bash League,T20,Adelaide Oval,,Brisbane Heat,bat,DL Vettori,130,Brisbane Heat,,32
+654083,male,2013/14,2014/01/18,Big Bash League,T20,Docklands Stadium,Melbourne,Melbourne Renegades,field,MC Henriques,152,Sydney Sixers,,2
+654085,male,2013/14,2014/01/21,Big Bash League,T20,Melbourne Cricket Ground,,Melbourne Stars,field,LJ Wright,132,Melbourne Stars,5,
+654087,male,2013/14,2014/01/22,Big Bash League,T20,Adelaide Oval,,Melbourne Renegades,bat,DJ Bravo,156,Melbourne Renegades,,1
+654089,male,2013/14,2014/01/23,Big Bash League,T20,Bellerive Oval,Hobart,Hobart Hurricanes,bat,BR Dunk,210,Hobart Hurricanes,,40
+654091,male,2013/14,2014/01/25,Big Bash League,T20,Stadium Australia,Sydney,Sydney Sixers,field,NM Lyon,129,Sydney Sixers,8,
+654093,male,2013/14,2014/01/27,Big Bash League,T20,Melbourne Cricket Ground,,Melbourne Stars,bat,JW Hastings,162,Melbourne Stars,,20
+654095,male,2013/14,2014/02/04,Big Bash League,T20,Melbourne Cricket Ground,,Melbourne Stars,bat,CJ Boyce,142,Hobart Hurricanes,7,
+654097,male,2013/14,2014/02/05,Big Bash League,T20,Sydney Cricket Ground,,Sydney Sixers,field,CJ Simmons,54,Perth Scorchers,,5
+654099,male,2013/14,2014/02/07,Big Bash League,T20,Western Australia Cricket Association Ground,Perth,Perth Scorchers,bat,GB Hogg,192,Perth Scorchers,,39
+756735,male,2014/15,2014/12/18,Big Bash League,T20,Adelaide Oval,,Melbourne Stars,bat,TP Ludeman,149,Adelaide Strikers,8,
+756737,male,2014/15,2014/12/19,Big Bash League,T20,Sydney Cricket Ground,,Sydney Sixers,field,NJ Maddinson,155,Sydney Sixers,8,
+756739,male,2014/15,2014/12/20,Big Bash League,T20,Melbourne Cricket Ground,,Melbourne Stars,field,DJG Sammy,191,Hobart Hurricanes,,52
+756741,male,2014/15,2014/12/21,Big Bash League,T20,Stadium Australia,Sydney,Brisbane Heat,field,JH Kallis,209,Sydney Thunder,,56
+756743,male,2014/15,2014/12/22,Big Bash League,T20,Western Australia Cricket Association Ground,Perth,Perth Scorchers,bat,JP Behrendorff,147,Adelaide Strikers,1,
+756745,male,2014/15,2014/12/23,Big Bash League,T20,Bellerive Oval,Hobart,Hobart Hurricanes,bat,MC Henriques,155,Sydney Sixers,7,
+756747,male,2014/15,2014/12/26,Big Bash League,T20,Western Australia Cricket Association Ground,Perth,Perth Scorchers,bat,M Klinger,193,Perth Scorchers,,35
+756749,male,2014/15,2014/12/27,Big Bash League,T20,Stadium Australia,Sydney,Sydney Thunder,field,AC Blizzard,181,Sydney Sixers,,16
+756751,male,2014/15,2014/12/28,Big Bash League,T20,"Brisbane Cricket Ground, Woolloongabba",Brisbane,Melbourne Stars,field,RM Duffield,165,Brisbane Heat,,1
+756753,male,2014/15,2014/12/29,Big Bash League,T20,Sydney Cricket Ground,,Perth Scorchers,bat,AJ Tye,136,Perth Scorchers,,36
+756755,male,2014/15,2014/12/30,Big Bash League,T20,Docklands Stadium,Melbourne,Melbourne Renegades,field,JL Pattinson,115,Melbourne Renegades,8,
+756757,male,2014/15,2014/12/31,Big Bash League,T20,Adelaide Oval,,Hobart Hurricanes,bat,TP Ludeman,137,Adelaide Strikers,8,
+756759,male,2014/15,2015/01/01,Big Bash League,T20,Western Australia Cricket Association Ground,Perth,Sydney Thunder,bat,JH Kallis,180,Sydney Thunder,,20
+756761,male,2014/15,2015/01/02,Big Bash League,T20,Bellerive Oval,Hobart,Hobart Hurricanes,field,TD Paine,209,Hobart Hurricanes,6,
+756763,male,2014/15,2015/01/03,Big Bash League,T20,Docklands Stadium,Melbourne,Melbourne Renegades,field,MA Beer,170,Melbourne Stars,,112
+756765,male,2014/15,2015/01/04,Big Bash League,T20,"Brisbane Cricket Ground, Woolloongabba",Brisbane,Adelaide Strikers,field,TM Head,153,Adelaide Strikers,5,
+756767,male,2014/15,2015/01/05,Big Bash League,T20,Melbourne Cricket Ground,,Melbourne Stars,field,JP Faulkner,151,,,
+756769,male,2014/15,2015/01/06,Big Bash League,T20,Adelaide Oval,,Adelaide Strikers,field,GB Hogg,134,Perth Scorchers,,18
+756773,male,2014/15,2015/01/08,Big Bash League,T20,Western Australia Cricket Association Ground,Perth,Brisbane Heat,bat,MA Carberry,135,Perth Scorchers,8,
+756775,male,2014/15,2015/01/22,Big Bash League,T20,Sydney Cricket Ground,,Sydney Sixers,field,JC Silk,155,Sydney Sixers,4,
+756777,male,2014/15,2015/01/10,Big Bash League,T20,Melbourne Cricket Ground,,Melbourne Renegades,bat,GJ Maxwell,154,Melbourne Stars,3,
+756779,male,2014/15,2015/01/11,Big Bash League,T20,Bellerive Oval,Hobart,Perth Scorchers,bat,JP Behrendorff,142,Perth Scorchers,,18
+756781,male,2014/15,2015/01/11,Big Bash League,T20,"Brisbane Cricket Ground, Woolloongabba",Brisbane,Sydney Sixers,field,DE Bollinger,148,Sydney Sixers,6,
+756783,male,2014/15,2015/01/12,Big Bash League,T20,Adelaide Oval,,Sydney Thunder,field,,120,,,
+756785,male,2014/15,2015/01/13,Big Bash League,T20,Docklands Stadium,Melbourne,Melbourne Renegades,field,Shakib Al Hasan,81,Melbourne Renegades,5,
+756787,male,2014/15,2015/01/14,Big Bash League,T20,Sydney Cricket Ground,,Adelaide Strikers,bat,J Botha,183,Adelaide Strikers,,23
+756789,male,2014/15,2015/01/07,Big Bash League,T20,Bellerive Oval,Hobart,Hobart Hurricanes,field,BA Stokes,164,Melbourne Renegades,,37
+756791,male,2014/15,2015/01/17,Big Bash League,T20,Sydney Showground Stadium,,Melbourne Stars,field,KP Pietersen,107,Melbourne Stars,8,
+756793,male,2014/15,2015/01/19,Big Bash League,T20,Docklands Stadium,Melbourne,Adelaide Strikers,bat,TM Head,167,Adelaide Strikers,,22
+756795,male,2014/15,2015/01/21,Big Bash League,T20,Melbourne Cricket Ground,,Perth Scorchers,bat,PSP Handscomb,180,Melbourne Stars,3,
+756797,male,2014/15,2015/01/15,Big Bash League,T20,"Brisbane Cricket Ground, Woolloongabba",Brisbane,Hobart Hurricanes,field,CA Lynn,199,Brisbane Heat,,18
+756799,male,2014/15,2015/01/24,Big Bash League,T20,Adelaide Oval,,Sydney Sixers,bat,NJ Maddinson,182,Sydney Sixers,,87
+756801,male,2014/15,2015/01/25,Big Bash League,T20,Western Australia Cricket Association Ground,Perth,Perth Scorchers,bat,AJ Tye,145,Perth Scorchers,,18
+756803,male,2014/15,2015/01/28,Big Bash League,T20,Manuka Oval,Canberra,Sydney Sixers,bat,SE Marsh,148,Perth Scorchers,4,
+897697,male,2015/16,2015/12/18,Big Bash League,T20,Adelaide Oval,,Melbourne Stars,field,AI Ross,188,Adelaide Strikers,,19
+897699,male,2015/16,2015/12/19,Big Bash League,T20,"Brisbane Cricket Ground, Woolloongabba",Brisbane,Brisbane Heat,bat,AJ Finch,181,Melbourne Renegades,7,
+897701,male,2015/16,2015/12/20,Big Bash League,T20,Sydney Cricket Ground,,Sydney Sixers,bat,BJ Haddin,187,Sydney Sixers,,95
+897705,male,2015/16,2015/12/21,Big Bash League,T20,Western Australia Cricket Association Ground,Perth,Perth Scorchers,bat,AU Rashid,152,Adelaide Strikers,4,
+897707,male,2015/16,2015/12/22,Big Bash League,T20,Bellerive Oval,Hobart,Hobart Hurricanes,bat,TD Paine,185,Hobart Hurricanes,,20
+897709,male,2015/16,2015/12/23,Big Bash League,T20,Docklands Stadium,Melbourne,Sydney Sixers,field,MJ Lumb,173,Sydney Sixers,3,
+897711,male,2015/16,2015/12/26,Big Bash League,T20,Western Australia Cricket Association Ground,Perth,Brisbane Heat,bat,DJ Willey,118,Perth Scorchers,9,
+897713,male,2015/16,2015/12/27,Big Bash League,T20,Sydney Cricket Ground,,Sydney Sixers,bat,GJ Maxwell,140,Melbourne Stars,5,
+897715,male,2015/16,2015/12/28,Big Bash League,T20,Sydney Showground Stadium,,Adelaide Strikers,bat,JH Kallis,118,Sydney Thunder,7,
+897717,male,2015/16,2015/12/29,Big Bash League,T20,"Brisbane Cricket Ground, Woolloongabba",Brisbane,Hobart Hurricanes,bat,CA Lynn,195,Hobart Hurricanes,,15
+897719,male,2015/16,2015/12/30,Big Bash League,T20,Docklands Stadium,Melbourne,Perth Scorchers,field,M Klinger,171,Perth Scorchers,10,
+897721,male,2015/16,2015/12/31,Big Bash League,T20,Adelaide Oval,,Adelaide Strikers,field,TM Head,177,Adelaide Strikers,5,
+897723,male,2015/16,2016/01/01,Big Bash League,T20,Bellerive Oval,Hobart,Sydney Thunder,field,SW Tait,164,Hobart Hurricanes,,11
+897725,male,2015/16,2016/01/02,Big Bash League,T20,Melbourne Cricket Ground,,Melbourne Stars,field,LJ Wright,162,Melbourne Stars,7,
+897727,male,2015/16,2016/01/02,Big Bash League,T20,Western Australia Cricket Association Ground,Perth,Sydney Sixers,bat,DJ Willey,113,Perth Scorchers,9,
+897729,male,2015/16,2016/01/03,Big Bash League,T20,"Brisbane Cricket Ground, Woolloongabba",Brisbane,Brisbane Heat,field,CA Lynn,187,Brisbane Heat,6,
+897731,male,2015/16,2016/01/04,Big Bash League,T20,Bellerive Oval,Hobart,Melbourne Renegades,field,CP Tremain,141,Melbourne Renegades,5,
+897733,male,2015/16,2016/01/05,Big Bash League,T20,Adelaide Oval,,Adelaide Strikers,bat,TM Head,175,Adelaide Strikers,,36
+897735,male,2015/16,2016/01/06,Big Bash League,T20,Melbourne Cricket Ground,,Melbourne Stars,field,GJ Maxwell,125,Melbourne Stars,8,
+897737,male,2015/16,2016/01/07,Big Bash League,T20,Sydney Showground Stadium,,Sydney Thunder,field,CT Bancroft,176,Perth Scorchers,,30
+897739,male,2015/16,2016/01/08,Big Bash League,T20,"Brisbane Cricket Ground, Woolloongabba",Brisbane,Adelaide Strikers,field,DPMD Jayawardene,176,Adelaide Strikers,8,
+897741,male,2015/16,2016/01/09,Big Bash League,T20,Docklands Stadium,Melbourne,Melbourne Stars,field,MP Stoinis,156,Melbourne Stars,8,
+897743,male,2015/16,2016/01/10,Big Bash League,T20,Bellerive Oval,Hobart,Perth Scorchers,bat,MA Carberry,174,Perth Scorchers,,1
+897745,male,2015/16,2016/01/10,Big Bash League,T20,Sydney Cricket Ground,,Brisbane Heat,bat,JA Burns,163,Brisbane Heat,,6
+897747,male,2015/16,2016/01/11,Big Bash League,T20,Sydney Showground Stadium,,Sydney Thunder,bat,CL White,174,Melbourne Renegades,5,
+897749,male,2015/16,2016/01/13,Big Bash League,T20,Adelaide Oval,,Hobart Hurricanes,bat,AU Rashid,144,Adelaide Strikers,6,
+897751,male,2015/16,2016/01/14,Big Bash League,T20,Melbourne Cricket Ground,,Melbourne Stars,field,S Badree,189,Brisbane Heat,,56
+897753,male,2015/16,2016/01/16,Big Bash League,T20,Sydney Cricket Ground,,Sydney Sixers,field,SR Watson,203,Sydney Thunder,,46
+897757,male,2015/16,2016/01/18,Big Bash League,T20,Docklands Stadium,Melbourne,Melbourne Renegades,field,TM Head,171,Adelaide Strikers,,27
+897759,male,2015/16,2016/01/21,Big Bash League,T20,Adelaide Oval,,Adelaide Strikers,bat,UT Khawaja,160,Sydney Thunder,8,
+897761,male,2015/16,2016/01/22,Big Bash League,T20,Melbourne Cricket Ground,,Melbourne Stars,field,KP Pietersen,140,Melbourne Stars,7,
+897763,male,2015/16,2016/01/24,Big Bash League,T20,Melbourne Cricket Ground,,Sydney Thunder,field,UT Khawaja,177,Sydney Thunder,3,

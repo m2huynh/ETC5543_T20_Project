@@ -1,0 +1,550 @@
+---
+title: "DASHBOARD"
+format: html
+editor: visual
+---
+
+Dashboard idea using cricketR - 
+
+1. Perform player specific statistic using existing functions -
+
+
+
+- batsmanCumulativeAverageRuns() - 
+batsmanCumulativeStrikeRate() - work on it and add it
+
+batsmanMovingAverage(), batsmanPerfBoxHist() - good graph for keeping a track of player performance over the 
+season and comparing who scores at which point
+
+
+
+
+
+
+
+
+
+```{r}
+model_data <- model_data |>
+  select(
+    -non_boundary,
+    
+  )
+```
+
+
+
+---
+
+```{r, message=FALSE, warning=FALSE}
+raw_data <- read_csv("./data/bbl_all.csv")
+raw_data_1 <- read_csv("./data/bbl_match_info.csv")
+```
+
+Check team run rate
+
+```{r}
+db_data <- raw_data |>
+  
+  #date
+  mutate(
+    match_date = format(start_date, "%d/%m/%y")
+  ) |>
+  relocate(match_date, .after = season) |>
+  
+  #remove / relocate unnecessary variables
+  relocate(start_date, .after = fielder_3) |>
+  select(
+    -penalty,                    #NA column
+    -other_wicket_type           #NA column
+  ) |>
+  
+  #over
+  mutate(
+    over = floor(actual_delivery) + 1
+  ) |>
+  relocate(over, .after = actual_delivery) |>
+  
+  #rearrange important delivery variables
+  relocate(
+    runs_off_bat,
+    extras,
+    wides,
+    noballs,
+    byes,
+    legbyes,
+    wicket_type,
+    .after = over
+  ) |>
+  
+  #phase-over
+  mutate(
+    Phase_over = case_when(
+      over <= 6 ~ "Powerplay",
+      over <= 16 ~ "Mid-Game",
+      over <= 20 ~ "Death"
+    )
+  ) |>
+  relocate(Phase_over, .after = over) |>
+  
+  #delivery order
+  arrange(start_date, match_id, innings) |>
+  mutate(
+    delivery_order = row_number()
+  ) |>
+  
+  #target runs
+  left_join(
+    raw_data_1 |>
+      select(match_id, target_runs),
+    by = "match_id"
+  ) |>
+  relocate(target_runs, .after = innings) |>
+  
+  #wicket on current delivery
+  mutate(
+    wicket_this_ball = case_when(
+      is.na(wicket_type) ~ 0,
+      wicket_type == "retired hurt" ~ 0,
+      TRUE ~ 1
+    )
+  ) |>
+  relocate(wicket_this_ball, .after = wicket_type) |>
+  
+  #runs on current delivery
+  mutate(
+    runs_this_ball = runs_off_bat + extras
+  ) |>
+  relocate(runs_this_ball, .after = wicket_this_ball) |>
+  
+  #rearrange main match variables
+  relocate(
+    innings,
+    target_runs,
+    ball,
+    actual_delivery,
+    over,
+    Phase_over,
+    wides,
+    noballs,
+    byes,
+    legbyes,
+    extras,
+    wicket_this_ball,
+    wicket_type,
+    runs_off_bat,
+    runs_this_ball,
+    .after = match_date
+  ) |>
+  
+  #cumulative match score
+  group_by(match_id, innings) |>
+  mutate(
+    cumulative_runs = cumsum(runs_this_ball),
+    cumulative_wickets = cumsum(wicket_this_ball),
+    score = paste0(
+      cumulative_runs,
+      "/",
+      cumulative_wickets
+    )
+  ) |>
+  ungroup() |>
+  
+  #phase cumulative score
+  group_by(
+    match_id,
+    innings,
+    Phase_over
+  ) |>
+  mutate(
+    phase_runs = cumsum(runs_this_ball),
+    phase_wickets = cumsum(wicket_this_ball)
+  ) |>
+  ungroup() |>
+  
+  #legal delivery
+  mutate(
+    legal_ball = case_when(
+      !is.na(wides) & wides > 0 ~ 0,
+      !is.na(noballs) & noballs > 0 ~ 0,
+      TRUE ~ 1
+    )
+  ) |>
+  
+  #cumulative legal deliveries
+  group_by(
+    match_id,
+    innings
+  ) |>
+  mutate(
+    cumulative_legal_balls = cumsum(legal_ball)
+  ) |>
+  ungroup() |>
+  
+  #current team run rate
+  mutate(
+    team_run_rate = case_when(
+      cumulative_legal_balls > 0 ~
+        (cumulative_runs / cumulative_legal_balls) * 6,
+      TRUE ~ NA_real_
+    )
+  )
+```
+
+```{r}
+#additional player and match-state feature engineering
+
+db_data <- db_data |>
+  mutate(
+    runs_before_ball = cumulative_runs - runs_this_ball,
+    wickets_before_ball = cumulative_wickets - wicket_this_ball
+  ) |>
+  relocate(
+    runs_before_ball,
+    .after = runs_this_ball
+  ) |>
+  relocate(
+    wickets_before_ball,
+    .after = wicket_this_ball
+  )
+
+#replace NA wides and no-balls with 0
+db_data <- db_data |>
+  mutate(
+    wides = ifelse(is.na(wides), 0, wides),
+    noballs = ifelse(is.na(noballs), 0, noballs)
+  )
+
+
+#batsman runs within the innings
+db_data <- db_data |>
+  group_by(
+    match_id,
+    innings,
+    striker
+  ) |>
+  mutate(
+    batsmen_cumulative_runs =
+      cumsum(runs_off_bat),
+
+    batsmen_runs_before_ball =
+      batsmen_cumulative_runs - runs_off_bat
+  ) |>
+  ungroup() |>
+  relocate(
+    batsmen_runs_before_ball,
+    batsmen_cumulative_runs,
+    .after = score
+  )
+
+
+#bowler wickets and runs conceded within the innings
+db_data <- db_data |>
+  group_by(
+    match_id,
+    innings,
+    bowler
+  ) |>
+  mutate(
+    bowler_cumulative_wickets = cumsum(
+      wicket_type %in% c(
+        "caught",
+        "bowled",
+        "lbw",
+        "stumped",
+        "hit wicket",
+        "caught and bowled"
+      )
+    ),
+
+    bowler_wickets_before_ball =
+      bowler_cumulative_wickets -
+      (
+        wicket_type %in% c(
+          "caught",
+          "bowled",
+          "lbw",
+          "stumped",
+          "hit wicket",
+          "caught and bowled"
+        )
+      ),
+
+    bowler_cumulative_runs =
+      cumsum(
+        runs_off_bat +
+        wides +
+        noballs
+      ),
+
+    bowler_runs_before_ball =
+      bowler_cumulative_runs -
+      (
+        runs_off_bat +
+        wides +
+        noballs
+      )
+  ) |>
+  ungroup() |>
+  relocate(
+    bowler_cumulative_wickets,
+    bowler_wickets_before_ball,
+    bowler_cumulative_runs,
+    bowler_runs_before_ball,
+    .after = batsmen_cumulative_runs
+  )
+```
+
+```{r}
+db_data <- db_data |>
+  select(
+    match_id,
+    season,
+    match_date,
+    innings,
+    target_runs,
+    over,
+    ball,
+    actual_delivery,
+    legal_ball,
+    cumulative_legal_balls,
+    Phase_over,
+    extras,
+    wides,
+    noballs,
+    byes,
+    legbyes,
+    wicket_this_ball,
+    wickets_before_ball,
+    wicket_type,
+    runs_off_bat,
+    runs_this_ball,
+    runs_before_ball,
+    cumulative_runs,
+    cumulative_wickets,
+    score,
+    team_run_rate,
+    phase_runs,
+    phase_wickets,
+    player_dismissed,
+    batting_team,
+    striker,
+    non_striker,
+    batsmen_cumulative_runs,
+    batsmen_runs_before_ball,
+    bowling_team,
+    bowler,
+    bowler_wickets_before_ball,
+    bowler_cumulative_wickets,
+    bowler_runs_before_ball,
+    bowler_cumulative_runs,
+    venue,
+    delivery_order
+  )
+```
+
+```{r}
+#batsmen data
+batsman_data <- db_data |>
+  select(
+    match_id,
+    season,
+    match_date,
+    innings,
+    target_runs,
+    
+    #delivery information
+    over,
+    ball,
+    actual_delivery,
+    legal_ball,
+    cumulative_legal_balls,
+    Phase_over,
+    
+    #extras
+    extras,
+    wides,
+    noballs,
+    byes,
+    legbyes,
+    
+    #wicket information
+    wicket_this_ball,
+    wickets_before_ball,
+    wicket_type,
+    player_dismissed,
+    
+    #batting / scoring information
+    runs_off_bat,
+    runs_this_ball,
+    runs_before_ball,
+    cumulative_runs,
+    cumulative_wickets,
+    score,
+    team_run_rate,
+    phase_runs,
+    phase_wickets,
+    
+    #player / team information
+    batting_team,
+    striker,
+    non_striker,
+    batsmen_cumulative_runs,
+    batsmen_runs_before_ball,
+    bowling_team,
+    bowler,
+    
+    #match context
+    venue,
+    delivery_order
+  )
+
+##venue- batsmen stats
+batsman_ground_stats <- batsman_data |>
+  group_by(
+    season,
+    striker,
+    venue
+  ) |>
+  summarise(
+    total_runs_ground = sum(runs_off_bat, na.rm = TRUE),
+    innings_at_ground = n_distinct(match_id, innings),
+    .groups = "drop"
+  ) |>
+  mutate(
+    average_runs_ground =
+      total_runs_ground / innings_at_ground
+  ) |>
+  arrange(
+    season,
+    striker,
+    desc(average_runs_ground)
+  )
+
+##batsmen against each team
+batsman_opposition_stats <- batsman_data |>
+  group_by(
+    season,
+    striker,
+    bowling_team
+  ) |>
+  summarise(
+    total_runs_opposition = sum(runs_off_bat, na.rm = TRUE),
+    innings_vs_opposition = n_distinct(match_id, innings),
+    .groups = "drop"
+  ) |>
+  mutate(
+    average_runs_opposition =
+      total_runs_opposition / innings_vs_opposition
+  ) |>
+  arrange(
+    season,
+    striker,
+    desc(average_runs_opposition)
+  )
+
+##batsmen contribution against win-lose
+batsman_won_lost_match <- batsman_data |>
+  
+  # Add winning team
+  left_join(
+    raw_data_1 |>
+      select(match_id, winner) |>
+      distinct(),
+    by = "match_id"
+  ) |>
+  
+  # Identify result
+  mutate(
+    match_result = case_when(
+      is.na(winner) ~ NA_character_,
+      batting_team == winner ~ "Won",
+      batting_team != winner ~ "Lost"
+    )
+  ) |>
+  
+  # One row = one batter in one innings
+  group_by(
+    season,
+    match_id,
+    innings,
+    striker,
+    batting_team,
+    bowling_team,
+    match_result
+  ) |>
+  summarise(
+    innings_runs = sum(runs_off_bat, na.rm = TRUE),
+    .groups = "drop"
+  ) |>
+  
+  arrange(
+    season,
+    striker,
+    match_id
+  )
+
+
+##batsmen type of dimissals
+batsman_dismissal_stats <- batsman_data |>
+  filter(
+    !is.na(player_dismissed),
+    player_dismissed == striker
+  ) |>
+  group_by(
+    season,
+    striker,
+    wicket_type
+  ) |>
+  summarise(
+    dismissals = n(),
+    .groups = "drop"
+  ) |>
+  arrange(
+    season,
+    striker,
+    desc(dismissals)
+  )
+
+```
+
+```{r}
+##batsmen innings
+batsman_innings_data <- batsman_data |>
+  mutate(
+    batter_ball = case_when(
+      wides > 0 ~ 0,
+      TRUE ~ 1
+    )
+  ) |>
+  group_by(
+    season,
+    match_id,
+    innings,
+    striker
+  ) |>
+  summarise(
+    match_date = first(match_date),
+    batting_team = first(batting_team),
+    bowling_team = first(bowling_team),
+    venue = first(venue),
+
+    innings_runs = sum(runs_off_bat, na.rm = TRUE),
+    balls_faced = sum(batter_ball, na.rm = TRUE),
+
+    strike_rate = case_when(
+      balls_faced > 0 ~
+        (innings_runs / balls_faced) * 100,
+      TRUE ~ NA_real_
+    ),
+
+    .groups = "drop"
+  ) |>
+  arrange(
+    striker,
+    match_date,
+    match_id
+  )
+```
+
+

@@ -85,18 +85,38 @@ processed_data <- processed_data |>
   mutate(runs_this_ball = runs_off_bat + extras) |>
   relocate(runs_this_ball, .after = wicket_this_ball)
 
+processed_data <- processed_data |>
+  relocate(
+    innings,
+    target_runs,
+    ball,
+    actual_delivery,
+    over,
+    Phase_over,
+    wides,
+    noballs,
+    byes,
+    legbyes,
+    extras,
+    wicket_this_ball,
+    wicket_type,
+    runs_off_bat,
+    runs_this_ball,
+    .after = match_date
+  )
+
 ```
 
-
 ```{r}
-calculate_score <- function(data) {
+calculate_score_phase <- function(data) {
 
   required_cols <- c(
     "match_id",
     "innings",
     "delivery_order",
     "runs_this_ball",
-    "wicket_this_ball"
+    "wicket_this_ball",
+    "Phase_over"
   )
 
   missing_cols <- setdiff(required_cols, names(data))
@@ -124,15 +144,75 @@ calculate_score <- function(data) {
              .after = runs_this_ball) |>
   ungroup()
   
+  data <- data |>
+    group_by(
+      match_id,
+      innings,
+      Phase_over
+    ) |>
+    mutate(
+      phase_runs = cumsum(runs_this_ball),
+      phase_wickets = cumsum(wicket_this_ball)
+    ) |>
+    relocate(phase_runs,
+             phase_wickets,
+             score,
+             .after = cumulative_wickets) |>
+    ungroup()
+  
   return(data)
 }
 ```
 
 ```{r}
-processed_data_test <- calculate_score(processed_data)
+processed_data_test <- calculate_score_phase(processed_data)
 ```
 
 ```{r}
+processed_data_test <- processed_data_test |>
+  mutate(
+    legal_ball = case_when(
+      !is.na(wides) & wides > 0 ~ 0,
+      !is.na(noballs) & noballs > 0 ~ 0,
+      TRUE ~ 1
+    )
+  ) |>
+  relocate(legal_ball, .after = runs_this_ball)
+
+
+processed_data_test <- processed_data_test |>
+  group_by(
+    match_id,
+    innings
+  ) |>
+  mutate(
+    cumulative_legal_balls = cumsum(legal_ball)
+  ) |>
+  relocate(
+    cumulative_legal_balls,
+    .after = legal_ball
+  ) |>
+  ungroup()
+
+processed_data_test <- processed_data_test |>
+  mutate(
+    team_run_rate = case_when(
+      cumulative_legal_balls > 0 ~
+        (cumulative_runs / cumulative_legal_balls) * 6,
+      TRUE ~ NA_real_
+    )
+  ) |>
+  relocate(
+    team_run_rate,
+    .after = cumulative_legal_balls
+  )
+
+
+```
+
+
+```{r}
+#code chunk for dashboard
 over_data <- processed_data_test |>
   group_by(
     season,
@@ -151,8 +231,6 @@ over_data <- processed_data_test |>
     .groups = "drop"
   )
 ```
-
-
 
 ```{r}
 #Splitting the data into seasons
@@ -244,6 +322,7 @@ processed_data |>
   count(match_id, innings) |>
   filter(n > 1)
 ```
+
 ```{r}
 wickets <- processed_data |>
   filter(wicket_type == '	NA')
@@ -251,4 +330,11 @@ wickets <- processed_data |>
 processed_data_1 |>
   distinct(match_id)
 ```
+
+
+```{r}
+unique(processed_data$venue)
+unique(processed_data$wicket_type)
+```
+
 
