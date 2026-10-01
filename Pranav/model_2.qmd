@@ -1,0 +1,184 @@
+---
+title: "Model-iteration-2"
+format: html
+---
+
+model 2 - changing evaluation metrics. Using pr-auc
+
+```{r}
+library(tidyverse)
+library(xgboost)      
+library(Matrix)     
+library(pROC)      
+library(here)
+library(yardstick)
+```
+```{r}
+model_data <- readRDS(here("Pranav", "data", "t20_wicket_model_data.rds"))
+```
+```{r}
+match_dates <- model_data |>
+  distinct(match_id, start_date) |>
+  arrange(start_date, match_id)
+
+cutoff_index <- floor(nrow(match_dates) * 0.8)
+
+cutoff_date <- match_dates$start_date[cutoff_index]
+
+train_data <- model_data |>
+  filter(start_date <= cutoff_date)
+
+test_data <- model_data |>
+  filter(start_date > cutoff_date)
+
+```
+
+template end-
+
+
+xbgoost matrices
+
+```{r}
+y_train <- train_data$wickets
+y_test  <- test_data$wickets
+
+t20_train <- train_data |>
+  select(-match_id, -start_date, -wickets)
+
+t20_test <- test_data |>
+  select(-match_id, -start_date, -wickets)
+
+t20_xgtrain <- xgb.DMatrix(
+  data = t20_train,
+  label = y_train
+)
+
+t20_xgtest <- xgb.DMatrix(
+  data = t20_test,
+  label = y_test
+)
+```
+
+setting parameters
+
+```{r}
+params <- list(
+  objective = "binary:logistic",
+  eval_metric = "aucpr",
+  max_depth = 6,
+  eta = 0.05,
+  subsample = 0.8,
+  colsample_bytree = 0.8,
+  min_child_weight = 5
+)
+```
+
+5foldcv
+
+
+```{r}
+set.seed(35571381)
+
+t20_cv <- xgb.cv(
+  params = params,
+  data = t20_xgtrain,
+  nrounds = 1000,
+  nfold = 5,
+  early_stopping_rounds = 25,
+  print_every_n = 25,
+  maximize = TRUE
+)
+
+best_nrounds <- t20_cv$evaluation_log$iter[
+  which.max(t20_cv$evaluation_log$test_aucpr_mean)
+]
+
+best_nrounds
+```
+
+training final model
+
+
+```{r}
+t20_final <- xgb.train(
+  params = params,
+  data = t20_xgtrain,
+  nrounds = best_nrounds,
+  evals = list(
+    train = t20_xgtrain),
+  print_every_n = 5
+)
+```
+
+predicting
+
+```{r}
+pred_probs <- predict(t20_final, t20_xgtest)
+```
+
+pr-auc
+
+```{r}
+pr_auc <- pr_auc_vec(
+  truth = factor(y_test, levels = c(0, 1)),
+  estimate = pred_probs,
+  event_level = "second"
+)
+
+pr_auc
+```
+
+roc-auc
+
+```{r}
+roc_auc <- roc_auc_vec(
+  truth = factor(y_test, levels = c(0, 1)),
+  estimate = pred_probs,
+  event_level = "second"
+)
+
+roc_auc
+```
+
+calibratino
+
+```{r}
+calibration <- tibble(
+  pred = pred_probs,
+  actual = y_test
+) |>
+  mutate(bucket = ntile(pred, 10)) |>
+  group_by(bucket) |>
+  summarise(
+    mean_pred = mean(pred),
+    mean_actual = mean(actual),
+    n = n(),
+    .groups = "drop"
+  )
+
+print(calibration)
+```
+
+pr_auc
+[1] 0.0958973
+
+roc_auc
+[1] 0.6232527
+
+I'd record 0.0959 PR-AUC as the main Model 1/2 benchmark and use it to compare subsequent iterations.
+
+
+```{r}
+saveRDS(
+  list(
+    model = t20_final,
+    cv = t20_cv,
+    test_data = test_data,
+    pred_probs = pred_probs,
+    y_test = y_test,
+    pr_auc = pr_auc,
+    roc_auc = roc_auc
+  ),
+  here("Pranav", "data", "model_2_results.rds")
+)
+```

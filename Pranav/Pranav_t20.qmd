@@ -316,7 +316,7 @@ Building the model:
 feature_cols <- c(
   # match state
   "innings", "over_no", "phase", "balls_remaining",
-  "score_before", "wickets_lost_before", "required_runs", "target",
+  "score_before", "wickets_lost_before", "required_runs", 
   "free_hit",
 
   # bowler in-match form
@@ -332,6 +332,7 @@ feature_cols <- c(
   "career_bowling_strike_rate_before","career_batting_strike_rate_before", "career_boundary_p_before",
   "career_matches_bowled_before", "career_economy_before",
   "career_bowling_avg_before", "career_dot_p_before"
+
 )
 
 model_data <- bbl_all |>
@@ -356,7 +357,7 @@ model_data <- model_data |> encode_phase()
 ```
 
 ```{r}
-model_data <- readRDS(here("Pranav", "data", "t20_wicket_model_data.rds"))
+saveRDS(model_data,here("Pranav", "data", "t20_wicket_model_data.rds"))
 ```
 
 2. Training and testing split according to start date
@@ -377,4 +378,3 @@ test_data <- model_data |>
   filter(start_date > cutoff_date)
 
 ```
-
