@@ -4,25 +4,13 @@ format: html
 editor: visual
 ---
 
-Dashboard idea using cricketR - 
+Dashboard idea using cricketR -
 
-1. Perform player specific statistic using existing functions -
+1.  Perform player specific statistic using existing functions -
 
+- batsmanCumulativeAverageRuns() - batsmanCumulativeStrikeRate() - work on it and add it
 
-
-- batsmanCumulativeAverageRuns() - 
-batsmanCumulativeStrikeRate() - work on it and add it
-
-batsmanMovingAverage(), batsmanPerfBoxHist() - good graph for keeping a track of player performance over the 
-season and comparing who scores at which point
-
-
-
-
-
-
-
-
+batsmanMovingAverage(), batsmanPerfBoxHist() - good graph for keeping a track of player performance over the season and comparing who scores at which point
 
 ```{r}
 model_data <- model_data |>
@@ -32,9 +20,7 @@ model_data <- model_data |>
   )
 ```
 
-
-
----
+------------------------------------------------------------------------
 
 ```{r, message=FALSE, warning=FALSE}
 raw_data <- read_csv("./data/bbl_all.csv")
@@ -546,5 +532,3 @@ batsman_innings_data <- batsman_data |>
     match_id
   )
 ```
-
-
