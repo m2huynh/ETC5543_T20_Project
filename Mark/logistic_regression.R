@@ -42,12 +42,23 @@ coin_toss_advantage <- bbl_match_info |>
 
 log_reg <- glm(
   winner_same_as_toss_winner ~ clean_stadium_grouped + toss_decision + toss_winner,
-  coin_toss_advantage,
+  coin_toss_advantage |> mutate(winner_same_as_toss_winner = as.factor(winner_same_as_toss_winner)),
   family = binomial
 )
+saveRDS(log_reg, "log_reg_model.rds")
 
 summary(log_reg)
 
+sjPlot::tab_model(log_reg)
+
+m2 <- glm(
+  winner_is_home_team ~ toss_winner,
+  coin_toss_advantage |> mutate(winner_is_home_team = as.integer(winner_is_home_team)),
+  family = binomial
+)
+coin_toss_advantage$winner_is_home_team
+sjPlot::tab_model(m2)
+sjPlot::plot_model(m2, type = 'pred', terms = c('toss_winner'))
 glm(formula = winner_same_as_toss_winner ~ 1, family = binomial, data = coin_toss_advantage) -> null_log
 summary(null_log)
 anova(null_log, log_reg, test = "Chisq")

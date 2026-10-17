@@ -1,0 +1,121 @@
+---
+title: "Pitch Presentation"
+format: html
+---
+
+```{r}
+#| echo = FALSE
+
+knitr::opts_chunk$set(warning= FALSE, message = FALSE, echo = FALSE)
+```
+```{r}
+library(tidyverse)
+library(here)
+library(yardstick)
+library(xgboost)
+
+```
+
+
+```{r}
+results <- readRDS(
+  here("Pranav", "data", "model_2_results.rds")
+)
+
+t20_final <- results$model
+t20_cv <- results$cv
+test_data <- results$test_data
+pred_probs <- results$pred_probs
+y_test <- results$y_test
+pr_auc <- results$pr_auc
+roc_auc <- results$roc_auc
+```
+
+## Can we build a model that predicts the probability of a wicket falling on any given delivery, using match-state and player-identity features?
+
+
+### Feature engineering
+The variables engineereed for the model are:
+
+#### Match state:
+
+  "innings", "over_no", "phase", "balls_remaining",
+  "score_before", "wickets_lost_before", "required_runs", 
+  "free_hit",
+
+#### Bowler in-match form:
+
+  "bowler_balls_bowled_before", "bowler_economy_before",
+  "bowler_boundary_p_before", "bowler_dot_ball_p_before",
+
+#### Batsman in-match form:
+
+  "batsman_runs_scored_before", "batsman_balls_faced_before",
+  "batsman_strike_rate_before", "batsman_boundary_p_before",
+
+#### Bistorical / career form:
+
+  "career_matches_before", "career_batting_avg_before",
+  "career_bowling_strike_rate_before","career_batting_strike_rate_before", "career_boundary_p_before",
+  "career_matches_bowled_before", "career_economy_before",
+  "career_bowling_avg_before", "career_dot_p_before"
+
+
+### Training and test split
+```r
+# Identify the chronological order of matches
+match_dates <- model_data |>
+  distinct(match_id, start_date) |>
+  arrange(start_date, match_id)
+
+# Use the first 80% of matches chronologically as the training period
+cutoff_index <- floor(nrow(match_dates) * 0.8)
+
+# Set the date of the 80th percentile match as the cutoff
+cutoff_date <- match_dates$start_date[cutoff_index]
+
+# Train the model only on matches occurring before or on the cutoff date
+train_data <- model_data |>
+  filter(start_date <= cutoff_date)
+
+# Test the model on the most recent 20% of matches
+test_data <- model_data |>
+  filter(start_date > cutoff_date)
+```
+### Model
+An XGBoost model was used on the data. This initial model had a PR-AUC score of 0.096, and an ROC-AUC score of 0.623. 
+
+### Feature importance
+
+```{r}
+importance <- xgb.importance(
+  model = t20_final
+)
+
+importance |>
+  slice_max(
+    order_by = Gain,
+    n = 10
+  ) |>
+  ggplot(
+    aes(
+      x = reorder(Feature, Gain),
+      y = Gain
+    )
+  ) +
+  geom_col() +
+  coord_flip() +
+  labs(
+    title = "Top 10 Predictors",
+    x = NULL,
+    y = "XGBoost Gain"
+  ) +
+  theme_minimal()
+```
+
+This shows that the initial iterations of the model are giving more importance to match-level variables and not career-level variables. 
+
+### Next Steps
+1. Tune and validate the wicket model : Test different XGBoost parameters and compare performance against simpler baseline models.
+2. Analyse model errors : Identify match situations where the model struggles to predict wickets.
+3. Answer the next question : "Which bowlers are most effective at restricting runs and taking wickets in the death overs, after controlling for the match state they bowl in?"

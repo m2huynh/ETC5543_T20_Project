@@ -55,7 +55,7 @@ const fetchAllWeather = async () => {
     fs.mkdirSync(outputDir, { recursive: true });
   }
 
-  // Loop through 2011 to 2025 (Dec 20, 2025 to Feb 5, 2026 covers the 2025-2026 period)
+  // Loop through 2011 to 2025 (Dec 05, 2025 to Feb 17, 2026 covers the 2025-2026 period)
   const startYear = 2011;
   const endYear = 2025;
 
@@ -67,13 +67,13 @@ const fetchAllWeather = async () => {
       const nextYear = year + 1;
 
       // Split the range into two chunks < 30 days
-      const chunk1Start = `${year}-12-20`;
+      const chunk1Start = `${year}-12-05`;
       const chunk1End = `${nextYear}-01-10`;
 
       const chunk2Start = `${nextYear}-01-11`;
-      const chunk2End = `${nextYear}-02-05`;
+      const chunk2End = `${nextYear}-02-17`;
 
-      console.log(`Fetching ${city}: Dec 20, ${year} to Feb 05, ${nextYear}...`);
+      console.log(`Fetching ${city}: Dec 05, ${year} to Feb 17, ${nextYear}...`);
 
       // Request Chunk 1
       const data1 = await fetchWeatherChunk(city, chunk1Start, chunk1End);
