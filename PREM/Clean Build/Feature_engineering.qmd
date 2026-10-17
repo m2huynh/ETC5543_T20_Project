@@ -1,0 +1,1849 @@
+---
+title: "Feature Engineering - final version"
+author: "Prem"
+format: html
+editor: visual
+---
+
+### **Libraries used in this file**
+
+```{r}
+library(tidyverse)
+library(readr)
+library(pROC)
+```
+
+### **Reading in the raw data**
+
+```{r, message=FALSE, warning=FALSE}
+raw_data <- read_csv("../data/bbl_all.csv")
+raw_data_1 <- read_csv("../data/bbl_match_info.csv")
+```
+
+### **Feature Engineering**
+
+The code chunk below contains the required data manipulation and variable engineering required to answer and understand the dashboard.
+
+```{r}
+db_data <- raw_data |>
+  
+  # date
+  mutate(
+    match_date = format(start_date, "%d/%m/%y")
+  ) |>
+  relocate(match_date, .after = season) |>
+  
+  
+  # remove / relocate unnecessary variables
+  relocate(start_date, .after = fielder_3) |>
+  select(
+    -penalty,
+    -other_wicket_type
+  ) |>
+  
+  
+  # over
+  mutate(
+    over = floor(actual_delivery) + 1
+  ) |>
+  relocate(over, .after = actual_delivery) |>
+  
+  
+  # rearrange important delivery variables
+  relocate(
+    runs_off_bat,
+    extras,
+    wides,
+    noballs,
+    byes,
+    legbyes,
+    wicket_type,
+    .after = over
+  ) |>
+  
+  # phase of the game
+  mutate(
+    Phase_over = case_when(
+      over <= 6 ~ "Powerplay",
+      over <= 16 ~ "Mid-Game",
+      over <= 20 ~ "Death"
+    )
+  ) |>
+  relocate(Phase_over, .after = over) |>
+  
+  #delivery order
+  arrange(start_date, match_id, innings) |> 
+   group_by(match_id,
+            innings) |>
+  mutate(  delivery_order = row_number() ) |>
+  
+  ungroup() |>
+  
+   # target runs
+  left_join(
+    raw_data_1 |>
+      select(match_id, target_runs),
+    by = "match_id") |>
+  relocate(target_runs, .after = innings) |>
+  
+  # wicket on current delivery
+  mutate(
+    wicket_this_ball = case_when(
+      is.na(wicket_type) ~ 0,
+      wicket_type == "retired hurt" ~ 0,
+      TRUE ~ 1) ) |>
+  relocate(
+    wicket_this_ball, .after = wicket_type) |>
+  
+  #replace NA with 0
+  mutate(
+    extras = ifelse(is.na(extras), 0, extras),
+    wides = ifelse(is.na(wides), 0, wides),
+    noballs = ifelse(is.na(noballs), 0, noballs),
+    byes = ifelse(is.na(byes), 0, byes),
+    legbyes = ifelse(is.na(legbyes), 0, legbyes) 
+    ) |>
+  
+  # runs on current delivery
+  mutate(runs_this_ball = runs_off_bat + extras) |>
+  relocate(
+    runs_this_ball, .after = wicket_this_ball) |>
+  
+  
+  #rearrange main match variables
+  relocate(
+    innings,
+    target_runs,
+    ball,
+    actual_delivery,
+    over,
+    Phase_over,
+    wides,
+    noballs,
+    byes,
+    legbyes,
+    extras,
+    wicket_this_ball,
+    wicket_type,
+    runs_off_bat,
+    runs_this_ball,
+    .after = match_date
+  ) |>
+  
+  #cumulative match score
+  group_by(match_id, innings) |>
+  mutate(
+    cumulative_runs = cumsum(runs_this_ball),
+    cumulative_wickets = cumsum(wicket_this_ball),
+    score = paste0(
+      cumulative_runs,
+      "/",
+      cumulative_wickets
+    )
+  ) |>
+  ungroup() |>
+  
+  # cumulative extras
+  group_by(
+    match_id,
+    innings
+  ) |>
+  mutate(
+    cumulative_extras = cumsum(extras),
+    cumulative_wides = cumsum(wides),
+    cumulative_noballs = cumsum(noballs),
+    cumulative_byes = cumsum(byes),
+    cumulative_legbyes = cumsum(legbyes) ) |>
+  ungroup() |>
+  
+  
+   # phase cumulative score
+  group_by(
+    match_id,
+    innings,
+    Phase_over
+  ) |>
+  mutate(
+    phase_runs = cumsum(runs_this_ball),
+    phase_wickets = cumsum(wicket_this_ball),
+    phase_extras = cumsum(extras),
+    phase_wides = cumsum(wides),
+    phase_noballs = cumsum(noballs),
+    phase_byes = cumsum(byes),
+    phase_legbyes = cumsum(legbyes) ) |>
+  ungroup() |>
+  
+  
+  #legal delivery
+  mutate(
+    legal_ball = case_when(
+      !is.na(wides) & wides > 0 ~ 0,
+      !is.na(noballs) & noballs > 0 ~ 0,
+      TRUE ~ 1
+    )
+  ) |>
+  
+  #cumulative legal deliveries
+  group_by(
+    match_id,
+    innings
+  ) |>
+  mutate(
+    cumulative_legal_balls = cumsum(legal_ball)
+  ) |>
+  ungroup() |>
+  
+  # runs, wickets before current ball
+  mutate(
+    runs_before_ball = cumulative_runs - runs_this_ball,
+    wickets_before_ball = cumulative_wickets - wicket_this_ball
+  ) |>
+  relocate(
+    runs_before_ball,
+    .after = runs_this_ball
+  ) |>
+  relocate(
+    wickets_before_ball,
+    .after = wicket_this_ball
+  ) |>
+
+  
+  #current team run rate
+  mutate(
+    team_run_rate = case_when(
+      cumulative_legal_balls > 0 ~
+        (cumulative_runs / cumulative_legal_balls) * 6,
+      TRUE ~ NA_real_
+    )
+  )
+
+#scoring rate engineering
+#by season, team, oppn, over
+scoring_rate_season_over <- db_data |>
+  group_by(
+    season,
+    batting_team,
+    bowling_team,
+    over,
+    Phase_over
+  ) |>
+  summarise(
+    
+    total_runs =
+      sum(
+        runs_this_ball,
+        na.rm = TRUE
+      ),
+    
+    total_legal_balls =
+      sum(
+        legal_ball,
+        na.rm = TRUE
+      ),
+    
+    total_extras =
+      sum(
+        extras,
+        na.rm = TRUE
+      ),
+    
+    total_wickets =
+      sum(
+        wicket_this_ball,
+        na.rm = TRUE
+      ),
+    
+    matches_played =
+      n_distinct(
+        match_id
+      ),
+    
+    .groups = "drop"
+  ) |>
+  
+  mutate(
+  
+  over_run_rate =
+    case_when(
+      total_legal_balls > 0 ~
+        (total_runs / total_legal_balls) * 6,
+      TRUE ~ NA_real_
+    ),
+  
+  wickets_per_match =
+    case_when(
+      matches_played > 0 ~
+        total_wickets / matches_played,
+      TRUE ~ NA_real_
+    )
+  ) |>
+  arrange(
+    season,
+    batting_team,
+    bowling_team,
+    over
+  )
+
+
+#by above phase instead of over
+scoring_rate_season_phase <- db_data |>
+  group_by(
+    season,
+    batting_team,
+    bowling_team,
+    Phase_over
+  ) |>
+  summarise(
+    
+    total_runs =
+      sum(
+        runs_this_ball,
+        na.rm = TRUE
+      ),
+    
+    total_legal_balls =
+      sum(
+        legal_ball,
+        na.rm = TRUE
+      ),
+    
+    total_extras =
+      sum(
+        extras,
+        na.rm = TRUE
+      ),
+    
+    total_wickets =
+      sum(
+        wicket_this_ball,
+        na.rm = TRUE
+      ),
+    
+    matches_played =
+      n_distinct(
+        match_id
+      ),
+    
+    .groups = "drop"
+  ) |>
+  mutate(
+    over_run_rate =
+    case_when(
+      total_legal_balls > 0 ~
+        (total_runs / total_legal_balls) * 6,
+      TRUE ~ NA_real_
+    ),
+  
+  wickets_per_match =
+    case_when(
+      matches_played > 0 ~
+        total_wickets / matches_played,
+      TRUE ~ NA_real_
+    )
+  ) |>
+  arrange(
+    season,
+    batting_team,
+    bowling_team,
+    Phase_over
+  )
+
+#all seasons
+scoring_rate_all_seasons_over <- db_data |>
+  group_by(
+    batting_team,
+    bowling_team,
+    over,
+    Phase_over
+  ) |>
+  summarise(
+    
+    total_runs =
+      sum(
+        runs_this_ball,
+        na.rm = TRUE
+      ),
+    
+    total_legal_balls =
+      sum(
+        legal_ball,
+        na.rm = TRUE
+      ),
+    
+    total_extras =
+      sum(
+        extras,
+        na.rm = TRUE
+      ),
+    
+    total_wickets =
+      sum(
+        wicket_this_ball,
+        na.rm = TRUE
+      ),
+    
+    matches_played =
+      n_distinct(
+        match_id
+      ),
+    
+    .groups = "drop"
+  ) |>
+  mutate(
+    
+    over_run_rate =
+      case_when(
+        total_legal_balls > 0 ~
+          (total_runs / total_legal_balls) * 6,
+        TRUE ~ NA_real_
+      )
+  ) |>
+  arrange(
+    batting_team,
+    bowling_team,
+    over
+  )
+
+#all seasons and phase
+scoring_rate_all_seasons_phase <- db_data |>
+  group_by(
+    batting_team,
+    bowling_team,
+    Phase_over
+  ) |>
+  summarise(
+    
+    total_runs =
+      sum(
+        runs_this_ball,
+        na.rm = TRUE
+      ),
+    
+    total_legal_balls =
+      sum(
+        legal_ball,
+        na.rm = TRUE
+      ),
+    
+    total_extras =
+      sum(
+        extras,
+        na.rm = TRUE
+      ),
+    
+    total_wickets =
+      sum(
+        wicket_this_ball,
+        na.rm = TRUE
+      ),
+    
+    matches_played =
+      n_distinct(
+        match_id
+      ),
+    
+    .groups = "drop"
+  ) |>
+  mutate(
+    
+    phase_run_rate =
+      case_when(
+        total_legal_balls > 0 ~
+          (total_runs / total_legal_balls) * 6,
+        TRUE ~ NA_real_
+      )
+  ) |>
+  arrange(
+    batting_team,
+    bowling_team,
+    Phase_over
+  )
+
+scoring_rate_comparison <- db_data |>
+  distinct(
+    season,
+    batting_team,
+    bowling_team
+  ) |>
+  arrange(
+    season,
+    batting_team,
+    bowling_team
+  )
+```
+
+### **Batsmen feature engineering**
+
+```{r}
+#batsman runs within the innings
+db_data <- db_data |>
+  group_by(
+    match_id,
+    innings,
+    striker
+  ) |>
+  mutate(
+    batsmen_cumulative_runs =
+      cumsum(runs_off_bat),
+
+    batsmen_runs_before_ball =
+      batsmen_cumulative_runs - runs_off_bat
+  ) |>
+  ungroup() |>
+  relocate(
+    batsmen_runs_before_ball,
+    batsmen_cumulative_runs,
+    .after = score
+  )
+
+#batsmen data
+batsman_data <- db_data |>
+  select(
+    match_id,
+    season,
+    match_date,
+    innings,
+    target_runs,
+    
+    #delivery information
+    over,
+    ball,
+    actual_delivery,
+    legal_ball,
+    cumulative_legal_balls,
+    Phase_over,
+    
+    #extras
+    extras,
+    wides,
+    noballs,
+    byes,
+    legbyes,
+    
+    #wicket information
+    wicket_this_ball,
+    wickets_before_ball,
+    wicket_type,
+    player_dismissed,
+    
+    #batting / scoring information
+    runs_off_bat,
+    runs_this_ball,
+    runs_before_ball,
+    cumulative_runs,
+    cumulative_wickets,
+    score,
+    team_run_rate,
+    phase_runs,
+    phase_wickets,
+    
+    #player / team information
+    batting_team,
+    striker,
+    non_striker,
+    batsmen_cumulative_runs,
+    batsmen_runs_before_ball,
+    bowling_team,
+    bowler,
+    
+    #match context
+    venue,
+    delivery_order
+  )
+
+#batsmen against each team
+batsman_opposition_stats <- batsman_data |>
+  group_by(
+    season,
+    striker,
+    bowling_team
+  ) |>
+  summarise(
+    total_runs_opposition = sum(runs_off_bat, na.rm = TRUE),
+    innings_vs_opposition = n_distinct(match_id, innings),
+    .groups = "drop"
+  ) |>
+  mutate(
+    runs_per_innings_opposition =
+      total_runs_opposition / innings_vs_opposition
+  ) |>
+  arrange(
+    season,
+    striker,
+    desc(runs_per_innings_opposition)
+  )
+
+#batsmen contribution against win-lose
+batsman_won_lost_match <- batsman_data |>
+  
+  # Add winning team
+  left_join(
+    raw_data_1 |>
+      select(match_id, winner) |>
+      distinct(),
+    by = "match_id"
+  ) |>
+  
+  # Identify result
+  mutate(
+    match_result = case_when(
+      is.na(winner) ~ NA_character_,
+      batting_team == winner ~ "Won",
+      batting_team != winner ~ "Lost"
+    )
+  ) |>
+  
+  # One row = one batter in one innings
+  group_by(
+    season,
+    match_id,
+    innings,
+    striker,
+    batting_team,
+    bowling_team,
+    match_result
+  ) |>
+  summarise(
+    innings_runs = sum(runs_off_bat, na.rm = TRUE),
+    .groups = "drop"
+  ) |>
+  
+  arrange(
+    season,
+    striker,
+    match_id
+  )
+
+
+#batsmen type of dimissals
+batsman_dismissal_stats <- db_data |>
+  filter(
+    !is.na(player_dismissed),
+    wicket_this_ball == 1
+  ) |>
+  group_by(
+    season,
+    player_dismissed,
+    wicket_type
+  ) |>
+  summarise(
+    dismissals = n(),
+    .groups = "drop"
+  ) |>
+  arrange(
+    season,
+    player_dismissed,
+    desc(dismissals)
+  )
+
+#batsmen innings
+batsman_innings_data <- batsman_data |>
+  mutate(
+    batter_ball = case_when(
+      wides > 0 ~ 0,
+      TRUE ~ 1
+    )
+  ) |>
+  group_by(
+    season,
+    match_id,
+    innings,
+    striker
+  ) |>
+  summarise(
+    match_date = first(match_date),
+    batting_team = first(batting_team),
+    bowling_team = first(bowling_team),
+    venue = first(venue),
+
+    innings_runs = sum(runs_off_bat, na.rm = TRUE),
+    balls_faced = sum(batter_ball, na.rm = TRUE),
+
+    strike_rate = case_when(
+      balls_faced > 0 ~
+        (innings_runs / balls_faced) * 100,
+      TRUE ~ NA_real_
+    ),
+
+    .groups = "drop"
+  ) |>
+  arrange(
+    striker,
+    match_date,
+    match_id
+  )
+
+```
+
+### **Pressure code chunk**
+
+```{r}
+#Removing shortened matches and do a sanity check of how many of them are there in the data-set
+second_innings_check <- db_data |>
+  filter(innings == 2) |>
+  group_by(
+    match_id,
+    season,
+    batting_team,
+    bowling_team,
+    target_runs
+  ) |>
+  summarise(
+    legal_balls_bowled =
+      sum(legal_ball, na.rm = TRUE),
+
+    final_runs =
+      max(cumulative_runs, na.rm = TRUE),
+
+    final_wickets =
+      max(cumulative_wickets, na.rm = TRUE),
+
+    .groups = "drop"
+  ) |>
+  mutate(
+    target_reached =
+      final_runs >= target_runs,
+
+    all_out =
+      final_wickets >= 10
+  )
+
+
+shortened_matches <- second_innings_check |>
+  filter(
+    legal_balls_bowled < 120,
+    target_reached == FALSE,
+    all_out == FALSE
+  ) |>
+  arrange(
+    legal_balls_bowled
+  )
+shortened_matches
+
+pressure_data <- db_data |>
+  
+  # only second innings = chasing team and removing interrupted matches - rain/retired hurt batsmen
+  filter(
+    innings == 2,
+    !is.na(target_runs),
+    !match_id %in% shortened_matches$match_id
+  ) |>
+  
+  # add match winner
+  left_join(
+    raw_data_1 |>
+      select(
+        match_id,
+        winner
+      ),
+    by = "match_id"
+  ) |>
+  
+  # create match state BEFORE the current delivery
+  mutate(
+    
+    legal_balls_before_ball =
+      cumulative_legal_balls - legal_ball,
+    
+    balls_remaining =
+      120 - legal_balls_before_ball,
+    
+    runs_required =
+      pmax(
+        target_runs - runs_before_ball,
+        0
+      ),
+    
+    wickets_in_hand =
+      10 - wickets_before_ball,
+    
+    required_run_rate =
+      case_when(
+        balls_remaining > 0 ~
+          (runs_required / balls_remaining) * 6,
+        TRUE ~ NA_real_
+      ),
+    
+    # final outcome of the chase
+    chase_win =
+      case_when(
+        is.na(winner) ~ NA_integer_,
+        batting_team == winner ~ 1L,
+        TRUE ~ 0L
+      )
+  ) |>
+  
+  # keep only variables required for the model
+  select(
+    match_id,
+    season,
+    required_run_rate,
+    wickets_in_hand,
+    balls_remaining,
+    chase_win
+  ) |>
+  
+  # remove unusable observations
+  filter(
+    !is.na(required_run_rate),
+    !is.na(wickets_in_hand),
+    !is.na(balls_remaining),
+    !is.na(chase_win),
+    balls_remaining > 0
+  )
+```
+
+### **Logistic Model**
+
+```{r}
+match_ids <- unique(pressure_data$match_id)
+
+train_ids <- sample(
+  match_ids,
+  size = 0.8 * length(match_ids)
+)
+
+pressure_train <- pressure_data |>
+  filter(match_id %in% train_ids)
+
+pressure_test <- pressure_data |>
+  filter(!match_id %in% train_ids)
+```
+
+```{r}
+pressure_model <- glm(
+  chase_win ~
+    required_run_rate +
+    wickets_in_hand +
+    balls_remaining,
+  
+  data = pressure_train,
+  family = binomial
+)
+
+summary(pressure_model)
+```
+
+```{r}
+pressure_test <- pressure_test |>
+  mutate(
+    predicted_probability = predict(
+      pressure_model,
+      newdata = pressure_test,
+      type = "response"
+    )
+  )
+```
+
+```{r}
+summary(pressure_test$predicted_probability)
+```
+
+```{r}
+pressure_test |>
+  select(
+    match_id,
+    required_run_rate,
+    wickets_in_hand,
+    balls_remaining,
+    chase_win,
+    predicted_probability
+  ) |>
+  head(20)
+```
+
+```{r}
+pressure_test <- pressure_test |>
+  mutate(
+    predicted_class = ifelse(
+      predicted_probability >= 0.5,
+      1,
+      0
+    )
+  )
+
+mean(
+  pressure_test$predicted_class ==
+    pressure_test$chase_win
+)
+```
+
+```{r}
+table(
+  Actual = pressure_test$chase_win,
+  Predicted = pressure_test$predicted_class
+)
+```
+
+```{r}
+accuracy <- mean(
+  pressure_test$predicted_class ==
+    pressure_test$chase_win
+)
+
+accuracy
+```
+
+```{r}
+roc_pressure <- roc(
+  pressure_test$chase_win,
+  pressure_test$predicted_probability
+)
+
+auc(roc_pressure)
+```
+
+### **Actual Model**
+
+```{r}
+pressure_model <- glm(
+  chase_win ~
+    required_run_rate +
+    wickets_in_hand +
+    balls_remaining,
+  
+  data = pressure_data,
+  family = binomial
+)
+```
+
+```{r}
+pressure_data <- pressure_data |>
+  mutate(
+    predicted_probability = predict(
+      pressure_model,
+      newdata = pressure_data,
+      type = "response"
+    )
+  )
+```
+
+```{r}
+pressure_data <- pressure_data |>
+  mutate(
+    pressure_score =
+      1 - predicted_probability
+  )
+```
+
+```{r}
+pressure_cutoffs <- quantile(
+  pressure_data$pressure_score,
+  probs = c(0.25, 0.75),
+  na.rm = TRUE
+)
+
+pressure_cutoffs
+```
+
+```{r}
+pressure_data <- pressure_data |>
+  mutate(
+    pressure_level = case_when(
+      
+      pressure_score <= pressure_cutoffs[1] ~
+        "Low Pressure",
+      
+      pressure_score >= pressure_cutoffs[2] ~
+        "High Pressure",
+      
+      TRUE ~
+        "Medium Pressure"
+    )
+  )
+```
+
+```{r}
+pressure_data <- pressure_data |>
+  mutate(
+    predicted_class = ifelse(
+      predicted_probability >= 0.5,
+      1,
+      0 ))
+```
+
+```{r}
+training_accuracy <- mean(
+  pressure_data$predicted_class ==
+    pressure_data$chase_win
+)
+
+training_accuracy
+```
+
+```{r}
+table(
+  Actual = pressure_data$chase_win,
+  Predicted = pressure_data$predicted_class
+)
+```
+
+```{r}
+roc_pressure_all <- roc(
+  pressure_data$chase_win,
+  pressure_data$predicted_probability
+)
+
+auc(roc_pressure_all)
+```
+
+
+### **Batsmen Pressure**
+
+```{r}
+batter_pressure_data <- db_data |>
+  
+  # only valid chasing innings
+  filter(
+    innings == 2,
+    !is.na(target_runs),
+    !match_id %in% shortened_matches$match_id,
+    !is.na(striker)
+  ) |>
+  
+  # recreate match state before each delivery
+  mutate(
+    
+    legal_balls_before_ball =
+      cumulative_legal_balls - legal_ball,
+    
+    balls_remaining =
+      120 - legal_balls_before_ball,
+    
+    runs_required =
+      pmax(
+        target_runs - runs_before_ball,
+        0
+      ),
+    
+    wickets_in_hand =
+      10 - wickets_before_ball,
+    
+    required_run_rate =
+      case_when(
+        balls_remaining > 0 ~
+          (runs_required / balls_remaining) * 6,
+        TRUE ~ NA_real_
+      ),
+    
+    # wides do not count as balls faced
+    batter_ball =
+      case_when(
+        wides > 0 ~ 0,
+        TRUE ~ 1
+      )
+  ) |>
+  
+  # remove unusable match states
+  filter(
+    !is.na(required_run_rate),
+    !is.na(wickets_in_hand),
+    !is.na(balls_remaining),
+    balls_remaining > 0
+  )
+```
+
+
+```{r}
+# using final pressure model
+  batter_pressure_data$predicted_probability <- predict(
+  pressure_model,
+  newdata = batter_pressure_data,
+  type = "response"
+)
+```
+
+
+```{r}
+batter_pressure_data <- batter_pressure_data |>
+  mutate(
+    pressure_score =
+      1 - predicted_probability,
+    
+    pressure_level =
+      case_when(
+        pressure_score <= pressure_cutoffs[1] ~
+          "Low Pressure",
+        
+        pressure_score >= pressure_cutoffs[2] ~
+          "High Pressure",
+        
+        TRUE ~
+          "Medium Pressure"
+      )
+  )
+```
+
+
+```{r}
+batter_pressure_performance <- batter_pressure_data |>
+  group_by(
+    season,
+    batting_team,
+    bowling_team,
+    striker,
+    pressure_level
+  ) |>
+  summarise(
+    
+    runs =
+      sum(
+        runs_off_bat,
+        na.rm = TRUE
+      ),
+    
+    balls_faced =
+      sum(
+        batter_ball,
+        na.rm = TRUE
+      ),
+    
+    matches =
+      n_distinct(
+        match_id
+      ),
+    
+    strike_rate =
+      case_when(
+        balls_faced > 0 ~
+          (runs / balls_faced) * 100,
+        TRUE ~ NA_real_
+      ),
+    
+    average_pressure_score =
+      mean(
+        pressure_score,
+        na.rm = TRUE
+      ),
+    
+    .groups = "drop"
+  ) |>
+  arrange(
+    season,
+    batting_team,
+    striker,
+    pressure_level
+  )
+```
+
+
+```{r}
+batter_pressure_summary <- batter_pressure_data |>
+  group_by(
+    batting_team,
+    striker
+  ) |>
+  summarise(
+    
+    matches =
+      n_distinct(
+        match_id
+      ),
+    
+    total_runs =
+      sum(
+        runs_off_bat,
+        na.rm = TRUE
+      ),
+    
+    total_balls_faced =
+      sum(
+        batter_ball,
+        na.rm = TRUE
+      ),
+    
+    overall_strike_rate =
+      case_when(
+        total_balls_faced > 0 ~
+          (total_runs / total_balls_faced) * 100,
+        TRUE ~ NA_real_
+      ),
+    
+    average_pressure_score =
+      mean(
+        pressure_score,
+        na.rm = TRUE
+      ),
+    
+    high_pressure_balls =
+      sum(
+        pressure_level == "High Pressure" &
+          batter_ball == 1,
+        na.rm = TRUE
+      ),
+    
+    medium_pressure_balls =
+      sum(
+        pressure_level == "Medium Pressure" &
+          batter_ball == 1,
+        na.rm = TRUE
+      ),
+    
+    low_pressure_balls =
+      sum(
+        pressure_level == "Low Pressure" &
+          batter_ball == 1,
+        na.rm = TRUE
+      ),
+    
+    .groups = "drop"
+  )
+```
+
+
+```{r}
+batter_high_low <- batter_pressure_data |>
+  filter(
+    pressure_level %in%
+      c(
+        "High Pressure",
+        "Low Pressure"
+      )
+  ) |>
+  group_by(
+    batting_team,
+    striker,
+    pressure_level
+  ) |>
+  summarise(
+    
+    runs =
+      sum(
+        runs_off_bat,
+        na.rm = TRUE
+      ),
+    
+    balls_faced =
+      sum(
+        batter_ball,
+        na.rm = TRUE
+      ),
+    
+    matches =
+      n_distinct(
+        match_id
+      ),
+    
+    strike_rate =
+      case_when(
+        balls_faced > 0 ~
+          (runs / balls_faced) * 100,
+        TRUE ~ NA_real_
+      ),
+    
+    .groups = "drop"
+  )
+```
+
+
+```{r}
+batter_pressure_comparison <- batter_high_low |>
+  pivot_wider(
+    names_from =
+      pressure_level,
+    
+    values_from =
+      c(
+        runs,
+        balls_faced,
+        matches,
+        strike_rate
+      ),
+    
+    names_sep = "_"
+  ) |>
+  mutate(
+    
+    strike_rate_difference =
+      `strike_rate_High Pressure` -
+      `strike_rate_Low Pressure`,
+    
+    runs_difference =
+      `runs_High Pressure` -
+      `runs_Low Pressure`
+  ) |>
+  arrange(
+    desc(strike_rate_difference)
+  )
+```
+
+### Batsmen Pressure Analysis
+
+```{r}
+batsmen_pressure_analysis <- batter_pressure_data |>
+  
+  left_join(
+    
+    raw_data_1 |>
+      select(
+        match_id,
+        winner
+      ) |>
+      distinct(),
+    
+    by = "match_id"
+  ) |>
+  
+  mutate(
+    
+    match_result = case_when(
+      
+      is.na(winner) ~ NA_character_,
+      
+      batting_team == winner ~ "Won",
+      
+      TRUE ~ "Lost"
+    )
+  )
+
+```
+
+```{r}
+pressure_match_data <- batsmen_pressure_analysis |>
+  
+  group_by(
+    season,
+    match_id,
+    batting_team,
+    bowling_team
+  ) |>
+  
+  summarise(
+    
+    target_runs =
+      first(target_runs),
+    
+    final_score =
+      max(
+        cumulative_runs,
+        na.rm = TRUE
+      ),
+    
+    wickets_lost =
+      max(
+        cumulative_wickets,
+        na.rm = TRUE
+      ),
+    
+    result =
+      first(match_result),
+    
+    average_pressure_score =
+      mean(
+        pressure_score,
+        na.rm = TRUE
+      ),
+    
+    maximum_pressure_score =
+      max(
+        pressure_score,
+        na.rm = TRUE
+      ),
+    
+    average_required_run_rate =
+      mean(
+        required_run_rate,
+        na.rm = TRUE
+      ),
+    
+    .groups = "drop"
+  )
+```
+
+```{r}
+pressure_matchup_season <- pressure_match_data |>
+  
+  group_by(
+    season,
+    batting_team,
+    bowling_team
+  ) |>
+  
+  summarise(
+    
+    chase_matches =
+      n_distinct(match_id),
+    
+    wins =
+      sum(
+        result == "Won",
+        na.rm = TRUE
+      ),
+    
+    losses =
+      sum(
+        result == "Lost",
+        na.rm = TRUE
+      ),
+    
+    average_target =
+      mean(
+        target_runs,
+        na.rm = TRUE
+      ),
+    
+    average_score =
+      mean(
+        final_score,
+        na.rm = TRUE
+      ),
+    
+    average_wickets_lost =
+      mean(
+        wickets_lost,
+        na.rm = TRUE
+      ),
+    
+    average_pressure_score =
+      mean(
+        average_pressure_score,
+        na.rm = TRUE
+      ),
+    
+    average_required_run_rate =
+      mean(
+        average_required_run_rate,
+        na.rm = TRUE
+      ),
+    
+    .groups = "drop"
+  ) |>
+  
+  arrange(
+    season,
+    batting_team,
+    bowling_team
+  )
+```
+
+```{r}
+pressure_matchup_all <- pressure_match_data |>
+  
+  group_by(
+    batting_team,
+    bowling_team
+  ) |>
+  
+  summarise(
+    
+    chase_matches =
+      n_distinct(match_id),
+    
+    wins =
+      sum(
+        result == "Won",
+        na.rm = TRUE
+      ),
+    
+    losses =
+      sum(
+        result == "Lost",
+        na.rm = TRUE
+      ),
+    
+    average_target =
+      mean(
+        target_runs,
+        na.rm = TRUE
+      ),
+    
+    average_score =
+      mean(
+        final_score,
+        na.rm = TRUE
+      ),
+    
+    average_wickets_lost =
+      mean(
+        wickets_lost,
+        na.rm = TRUE
+      ),
+    
+    average_pressure_score =
+      mean(
+        average_pressure_score,
+        na.rm = TRUE
+      ),
+    
+    average_required_run_rate =
+      mean(
+        average_required_run_rate,
+        na.rm = TRUE
+      ),
+    
+    .groups = "drop"
+  ) |>
+  
+  arrange(
+    batting_team,
+    bowling_team
+  )
+```
+
+```{r}
+batsmen_pressure_season <- batsmen_pressure_analysis |>
+  
+  filter(
+    pressure_level %in%
+      c(
+        "Low Pressure",
+        "High Pressure"
+      )
+  ) |>
+  
+  group_by(
+    season,
+    batting_team,
+    bowling_team,
+    striker,
+    pressure_level
+  ) |>
+  
+  summarise(
+    
+    runs =
+      sum(
+        runs_off_bat,
+        na.rm = TRUE
+      ),
+    
+    balls_faced =
+      sum(
+        batter_ball,
+        na.rm = TRUE
+      ),
+    
+    chase_matches =
+      n_distinct(
+        match_id
+      ),
+    
+    strike_rate =
+      case_when(
+        
+        balls_faced > 0 ~
+          (runs / balls_faced) * 100,
+        
+        TRUE ~
+          NA_real_
+      ),
+    
+    average_pressure_score =
+      mean(
+        pressure_score,
+        na.rm = TRUE
+      ),
+    
+    average_required_run_rate =
+      mean(
+        required_run_rate,
+        na.rm = TRUE
+      ),
+    
+    average_wickets_in_hand =
+      mean(
+        wickets_in_hand,
+        na.rm = TRUE
+      ),
+    
+    average_balls_remaining =
+      mean(
+        balls_remaining,
+        na.rm = TRUE
+      ),
+    
+    average_target =
+      mean(
+        target_runs,
+        na.rm = TRUE
+      ),
+    
+    .groups = "drop"
+  ) |>
+  
+  arrange(
+    season,
+    batting_team,
+    bowling_team,
+    striker,
+    pressure_level
+  )
+```
+
+```{r}
+batsmen_pressure_comparison_season <-
+  batsmen_pressure_season |>
+  
+  pivot_wider(
+    
+    names_from =
+      pressure_level,
+    
+    values_from =
+      c(
+        runs,
+        balls_faced,
+        chase_matches,
+        strike_rate,
+        average_pressure_score,
+        average_required_run_rate,
+        average_wickets_in_hand,
+        average_balls_remaining,
+        average_target
+      ),
+    
+    names_sep = "_"
+  ) |>
+  
+  mutate(
+    
+    strike_rate_difference =
+      case_when(
+        
+        !is.na(`strike_rate_High Pressure`) &
+          !is.na(`strike_rate_Low Pressure`) ~
+          
+          `strike_rate_High Pressure` -
+          `strike_rate_Low Pressure`,
+        
+        TRUE ~
+          NA_real_
+      )
+  ) |>
+  
+  arrange(
+    season,
+    batting_team,
+    bowling_team,
+    desc(strike_rate_difference)
+  )
+```
+
+```{r}
+batsmen_pressure_all <- batsmen_pressure_analysis |>
+  
+  filter(
+    pressure_level %in%
+      c(
+        "Low Pressure",
+        "High Pressure"
+      )
+  ) |>
+  
+  group_by(
+    batting_team,
+    bowling_team,
+    striker,
+    pressure_level
+  ) |>
+  
+  summarise(
+    
+    runs =
+      sum(
+        runs_off_bat,
+        na.rm = TRUE
+      ),
+    
+    balls_faced =
+      sum(
+        batter_ball,
+        na.rm = TRUE
+      ),
+    
+    chase_matches =
+      n_distinct(
+        match_id
+      ),
+    
+    seasons_played =
+      n_distinct(
+        season
+      ),
+    
+    strike_rate =
+      case_when(
+        
+        balls_faced > 0 ~
+          (runs / balls_faced) * 100,
+        
+        TRUE ~
+          NA_real_
+      ),
+    
+    average_pressure_score =
+      mean(
+        pressure_score,
+        na.rm = TRUE
+      ),
+    
+    average_required_run_rate =
+      mean(
+        required_run_rate,
+        na.rm = TRUE
+      ),
+    
+    average_wickets_in_hand =
+      mean(
+        wickets_in_hand,
+        na.rm = TRUE
+      ),
+    
+    average_balls_remaining =
+      mean(
+        balls_remaining,
+        na.rm = TRUE
+      ),
+    
+    average_target =
+      mean(
+        target_runs,
+        na.rm = TRUE
+      ),
+    
+    .groups = "drop"
+  ) |>
+  
+  arrange(
+    batting_team,
+    bowling_team,
+    striker,
+    pressure_level
+  )
+```
+
+
+```{r}
+batsmen_pressure_comparison_all <-
+  batsmen_pressure_all |>
+  
+  pivot_wider(
+    
+    names_from =
+      pressure_level,
+    
+    values_from =
+      c(
+        runs,
+        balls_faced,
+        chase_matches,
+        seasons_played,
+        strike_rate,
+        average_pressure_score,
+        average_required_run_rate,
+        average_wickets_in_hand,
+        average_balls_remaining,
+        average_target
+      ),
+    
+    names_sep = "_"
+  ) |>
+  
+  mutate(
+    
+    strike_rate_difference =
+      case_when(
+        
+        !is.na(`strike_rate_High Pressure`) &
+          !is.na(`strike_rate_Low Pressure`) ~
+          
+          `strike_rate_High Pressure` -
+          `strike_rate_Low Pressure`,
+        
+        TRUE ~
+          NA_real_
+      )
+  ) |>
+  
+  arrange(
+    batting_team,
+    bowling_team,
+    desc(strike_rate_difference)
+  )
+```
+
+```{r}
+batsmen_pressure_match <- batsmen_pressure_analysis |>
+  
+  filter(
+    pressure_level %in%
+      c(
+        "Low Pressure",
+        "High Pressure"
+      )
+  ) |>
+  
+  group_by(
+    season,
+    match_id,
+    match_date,
+    batting_team,
+    bowling_team,
+    striker,
+    pressure_level
+  ) |>
+  
+  summarise(
+    
+    target =
+      first(target_runs),
+    
+    result =
+      first(match_result),
+    
+    runs =
+      sum(
+        runs_off_bat,
+        na.rm = TRUE
+      ),
+    
+    balls_faced =
+      sum(
+        batter_ball,
+        na.rm = TRUE
+      ),
+    
+    strike_rate =
+      case_when(
+        
+        balls_faced > 0 ~
+          (runs / balls_faced) * 100,
+        
+        TRUE ~
+          NA_real_
+      ),
+    
+    average_pressure_score =
+      mean(
+        pressure_score,
+        na.rm = TRUE
+      ),
+    
+    average_required_run_rate =
+      mean(
+        required_run_rate,
+        na.rm = TRUE
+      ),
+    
+    average_wickets_in_hand =
+      mean(
+        wickets_in_hand,
+        na.rm = TRUE
+      ),
+    
+    average_balls_remaining =
+      mean(
+        balls_remaining,
+        na.rm = TRUE
+      ),
+    
+    .groups = "drop"
+  ) |>
+  
+  arrange(
+    striker,
+    match_date,
+    pressure_level
+  )
+```
+
