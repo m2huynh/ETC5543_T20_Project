@@ -75,7 +75,7 @@ db_data <- raw_data |>
   arrange(start_date, match_id, innings) |> 
    group_by(match_id,
             innings) |>
-  mutate(  delivery_order = row_number() ) |>
+  mutate(delivery_order = row_number() ) |>
   
   ungroup() |>
   
@@ -216,8 +216,15 @@ db_data <- raw_data |>
       TRUE ~ NA_real_
     )
   )
+```
 
-#scoring rate engineering
+
+
+### **Scoring rate engineering**
+
+
+
+```{r}
 #by season, team, oppn, over
 scoring_rate_season_over <- db_data |>
   group_by(

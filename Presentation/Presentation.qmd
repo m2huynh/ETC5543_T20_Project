@@ -58,7 +58,7 @@ options(width = 70)
 ---
 
 
-###Research Questions
+###  Research Questions
 
 :::: {.columns}
 
