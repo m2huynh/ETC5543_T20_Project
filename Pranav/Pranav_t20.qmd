@@ -1,5 +1,5 @@
 ---
-title: "Untitled"
+title: "rpreprocessing"
 format: html
 ---
 
@@ -58,8 +58,8 @@ Creating over number and phase of play
 ```{r}
 bbl_all <- bbl_all|> mutate(over_no = floor(ball)+1,
 phase= case_when(over_no >=1 & over_no <=6 ~ "Powerplay",
-over_no >=7 & over_no <=15 ~ "Middle",
-over_no >=16 & over_no <=20 ~ "Death")) 
+over_no >=7 & over_no <=16 ~ "Middle",
+over_no >=17 & over_no <=20 ~ "Death")) 
 ```
 
 
@@ -83,7 +83,7 @@ Calculating wickets lost by batting team
 
 ```{r}
 bbl_all <-  bbl_all|> group_by(match_id, innings)|>
-    mutate(wickets = ifelse(is.na(wicket_type),0,1) ,
+    mutate(wickets = ifelse(is.na(wicket_type) | wicket_type == "retired hurt", 0, 1) ,
     wickets_lost_before = cumsum(lag(wickets, default = 0)))
 ```
 
@@ -215,7 +215,7 @@ batsman_match_stats <- bbl_all |>
     balls_faced = sum(ifelse(is.na(wides), 1, 0)),
     
     # Dismissals of this batter
-    dismissals = sum(player_dismissed == striker, na.rm = TRUE),
+    dismissals = sum(wickets == 1 & player_dismissed == striker, na.rm = TRUE),
     
     # Boundary runs scored
     boundary_runs = sum(boundary_runs),
@@ -300,15 +300,96 @@ bowler_history <- bowler_match_stats |>
 
 Joining to main dataset
 
-
 ```{r}
 bbl_all <- bbl_all|>
     left_join(batsman_history, by=(c('match_id','striker')))|>
     left_join(bowler_history, by = (c("match_id","bowler")))
 ```
 
+```{r}
+bbl_all <- bbl_all |>
+  ungroup() |>
+  mutate(bowler_wicket = as.integer(wicket_type %in% c(
+    "caught", "bowled", "lbw", "caught and bowled", "stumped", "hit wicket")))
+```
+
+Additional ratios
+
+```{r}
+bbl_all <- bbl_all |> ungroup() |>
+  mutate(
+    balls_bowled         = 120 - balls_remaining,
+    wickets_in_hand      = 10 - wickets_lost_before,
+    current_rr           = ifelse(balls_bowled > 0, score_before / balls_bowled * 6, NA_real_),
+    required_rr          = ifelse(innings == 2 & balls_remaining > 0, required_runs / balls_remaining * 6, NA_real_),
+    rr_gap               = required_rr - current_rr,
+    resources            = wickets_in_hand * balls_remaining,
+    runs_per_wkt_in_hand = ifelse(innings == 2 & wickets_in_hand > 0, required_runs / wickets_in_hand, NA_real_),
+    batsman_sr_vs_rr     = batsman_strike_rate_before - current_rr / 6 * 100,
+    batter_new           = as.integer(batsman_balls_faced_before < 10)
+  )
+```
+
+Within-over position, momentum and partnership
+
+```{r}
+bbl_all <- bbl_all |>
+  group_by(match_id, innings, over_no) |>
+  mutate(ball_in_over = lag(cumsum(legal_ball), default = 0) + 1) |>
+  group_by(match_id, innings) |>
+  mutate(
+    is_boundary = as.integer(!is.na(boundary_type)),
+    wkt_pos = wickets * (balls_bowled + legal_ball),
+    bnd_pos = is_boundary * (balls_bowled + legal_ball),
+    balls_since_wicket   = balls_bowled - lag(cummax(wkt_pos), default = 0),
+    balls_since_boundary = balls_bowled - lag(cummax(bnd_pos), default = 0),
+    runs_last_6  = lag(cumsum(delivery_runs), 1, default = 0) - lag(cumsum(delivery_runs), 7,  default = 0),
+    runs_last_12 = lag(cumsum(delivery_runs), 1, default = 0) - lag(cumsum(delivery_runs), 13, default = 0),
+    dots_last_6  = lag(cumsum(dot_ball), 1, default = 0) - lag(cumsum(dot_ball), 7,  default = 0),
+    dots_last_12 = lag(cumsum(dot_ball), 1, default = 0) - lag(cumsum(dot_ball), 13, default = 0),
+    wkts_last_12 = lag(cumsum(wickets), 1, default = 0) - lag(cumsum(wickets), 13, default = 0),
+    bnds_last_12 = lag(cumsum(is_boundary), 1, default = 0) - lag(cumsum(is_boundary), 13, default = 0)
+  ) |>
+  select(-wkt_pos, -bnd_pos) |>
+  group_by(match_id, innings, wickets_lost_before) |>
+  mutate(partnership_runs_before  = lag(cumsum(delivery_runs), default = 0),
+         partnership_balls_before = lag(cumsum(legal_ball), default = 0)) |>
+  ungroup()
+```
+
+
+To flag the matches that were cut short, i.e., whole match was not played
+
+```{r}
+shortened <- bbl_all |>
+  ungroup() |>
+  group_by(match_id) |>
+  summarise(inn1_balls = sum(legal_ball[innings == 1]),
+            inn1_wkts  = sum(wickets[innings == 1]),
+            target     = first(target), .groups = "drop") |>
+  left_join(select(bbl_match_info, match_id, target_runs), by = "match_id") |>
+  mutate(shortened_match = as.integer(
+    (inn1_balls < 120 & inn1_wkts < 10) |
+      coalesce(abs(target_runs - target) > 1, FALSE))) |>
+  select(match_id, shortened_match)
+
+bbl_all <- bbl_all |> ungroup() |> left_join(shortened, by = "match_id")
+```
+
+
+
+Saving bbl_all data 
+```{r}
+saveRDS(bbl_all,here("Pranav", "data", "bbl_t20_data.rds"))
+```
+
+
+
+
+
 
 Building the model:
+
 
 1. Selecting relevant columns
 
