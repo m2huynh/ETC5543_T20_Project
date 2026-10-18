@@ -187,12 +187,11 @@ Baseline Calculation
 #### Results
 
 ```{r}
-#| layout-ncol: 2
-#| fig-width: 7
-#| fig-height: 6
+#| fig-width: 16
+#| fig-height: 8
 
-q4$plots$wkt_baseline
-q4$plots$baseline
+q4$plots$scatter
+
 ```
 
 
