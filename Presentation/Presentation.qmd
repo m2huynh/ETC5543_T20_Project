@@ -108,10 +108,93 @@ Pressure depends on:
 ---
 
 ##### Can we build a model that predicts the probability of a wicket falling on any given delivery, using match-state and player-identity features?
+ <br>
+
+ . . .
+
+Feature engineering
+
+- Match State Features
+- Player Features
+- Momentum Features
+- Partnership Variables
+
+```{r}
+#| echo: false
+
+
+library(tidyverse); library(gt); library(shapviz); library(here)
+pres   <- readRDS(here("Pranav", "data", "presentation_objects.rds"))
+q4 <- readRDS(here("Pranav", "data", "q4_presentation_objects.rds"))
+plots  <- pres$plots
+tables <- pres$tables
+```
+
+---
+
+#### The Model
+
+```{r}
+#| fig-width: 13
+#| fig-height: 4
+plots$by_over
+tables$phase|>gt::tab_options(
+    data_row.padding    = gt::px(2),   
+    table.font.size     = gt::px(18),
+    heading.padding     = gt::px(2),
+    column_labels.padding = gt::px(3)
+  )
+```
+---
+
+#### The Model
+
+```{r}
+#| layout-ncol: 2
+#| fig-width: 7
+#| fig-height: 6
+#| fig-cap: ["What drives the model's predictions", "Wicket probability heatmap by over"]
+
+plots$shap_groups
+plots$heatmap
+
+```
 
 ---
 
 ##### Which bowlers are most effective at restricting runs and taking wickets in the death overs, after controlling for the match state they bowl in?
+
+<br>
+
+. . .
+
+Why Raw Economy Fails
+
+<br>
+
+. . . 
+
+The Models
+
+<br>
+
+. . . 
+
+Baseline Calculation
+
+---
+
+#### Results
+
+```{r}
+#| layout-ncol: 2
+#| fig-width: 7
+#| fig-height: 6
+
+q4$plots$wkt_baseline
+q4$plots$baseline
+```
+
 
 ---
 
@@ -371,3 +454,17 @@ ggplot(pca_bowler_df, aes(x = PC1, y = PC2, color = cluster)) +
 ```
 
 :::
+---
+
+#### Stakeholders, Limitations and Future Scope
+
+<br>
+
+- BBL coaches, analysts and recruiters.
+
+
+- Missing fitness, pitch and tracking data.
+
+
+
+- Integrate more data sources and T20 leagues.
