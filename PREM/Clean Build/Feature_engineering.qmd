@@ -987,7 +987,6 @@ roc_pressure_all <- roc(
 auc(roc_pressure_all)
 ```
 
-
 ### **Batsmen Pressure**
 
 ```{r}
@@ -1043,7 +1042,6 @@ batter_pressure_data <- db_data |>
   )
 ```
 
-
 ```{r}
 # using final pressure model
   batter_pressure_data$predicted_probability <- predict(
@@ -1052,7 +1050,6 @@ batter_pressure_data <- db_data |>
   type = "response"
 )
 ```
-
 
 ```{r}
 batter_pressure_data <- batter_pressure_data |>
@@ -1073,7 +1070,6 @@ batter_pressure_data <- batter_pressure_data |>
       )
   )
 ```
-
 
 ```{r}
 batter_pressure_performance <- batter_pressure_data |>
@@ -1125,7 +1121,6 @@ batter_pressure_performance <- batter_pressure_data |>
     pressure_level
   )
 ```
-
 
 ```{r}
 batter_pressure_summary <- batter_pressure_data |>
@@ -1190,7 +1185,6 @@ batter_pressure_summary <- batter_pressure_data |>
   )
 ```
 
-
 ```{r}
 batter_high_low <- batter_pressure_data |>
   filter(
@@ -1235,7 +1229,6 @@ batter_high_low <- batter_pressure_data |>
   )
 ```
 
-
 ```{r}
 batter_pressure_comparison <- batter_high_low |>
   pivot_wider(
@@ -1267,7 +1260,7 @@ batter_pressure_comparison <- batter_high_low |>
   )
 ```
 
-### Batsmen Pressure Analysis
+### **Batsmen Pressure Analysis**
 
 ```{r}
 batsmen_pressure_analysis <- batter_pressure_data |>
@@ -1712,7 +1705,6 @@ batsmen_pressure_all <- batsmen_pressure_analysis |>
   )
 ```
 
-
 ```{r}
 batsmen_pressure_comparison_all <-
   batsmen_pressure_all |>
@@ -1846,4 +1838,3 @@ batsmen_pressure_match <- batsmen_pressure_analysis |>
     pressure_level
   )
 ```
-

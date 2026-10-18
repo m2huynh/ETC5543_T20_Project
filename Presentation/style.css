@@ -1,3 +1,15 @@
-body {
-  background: red !important;
+.reveal .slides section:not(.title-slide)::before {
+  content: "";
+  position: absolute;
+  top: 18px;
+  right: 22px;
+  width: 145px;
+  height: 55px;
+
+  background-image: url("_extensions/presentation/_images/logo/monash-one-line-black-rgb.png");
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+
+  z-index: 1000;
 }

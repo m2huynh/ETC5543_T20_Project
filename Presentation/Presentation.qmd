@@ -10,7 +10,8 @@ date: today
 toc: false
 
 format:
-  presentation-revealjs+letterbox: default
+  presentation-revealjs+letterbox:
+    logo: "_extensions/presentation/_images/logo/monash-one-line-black-rgb.png"
 ---
 
 ```{r}
@@ -26,21 +27,84 @@ options(width = 70)
 
 
 ### Introduction - About Cricket
-- Jist about the game
-- About raw data 
--
+
+:::: {.columns}
+
+::: {.column width="48%"}
+![](cricket_pitch.jpeg){width=100%}
+
+<div style="text-align:center; font-size:0.82em; margin-top:8px; line-height:1.45;">
+<strong>Batting team:</strong> scores runs<br>
+<strong>Bowling team:</strong> takes wickets
+</div>
+:::
+
+::: {.column width="52%"}
+
+#### T20 Cricket
+
+- **20 overs per team**
+- **6 legal balls per over**
+- **10 wickets maximum**
+- **First innings:** sets the target
+- **Second innings:** chases the target
+- **Toss:** choose to bat or field
+- **Win:** finish with the higher score
+
+:::
+
+::::
 
 ---
 
-### Stakeholders and Project Aim
 
----
+###Research Questions
 
-##### How do scoring rates and wicket probabilities vary across the three phases of a T20 innings — the Powerplay (overs 1–6), the middle overs (7–16), and the death overs (17–20)?
+:::: {.columns}
 
----
+::: {.column width="50%"}
 
-##### Which batters perform best under high-pressure chase situations — defined by a high required run rate and few wickets in hand — relative to their performance in low-pressure situations?
+<img src="T20 Cricket Fielding Restrictions Infographic.png"
+     style="display:block;
+            width:100%;
+            height:auto;
+            max-height:520px;
+            object-fit:contain;
+            margin-top:25px;
+            margin-left:auto;
+            margin-right:auto;">
+
+:::
+
+::: {.column width="50%"}
+
+<div style="font-size:0.55em; line-height:1.2; padding-top:10px;">
+
+#### 1. Scoring & Wickets by Phase
+
+**How do scoring rates and wicket probabilities vary across the three phases of a T20 innings?**
+
+- **Powerplay:** 1–6
+- **Middle:** 7–16
+- **Death:** 17–20
+
+<br>
+
+#### 2. Batter Performance Under Pressure
+
+**Which batters perform best under high-pressure chase situations compared with low-pressure situations?**
+
+Pressure depends on:
+
+- **Required run rate**
+- **Wickets in hand**
+- **Balls remaining**
+
+</div>
+
+:::
+
+::::
 
 ---
 
