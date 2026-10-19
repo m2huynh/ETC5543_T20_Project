@@ -22,6 +22,7 @@ library(knitr)
 library(tidyverse)
 
 options(width = 70)
+set.seed(1)
 ```
 
 
@@ -298,9 +299,7 @@ sjPlot::tab_model(
 sjPlot::tab_model(
   log_reg,
   terms = c("toss_decisionfield", "toss_winner_is_home_teamTRUE"),
-  dv.labels = "Same winner as toss winner",
-  show.aic = TRUE,
-  show.loglik = TRUE
+  dv.labels = "Same winner as toss winner"
 )
 ```
 
@@ -340,7 +339,7 @@ Apply k-means clustering
 
 ::: {.fragment}
 
-```{r, echo=FALSE,warning=FALSE,message=FALSE,out.width="100%"}
+```{r, echo=FALSE,warning=FALSE,message=FALSE,out.width="120%"}
 batter_stats <- read_csv("Mark/batter_stats.csv" |> here::here())
 
 # Scale Features & Retain Player Names
@@ -380,12 +379,26 @@ pca_batter <- prcomp(batter_matrix)
 pca_batter_df <- as.data.frame(pca_batter$x[, 1:2]) |>
   mutate(
     cluster = as.factor(km_res$cluster),
-    player = rownames(batter_matrix)
-  )
+    striker = rownames(batter_matrix)
+  ) |>
+  left_join(batter_stats)
 
+library(plotly)
 # 2. Plot PC1 vs PC2
-ggplot(pca_batter_df, aes(x = PC1, y = PC2, color = cluster)) +
-  geom_point(size = 3, alpha = 0.8) +
+p_bat <- ggplot(pca_batter_df, aes(x = PC1, y = PC2, color = cluster)) +
+  geom_point(
+    aes(
+      text = paste0(
+        "<b>Striker: </b>", striker, "<br>",
+        "<b>Cluster: </b>", cluster, "<br>",
+        "<b>Strike Rate: </b>", round(strike_rate, 2), "<br>",
+        "<b>Dot %: </b>", round(dot_pct, 2), "%<br>",
+        "<b>Boundary %: </b>", round(boundary_pct, 2), "%"
+      )
+    ),
+    size = 3, 
+    alpha = 0.8
+  ) +
   stat_ellipse(linetype = 2, alpha = 0.5) +
   labs(
     title = "BBL Batter Archetypes",
@@ -393,7 +406,14 @@ ggplot(pca_batter_df, aes(x = PC1, y = PC2, color = cluster)) +
     y = "PC2",
     color = "Cluster"
   )
+ggplotly(p_bat, tooltip = "text")
 ```
+
+- Cluster 1: Aggressive Powerplay boundary hitters
+
+- Cluster 2: Low-impact lower-order tailenders
+
+- Cluster 3: High-rotation middle-order anchors
 
 :::
 
@@ -437,12 +457,27 @@ pca_bowler <- prcomp(bowler_matrix)
 pca_bowler_df <- as.data.frame(pca_bowler$x[, 1:2]) |>
   mutate(
     cluster = as.factor(km_res$cluster),
-    player = rownames(bowler_matrix)
-  )
+    bowler = rownames(bowler_matrix)
+  ) |>
+  left_join(bowler_stats)
 
 # 2. Plot PC1 vs PC2
-ggplot(pca_bowler_df, aes(x = PC1, y = PC2, color = cluster)) +
-  geom_point(size = 3, alpha = 0.8) +
+p_bowl <- ggplot(pca_bowler_df, aes(x = PC1, y = PC2, color = cluster)) +
+  geom_point(
+    aes(
+      text = paste0(
+        "<b>Bowler: </b>", bowler, "<br>",
+        "<b>Cluster: </b>", cluster, "<br>",
+        "<b>Economy Rate: </b>", round(economy_rate, 2), "<br>",
+        "<b>Dot %: </b>", round(dot_pct, 1), "%<br>",
+        "<b>Boundary Conceded %: </b>", round(boundary_conceded_pct, 1), "%<br>",
+        "<b>Powerplay %: </b>", round(pp_ball_pct, 1), "%<br>",
+        "<b>Death %: </b>", round(death_ball_pct, 1), "%"
+      )
+    ),
+    size = 3,
+    alpha = 0.8
+  ) +
   stat_ellipse(linetype = 2, alpha = 0.5) +
   labs(
     title = "BBL Bowler Archetypes",
@@ -450,7 +485,14 @@ ggplot(pca_bowler_df, aes(x = PC1, y = PC2, color = cluster)) +
     y = "PC2",
     color = "Cluster"
   )
+plotly::ggplotly(p_bowl, tooltip = "text")
 ```
+
+- Cluster 1: High-dot new-ball pace attackers
+
+- Cluster 2: Low-economy middle-over run suppressors
+
+- Cluster 3: High-variance late-over death specialists
 
 :::
 ---
