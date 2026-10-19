@@ -242,7 +242,7 @@ knitr::kable(toss_summary)
 
 <div class="fragment">
 
-Chi-Square Test of Independence
+Chi-Square Test of Independence (Toss Decision & Winner Same as Toss Winner)
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
 # Chi-Square Test of Independence
@@ -356,6 +356,10 @@ factoextra::fviz_nbclust(batter_matrix, kmeans, method = "silhouette", nstart = 
     plot.title = element_text(size = 20, face = "bold"),  # Plot title size
     axis.title = element_text(size = 18, face = "bold"),  # Axis label titles
     axis.text = element_text(size = 14)                   # Axis numbers (1, 2, 3...)
+  ) +
+  scale_x_discrete(
+    limits = as.character(2:10),
+    breaks = as.character(2:10)
   )
 
 # Run K-Means
@@ -435,7 +439,11 @@ bowler_matrix <- bowler_stats |>
   scale()
 
 # Silhouette score with orginal data
-factoextra::fviz_nbclust(bowler_matrix, kmeans, method = "silhouette", nstart = 25)
+factoextra::fviz_nbclust(bowler_matrix, kmeans, method = "silhouette", nstart = 25) +
+  scale_x_discrete(
+    limits = as.character(2:10),
+    breaks = as.character(2:10)
+  )
 
 # Run K-Means
 km_res <- kmeans(bowler_matrix, centers = 3, nstart = 25)
