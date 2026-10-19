@@ -89,7 +89,7 @@ options(width = 70)
 
 <br>
 
-#### 2. Batter Performance Under Pressure
+#### 2. Batsmen Performance Under Pressure
 
 **Which batters perform best under high-pressure chase situations compared with low-pressure situations?**
 
