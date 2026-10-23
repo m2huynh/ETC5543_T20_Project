@@ -1,0 +1,501 @@
+---
+title: "Model-iteration-5"
+format: html
+---
+
+Model 5: Model 4 (same features, hyperparameters, grouped CV) plus two new groups, built inside this file:
+venue x player interaction features, and batting position features.
+Three variants are fitted (venue only, position only, both) and each is compared with Model 4 on the same test rows.
+
+
+```{r}
+library(tidyverse)
+library(xgboost)
+library(yardstick)
+library(here)
+```
+
+Read data, keep innings 1 and 2
+
+```{r}
+target_col <- "wickets"
+
+bbl_inn <- readRDS(here("Pranav", "data", "bbl_t20_data.rds")) |>
+  ungroup() |>
+  filter(innings %in% c(1, 2))
+
+# Venue spellings: look for one ground appearing under two names
+bbl_inn |> distinct(match_id, venue) |> count(venue, sort = TRUE) |> print(n = Inf)
+```
+
+Chronological cutoff, identical to Models 3 and 4. League priors use training matches only.
+
+```{r}
+match_dates <- bbl_inn |>
+  filter(shortened_match == 0) |>
+  distinct(match_id, start_date) |>
+  arrange(start_date, match_id)
+
+cutoff_index <- floor(nrow(match_dates) * 0.8)
+cutoff_date  <- match_dates$start_date[cutoff_index]
+
+train_match_ids <- match_dates |> filter(start_date <= cutoff_date) |> pull(match_id)
+match_lookup    <- bbl_inn |> distinct(match_id, start_date, venue)
+```
+
+Model 4 features (player identity): shrunk, lagged batter dismissal rate and bowler wicket rate
+
+```{r}
+K_bat  <- 120
+K_bowl <- 150
+
+bat_faced <- bbl_inn |>
+  group_by(match_id, striker) |>
+  summarise(balls = sum(ifelse(is.na(wides), 1, 0)), .groups = "drop")
+
+bat_out <- bbl_inn |>
+  filter(wickets == 1, !is.na(player_dismissed)) |>
+  group_by(match_id, striker = player_dismissed) |>
+  summarise(dism = n(), .groups = "drop")
+
+bat_match <- full_join(bat_faced, bat_out, by = c("match_id", "striker")) |>
+  left_join(match_lookup, by = "match_id") |>
+  mutate(balls = coalesce(balls, 0), dism = coalesce(dism, 0))
+
+league_bat <- bat_match |> filter(match_id %in% train_match_ids) |>
+  summarise(r = sum(dism) / sum(balls)) |> pull(r)
+
+bat_rate <- bat_match |>
+  arrange(striker, start_date, match_id) |>
+  group_by(striker) |>
+  mutate(b = lag(cumsum(balls), default = 0),
+         d = lag(cumsum(dism),  default = 0),
+         sk_bat_dismissal_rate = (d + K_bat * league_bat) / (b + K_bat)) |>
+  ungroup() |>
+  select(match_id, striker, sk_bat_dismissal_rate)
+
+bowl_match <- bbl_inn |>
+  group_by(match_id, start_date, bowler) |>
+  summarise(balls = sum(legal_ball), wkts = sum(bowler_wicket), .groups = "drop") |>
+  left_join(select(match_lookup, match_id, venue), by = "match_id")
+
+league_bowl <- bowl_match |> filter(match_id %in% train_match_ids) |>
+  summarise(r = sum(wkts) / sum(balls)) |> pull(r)
+
+bowl_rate <- bowl_match |>
+  arrange(bowler, start_date, match_id) |>
+  group_by(bowler) |>
+  mutate(b = lag(cumsum(balls), default = 0),
+         w = lag(cumsum(wkts),  default = 0),
+         sk_bowl_wicket_rate = (w + K_bowl * league_bowl) / (b + K_bowl)) |>
+  ungroup() |>
+  select(match_id, bowler, sk_bowl_wicket_rate)
+```
+
+New group 1: venue and venue x player features.
+All lagged (earlier matches only). The batter and bowler rates at a venue are shrunk toward that player's own overall rate, so the `_effect` columns measure how much the venue shifts the player away from his usual rate.
+
+```{r}
+K_venue <- 1200   # balls (about 5 matches)
+K_bv    <- 60     # batter balls at the venue
+K_wv    <- 100    # bowler balls at the venue
+
+# Venue main effect
+venue_match <- bbl_inn |>
+  group_by(match_id, start_date, venue) |>
+  summarise(balls = sum(legal_ball), wkts = sum(wickets), .groups = "drop")
+
+league_venue <- venue_match |> filter(match_id %in% train_match_ids) |>
+  summarise(r = sum(wkts) / sum(balls)) |> pull(r)
+
+venue_rate <- venue_match |>
+  arrange(venue, start_date, match_id) |>
+  group_by(venue) |>
+  mutate(b = lag(cumsum(balls), default = 0),
+         w = lag(cumsum(wkts),  default = 0),
+         sk_venue_wicket_rate = (w + K_venue * league_venue) / (b + K_venue)) |>
+  ungroup() |>
+  select(match_id, sk_venue_wicket_rate)
+
+# Batter at venue
+bat_venue <- bat_match |>
+  arrange(striker, venue, start_date, match_id) |>
+  group_by(striker, venue) |>
+  mutate(vb = lag(cumsum(balls), default = 0),
+         vd = lag(cumsum(dism),  default = 0)) |>
+  ungroup() |>
+  left_join(bat_rate, by = c("match_id", "striker")) |>
+  mutate(sk_bat_at_venue_rate = (vd + K_bv * sk_bat_dismissal_rate) / (vb + K_bv),
+         bat_venue_effect     = sk_bat_at_venue_rate - sk_bat_dismissal_rate) |>
+  select(match_id, striker, sk_bat_at_venue_rate, bat_venue_effect)
+
+# Bowler at venue
+bowl_venue <- bowl_match |>
+  arrange(bowler, venue, start_date, match_id) |>
+  group_by(bowler, venue) |>
+  mutate(vb = lag(cumsum(balls), default = 0),
+         vw = lag(cumsum(wkts),   default = 0)) |>
+  ungroup() |>
+  left_join(bowl_rate, by = c("match_id", "bowler")) |>
+  mutate(sk_bowl_at_venue_rate = (vw + K_wv * sk_bowl_wicket_rate) / (vb + K_wv),
+         bowl_venue_effect     = sk_bowl_at_venue_rate - sk_bowl_wicket_rate) |>
+  select(match_id, bowler, sk_bowl_at_venue_rate, bowl_venue_effect)
+```
+
+New group 2: batting position.
+Position is the order in which a batter first appears at the crease (as striker or non-striker) in the innings, so it only depends on batters who arrived before him. The usual position is the batter's shrunk average position in earlier matches.
+
+```{r}
+K_pos <- 3   # matches
+
+appear <- bbl_inn |>
+  group_by(match_id, innings) |>
+  mutate(seq = row_number()) |>
+  ungroup() |>
+  select(match_id, innings, seq, striker, non_striker) |>
+  pivot_longer(c(striker, non_striker), names_to = "role", values_to = "player") |>
+  mutate(key = seq * 2L + if_else(role == "striker", 1L, 2L))   # striker first on a tie
+
+position <- appear |>
+  group_by(match_id, innings, player) |>
+  summarise(first_key = min(key), .groups = "drop") |>
+  arrange(match_id, innings, first_key) |>
+  group_by(match_id, innings) |>
+  mutate(position = row_number()) |>
+  ungroup()
+
+# One row per batter per match, with the match date
+pos_match <- position |>
+  select(match_id, striker = player, position) |>
+  left_join(select(match_lookup, match_id, start_date), by = "match_id")
+
+league_pos <- pos_match |> filter(match_id %in% train_match_ids) |>
+  summarise(m = mean(position)) |> pull(m)
+
+pos_hist <- pos_match |>
+  arrange(striker, start_date, match_id) |>
+  group_by(striker) |>
+  mutate(n_b = row_number() - 1,
+         s_b = lag(cumsum(position), default = 0),
+         striker_usual_position = (s_b + K_pos * league_pos) / (n_b + K_pos)) |>
+  ungroup() |>
+  select(match_id, striker, striker_usual_position)
+
+pos_now <- position |>
+  select(match_id, innings, striker = player, striker_position = position)
+```
+
+Join everything (row count must not change), then apply the Model 3 filters
+
+```{r}
+n0 <- nrow(bbl_inn)
+
+bbl_all <- bbl_inn |>
+  left_join(bat_rate,    by = c("match_id", "striker")) |>
+  left_join(bowl_rate,   by = c("match_id", "bowler")) |>
+  left_join(venue_rate,  by = "match_id") |>
+  left_join(bat_venue,   by = c("match_id", "striker")) |>
+  left_join(bowl_venue,  by = c("match_id", "bowler")) |>
+  left_join(pos_now,     by = c("match_id", "innings", "striker")) |>
+  left_join(pos_hist,    by = c("match_id", "striker")) |>
+  mutate(striker_pos_diff = striker_position - striker_usual_position)
+
+stopifnot(nrow(bbl_all) == n0)
+
+bbl_all <- bbl_all |>
+  filter(shortened_match == 0) |>
+  mutate(
+    phase_Powerplay = as.integer(phase == "Powerplay"),
+    phase_Middle    = as.integer(phase == "Middle"),
+    phase_Death     = as.integer(phase == "Death")
+  )
+```
+
+Checks on the new features
+
+```{r}
+c(league_bat = league_bat, league_bowl = league_bowl,
+  league_venue = league_venue, league_pos = league_pos)
+
+new_cols <- c("sk_venue_wicket_rate", "sk_bat_at_venue_rate", "bat_venue_effect",
+              "sk_bowl_at_venue_rate", "bowl_venue_effect",
+              "striker_position", "striker_usual_position", "striker_pos_diff")
+
+bbl_all |>
+  summarise(across(all_of(new_cols),
+                   list(min = min, median = median, max = max, n_na = ~ sum(is.na(.x))))) |>
+  pivot_longer(everything()) |> print(n = Inf)
+
+count(bbl_all, striker_position)   # should run 1 to 11
+```
+
+Feature groups
+
+```{r}
+base_cols <- c(
+  "innings", "over_no", "balls_remaining", "score_before",
+  "wickets_lost_before", "required_runs", "free_hit",
+  "bowler_balls_bowled_before", "bowler_economy_before",
+  "bowler_boundary_p_before", "bowler_dot_ball_p_before",
+  "batsman_runs_scored_before", "batsman_balls_faced_before",
+  "batsman_strike_rate_before", "batsman_boundary_p_before",
+  "career_matches_before", "career_batting_avg_before",
+  "career_bowling_strike_rate_before", "career_batting_strike_rate_before",
+  "career_boundary_p_before", "career_matches_bowled_before",
+  "career_economy_before", "career_bowling_avg_before", "career_dot_p_before",
+  "phase_Powerplay", "phase_Middle", "phase_Death"
+)
+
+ratio_cols <- c("current_rr", "required_rr", "rr_gap", "resources",
+                "runs_per_wkt_in_hand", "batsman_sr_vs_rr", "batter_new")
+
+momentum_cols <- c("ball_in_over", "balls_since_wicket", "balls_since_boundary",
+                   "runs_last_6", "runs_last_12", "dots_last_6", "dots_last_12",
+                   "wkts_last_12", "bnds_last_12")
+
+partnership_cols <- c("partnership_runs_before", "partnership_balls_before")
+player_cols      <- c("sk_bat_dismissal_rate", "sk_bowl_wicket_rate")
+
+m4_cols <- c(base_cols, ratio_cols, momentum_cols, partnership_cols, player_cols)  # Model 4
+
+venue_cols    <- c("sk_venue_wicket_rate", "sk_bat_at_venue_rate", "bat_venue_effect",
+                   "sk_bowl_at_venue_rate", "bowl_venue_effect")
+position_cols <- c("striker_position", "striker_usual_position", "striker_pos_diff")
+```
+
+Select and split (same cutoff as Models 3 and 4)
+
+```{r}
+model_data <- bbl_all |>
+  select(match_id, start_date, all_of(unique(c(m4_cols, venue_cols, position_cols))),
+         all_of(target_col))
+
+train_data <- model_data |> filter(start_date <= cutoff_date)
+test_data  <- model_data |> filter(start_date >  cutoff_date)
+
+y_train <- train_data[[target_col]]
+y_test  <- test_data[[target_col]]
+
+c(train_rows = nrow(train_data), test_rows = nrow(test_data),
+  base_rate_train = mean(y_train), base_rate_test = mean(y_test))
+```
+
+Evaluation helper, parameters (same as Model 2) and grouped folds (same as Models 3 and 4)
+
+```{r}
+eval_preds <- function(truth, p) {
+  p <- pmin(pmax(p, 1e-15), 1 - 1e-15)
+  tibble(
+    pr_auc  = pr_auc_vec(factor(truth, levels = c(0, 1)), p, event_level = "second"),
+    roc_auc = roc_auc_vec(factor(truth, levels = c(0, 1)), p, event_level = "second"),
+    logloss = -mean(truth * log(p) + (1 - truth) * log(1 - p)),
+    brier   = mean((p - truth)^2)
+  )
+}
+
+params <- list(
+  objective = "binary:logistic",
+  eval_metric = "aucpr",
+  max_depth = 6,
+  eta = 0.05,
+  subsample = 0.8,
+  colsample_bytree = 0.8,
+  min_child_weight = 5
+)
+
+set.seed(35571381)
+train_matches <- unique(train_data$match_id)
+fold_of_match <- sample(rep(1:5, length.out = length(train_matches)))
+folds <- lapply(1:5, function(k) {
+  which(train_data$match_id %in% train_matches[fold_of_match == k])
+})
+```
+
+Fit one feature set: grouped CV to choose the number of rounds, then train and predict on the test set
+
+```{r}
+fit_eval <- function(cols) {
+  set.seed(35571381)
+  dtr <- xgb.DMatrix(train_data |> select(all_of(cols)) |> as.matrix(), label = y_train)
+  dte <- xgb.DMatrix(test_data  |> select(all_of(cols)) |> as.matrix(), label = y_test)
+
+  cv <- xgb.cv(params = params, data = dtr, nrounds = 1000, folds = folds,
+               early_stopping_rounds = 25, verbose = 0, maximize = TRUE)
+  nr <- cv$evaluation_log$iter[which.max(cv$evaluation_log$test_aucpr_mean)]
+
+  fit <- xgb.train(params = params, data = dtr, nrounds = nr, verbose = 0)
+  list(fit = fit, nrounds = nr, pred = predict(fit, dte))
+}
+
+variants <- list(
+  m5_venue    = c(m4_cols, venue_cols),
+  m5_position = c(m4_cols, position_cols),
+  m5_both     = c(m4_cols, venue_cols, position_cols)
+)
+
+runs <- map(variants, fit_eval)
+map_int(runs, "nrounds")
+```
+
+Test results
+
+```{r}
+m4 <- readRDS(here("Pranav", "data", "model_4_results.rds"))
+stopifnot(identical(as.numeric(m4$y_test), as.numeric(y_test)))   # same test rows
+
+results <- bind_rows(
+  base_rate = eval_preds(y_test, rep(mean(y_train), length(y_test))),
+  model_4   = eval_preds(y_test, m4$pred_probs),
+  imap_dfr(runs, ~ eval_preds(y_test, .x$pred) |> mutate(nrounds = .x$nrounds)),
+  .id = "model"
+)
+results
+```
+
+Paired bootstrap against Model 4: whole matches are resampled and the same resample is used for both models
+
+```{r}
+set.seed(35571381)
+idx_by_match <- split(seq_len(nrow(test_data)), test_data$match_id)
+
+boot_vs_m4 <- map_dfr(1:200, function(i) {
+  m   <- sample(names(idx_by_match), replace = TRUE)
+  idx <- unlist(idx_by_match[m], use.names = FALSE)
+  ref <- eval_preds(y_test[idx], m4$pred_probs[idx])
+  imap_dfr(runs, function(r, nm) {
+    a <- eval_preds(y_test[idx], r$pred[idx])
+    tibble(model = nm, pr_diff = a$pr_auc - ref$pr_auc, roc_diff = a$roc_auc - ref$roc_auc)
+  })
+})
+
+boot_vs_m4 |>
+  pivot_longer(c(pr_diff, roc_diff), names_to = "metric") |>
+  group_by(model, metric) |>
+  summarise(mean = mean(value),
+            lo = quantile(value, 0.025),
+            hi = quantile(value, 0.975), .groups = "drop")
+```
+
+Calibration and importance for the variant with both groups
+
+```{r}
+calibration <- tibble(pred = runs$m5_both$pred, actual = y_test) |>
+  mutate(bucket = ntile(pred, 10)) |>
+  group_by(bucket) |>
+  summarise(mean_pred = mean(pred), mean_actual = mean(actual), n = n(), .groups = "drop")
+calibration
+
+importance <- xgb.importance(model = runs$m5_both$fit)
+importance |> as_tibble() |> print(n = 30)
+importance |> as_tibble() |> filter(Feature %in% c(venue_cols, position_cols, player_cols))
+```
+
+
+```{r}
+cols_used <- variants$m5_both
+y_f <- factor(y_test, levels = c(0, 1))
+X   <- test_data |> select(all_of(cols_used)) |> as.matrix()
+
+stage_cols <- c("innings", "over_no", "balls_remaining", "score_before", "wickets_lost_before",
+                "required_runs", "free_hit", "resources", "current_rr", "required_rr", "rr_gap",
+                "runs_per_wkt_in_hand", "phase_Powerplay", "phase_Middle", "phase_Death")
+player_stat_cols <- cols_used[str_detect(cols_used,
+  "^(career_|bowler_|batsman_|sk_|bat_|bowl_|striker_|batter_)")]
+
+groups <- list(stage_of_innings = stage_cols, player_stats = player_stat_cols,
+               momentum = momentum_cols, partnership = partnership_cols)
+
+perm_drop <- function(cols, n_rep = 5) {
+  base <- pr_auc_vec(y_f, predict(runs$m5_both$fit, xgb.DMatrix(X)), event_level = "second")
+  drops <- map_dbl(1:n_rep, function(r) {
+    Xp <- X
+    Xp[, cols] <- X[sample(nrow(X)), cols, drop = FALSE]   # shuffle rows jointly
+    base - pr_auc_vec(y_f, predict(runs$m5_both$fit, xgb.DMatrix(Xp)), event_level = "second")
+  })
+  tibble(pr_auc_drop = mean(drops), sd = sd(drops))
+}
+
+set.seed(35571381)
+
+perm_groups   <- imap_dfr(groups, ~ perm_drop(.x) |> mutate(group = .y), .id = NULL) |>
+  arrange(desc(pr_auc_drop))
+perm_features <- map_dfr(cols_used, ~ perm_drop(.x) |> mutate(feature = .x)) |>
+  arrange(desc(pr_auc_drop))
+
+perm_groups
+perm_features |> print(n = 20)
+```
+
+
+XAI
+
+
+```{r}
+library(shapviz)   # install.packages("shapviz") if needed
+
+m5   <- readRDS(here("Pranav", "data", "model_5_results.rds"))
+fit  <- m5$runs$m5_both$fit
+cols <- m5$variants$m5_both
+td   <- m5$test_data
+
+set.seed(35571381)
+samp <- td |> slice_sample(n = 5000)               # sample keeps plots quick
+X    <- samp |> select(all_of(cols)) |> as.matrix()
+contrib <- predict(fit, X, predcontrib = TRUE)
+stopifnot(ncol(contrib) == length(cols) + 1)   # features + BIAS
+
+S <- contrib[, seq_along(cols), drop = FALSE]
+colnames(S) <- cols
+sv <- shapviz(S, X = as.data.frame(X), baseline = contrib[1, ncol(contrib)])
+# 1. Which features push wicket risk up or down
+sv_importance(sv, kind = "beeswarm", max_display = 15)
+
+# 2. Grouped SHAP: credit summed within a group per delivery, then averaged
+stage_cols <- intersect(c("innings", "over_no", "balls_remaining", "score_before",
+  "wickets_lost_before", "required_runs", "free_hit", "resources", "current_rr",
+  "required_rr", "rr_gap", "runs_per_wkt_in_hand",
+  "phase_Powerplay", "phase_Middle", "phase_Death"), cols)
+momentum_cols    <- intersect(c("ball_in_over", "balls_since_wicket", "balls_since_boundary",
+  "runs_last_6", "runs_last_12", "dots_last_6", "dots_last_12",
+  "wkts_last_12", "bnds_last_12"), cols)
+partnership_cols <- intersect(c("partnership_runs_before", "partnership_balls_before"), cols)
+groups <- list(stage_of_innings = stage_cols,
+               player_stats = setdiff(cols, c(stage_cols, momentum_cols, partnership_cols)),
+               momentum = momentum_cols, partnership = partnership_cols)
+
+imap_dfr(groups, ~ tibble(group = .y,
+                          mean_abs_shap = mean(abs(rowSums(S[, .x, drop = FALSE]))))) |>
+  ggplot(aes(reorder(group, mean_abs_shap), mean_abs_shap)) +
+  geom_col() + coord_flip() +
+  labs(x = NULL, y = "Mean |SHAP| (log-odds)", title = "Where the model's wicket signal comes from")
+
+# 3. Shape of the effects
+sv_dependence(sv, "over_no", color_var = "wickets_lost_before")
+sv_dependence(sv, "batsman_balls_faced_before", color_var = "over_no")
+
+# 4. One delivery explained: the highest-risk ball in the sample
+i <- which.max(rowSums(S))
+sv_waterfall(sv, row_id = i, max_display = 10)
+
+# 5. Heatmap: average predicted wicket probability by over and wickets down
+td |>
+  mutate(pred = m5$runs$m5_both$pred) |>
+  filter(wickets_lost_before <= 8) |>
+  group_by(over_no, wickets_lost_before) |>
+  summarise(pred = mean(pred), n = n(), .groups = "drop") |>
+  filter(n >= 30) |>
+  ggplot(aes(over_no, wickets_lost_before, fill = pred)) +
+  geom_tile() +
+  scale_fill_viridis_c(labels = scales::percent) +
+  labs(x = "Over", y = "Wickets lost", fill = "P(wicket)")
+```
+Save
+
+```{r}
+saveRDS(
+  list(runs = runs, params = params, variants = variants, results = results,
+       boot_vs_m4 = boot_vs_m4, calibration = calibration, importance = importance,
+       y_test = y_test, test_data = test_data),
+  here("Pranav", "data", "model_5_results.rds")
+)
+```
