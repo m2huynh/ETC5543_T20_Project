@@ -3,3 +3,17 @@ title: "Project Report-Pranav"
 format: html
 ---
 
+
+### 1. Research objectives
+
+This analysis investigates two questions about player performance in the Big Bash League (BBL). The first examines whether wicket outcomes can be predicted using information available before a delivery, while the second evaluates bowling effectiveness after accounting for the circumstances in which bowlers operate.
+
+####  Research question 1: Can we build a model that predicts the probability of a wicket falling on any given delivery, using match-state and player-identity features?
+
+The final prediction model uses XGBoost, a gradient-boosting algorithm, to estimate the probability of a wicket on each delivery [ref]. It combines information about the innings, score, wickets lost, balls remaining, recent scoring patterns and historical player performance. Its performance is assessed on chronologically later matches, with precision–recall area under the curve (PR-AUC) used as the primary metric because wicket outcomes are fairly uncommon. The analysis also examines calibration and feature contributions to understand the usefulness and limitations of the predictions.
+
+#### Research question 2: Which bowlers are most effective at restricting runs and taking wickets in the death overs, after controlling for the match state in which they bowl?
+
+This question uses linear and logistic mixed-effects models to estimate differences between bowlers in runs conceded and bowler-credited wickets, respectively [ref]. The models account for match-state variables and include random effects for bowler, striker and venue. Partial pooling moderates estimates for bowlers with limited observations, helping to avoid rankings driven by unusually favourable or unfavourable small samples.
+
+The two questions provide complementary perspectives: the prediction model assesses how much delivery-level wicket outcomes can be anticipated, while the mixed-effects analysis investigates whether differences in bowling effectiveness remain after adjusting for context. Together, they distinguish predictive information from adjusted comparisons of player performance.
