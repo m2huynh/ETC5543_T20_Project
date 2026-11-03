@@ -3,6 +3,17 @@ title: "Project Report-Pranav"
 format: html
 ---
 
+```{r}
+#| echo: false
+knitr::opts_chunk$set(echo= FALSE, warning= FALSE, message= FALSE)
+```
+```{r}
+library(tidyverse)
+library(here)
+q2   <- readRDS(here("Pranav", "data", "presentation_objects.rds"))
+q4 <- readRDS(here("Pranav", "data", "q4_presentation_objects.rds"))
+```
+
 
 ### 1. Research objectives
 
@@ -22,28 +33,103 @@ The two questions provide complementary perspectives: the prediction model asses
 ### 2. Data preparation and feature engineering
 #### 2.1 Data preparation
 The analysis uses the complete Cricsheet BBL ball-by-ball archive from the 2011/12 to 2024/25 seasons [ref]. The delivery-level data records the match, season, date, venue, innings, batting and bowling teams, striker, bowler, runs, extras and dismissal information. A supplementary match-information table provides additional match-level details. These records are prepared in R, with dates converted to date objects and delivery-level calculations grouped by match and innings where necessary.
+
 An important preprocessing step is distinguishing legal deliveries from wides and no-balls. These deliveries can add runs without counting towards the six legal balls in an over, affecting calculations of balls remaining, bowling economy and player performance. The data also distinguishes between any dismissal and a wicket credited to the bowler. This distinction matters because the wicket-prediction model targets any recorded dismissal other than a retired hurt, whereas the death-over analysis considers only dismissals credited to the bowler. For example, a run-out contributes to the first outcome but not the second.
+
 Matches identified as shortened are flagged during preprocessing. The final wicket-prediction model excludes these matches because revised innings lengths and targets can distort comparisons of match state. The death-over analysis applies the same exclusion. This restriction improves consistency in the definition of the innings and chase conditions being modelled.
 
 #### 2.2 Match-state features
 The raw delivery records do not directly provide all the predictors needed to describe the state of an innings. These are derived from the sequence of deliveries, ensuring that the model can represent conditions immediately before the delivery being evaluated.
 The score before the delivery is calculated from cumulative runs, while wickets lost before the delivery are derived from the dismissal records. Balls remaining are based on the number of legal deliveries already bowled, with wides and no-balls excluded from the count. For second-innings deliveries, the first-innings total is used to calculate the target and runs required. These variables support additional features such as current run rate, required run rate, the difference between required and current run rates, wickets in hand and runs required per wicket in hand.
+
 The phase of play is also encoded as a categorical distinction between the powerplay, middle and death overs. For the final model, these phases are represented by indicator variables. Additional features describe the position within an over and recent match momentum, including runs and dot balls across the previous six and twelve deliveries, wickets and boundaries over the previous twelve deliveries, and balls since the most recent wicket or boundary. Partnership runs and legal balls faced within the current partnership provide further information about the immediate batting context.
+
 These features allow the prediction model to represent more than the current score alone. Two deliveries at the same score may have different wicket probabilities depending on the wickets already lost, the number of balls remaining, recent scoring patterns and the requirements of the chase.
 
 #### 2.3 Player-performance and contextual features
 The final wicket-prediction model incorporates both within-match performance and historical information. Within-match batter features include runs scored, balls faced, strike rate and boundary-scoring proportion before the current delivery. Bowler features include legal balls bowled, economy rate, dot-ball percentage and boundary percentage before the delivery. Using lagged values ensures that these statistics do not include the outcome of the delivery being predicted.
+
 Historical career features summarise previous performances by each batter and bowler. Batter statistics include previous appearances, batting average, strike rate and boundary-scoring proportion. Bowler statistics include previous appearances, economy rate, bowling average, bowling strike rate and dot-ball percentage. These measures provide information about prior performance without relying on the player's final statistics from the current match.
+
 The final model, documented in model_7_ensemble.qmd, extends the features developed in earlier model iterations. It includes smoothed estimates of batter dismissal rate and bowler-credited wicket rate, using league-level rates as reference values so that estimates based on limited prior observations are not treated as equally reliable as those supported by substantial data. It also includes venue-level wicket rates and player–venue adjustments, as well as the striker's current batting position, historical usual position and the difference between them. These features allow the model to account for differences in player performance and context without simply treating every player's observed rate as a stable measure of ability.
+
 The historical features are constructed from prior matches, while league-level reference rates are calculated using training matches only. This is intended to prevent future information from influencing the predictors. The final model therefore combines match state, recent performance, historical player statistics, venue context and batting position.
 
 #### 2.4 Modelling datasets
 The final wicket-prediction model uses a chronological split, with approximately 80% of eligible matches allocated to training and later matches reserved for testing. Hyperparameter selection is conducted using five-fold cross-validation grouped by match, so deliveries from a single match are not split across validation folds. The final ensemble averages predictions from the three highest-performing configurations, with each configuration fitted using three random seeds. The test set is reserved for final evaluation rather than repeated model selection.
+
 The death-over analysis uses a separate modelling dataset restricted to overs 17–20 of eligible matches. It models runs conceded by the bowler and bowler-credited wickets as distinct outcomes, using match-state predictors and random effects for bowler, striker and venue. This separation ensures that the wicket-prediction task evaluates the probability of any dismissal, whereas the death-over analysis focuses on bowling effectiveness in terms of runs conceded and wickets credited to the bowler.
 
 ### 3. Wicket prediction model
 #### 3.1 Model development and feature selection
 The first research question investigates whether the probability of a wicket falling on a delivery can be predicted using match-state and player-performance features. This was approached as a binary classification problem, with the occurrence of a wicket as the response variable. XGBoost was selected as the primary modelling method because it can capture non-linear relationships and interactions between the features.
+
 An important part of the modelling process was assessing whether historical player-performance information provided additional predictive value. Model 3 provided the initial feature set, incorporating match-state, momentum and partnership information. Model 4 extended this by including two smoothed historical performance measures: batter dismissal rate and bowler wicket rate. These features were calculated using previous matches and shrunk towards league averages to reduce the influence of limited playing histories.
+
 The comparison between Models 3 and 4 provides an indication of the contribution of these additional player features. Both models were evaluated on the same test deliveries, with differences assessed using paired bootstrap resampling at the match level. Model 4 achieved a PR-AUC improvement of 0.00146 over Model 3, although its 95% bootstrap interval ranged from -0.000804 to 0.00422. This interval includes zero, so the results do not establish a statistically clear improvement in PR-AUC. However, ROC-AUC increased by 0.00426, with a 95% interval of 0.000253–0.00862, providing evidence of a small improvement in overall discrimination.
+
 The feature importance results for Model 4 also indicated that historical player information contributed to the predictions. Batter dismissal rate was the seventh most influential feature according to XGBoost gain, while bowler wicket rate ranked twenty-fourth. These findings supported retaining player-performance information in subsequent modelling, although feature importance alone does not establish the independent predictive contribution of either feature.
+
+#### 3.2 Final model development
+
+Following the feature-engineering experiments, Model 7 was developed as the final XGBoost ensemble. It incorporated match-state, momentum, partnership, historical player-performance, venue-related and batting-position features. Historical player and venue measures were smoothed towards relevant league averages to reduce instability arising from limited observations.
+
+Model development used a chronological training and test split, with approximately 80% of matches allocated to training and the remaining matches reserved for final evaluation. Hyperparameter selection was conducted using random search and five-fold cross-validation, with deliveries from the same match kept within a single fold. This reduced the risk of information leakage between training and validation observations from the same match.
+
+PR-AUC was prioritised during model selection because wickets represent a relatively rare outcome. Early stopping was used to determine the appropriate number of boosting iterations. The final ensemble combined the three best-performing hyperparameter configurations, each fitted using three different random seeds. Predictions from the resulting nine models were averaged to produce the final wicket probabilities.
+
+#### 3.3 Predictive performance
+
+Model 7 was evaluated on a chronological holdout test set containing 29,111 deliveries and 1,599 wickets, representing an observed wicket rate of 5.49%. Its PR-AUC was 0.0906, with a 95% match-bootstrap confidence interval of 0.0826–0.0983. This exceeded the baseline value corresponding to the overall wicket rate. The model also achieved a ROC-AUC of 0.613 (95% CI: 0.597–0.629). While this indicates that the model ranks wicket deliveries above non-wicket deliveries more often than chance, its overall discriminatory ability remains modest.
+
+The model's ability to distinguish between deliveries with different levels of wicket risk is more apparent when examining the predicted-risk deciles. Test deliveries were ranked by predicted wicket probability and divided into ten approximately equal-sized groups. The highest-risk decile contained 21.1% of all test-set wickets despite representing only 10% of deliveries. Its observed wicket rate was 11.6%, compared with the overall rate of 5.49%, resulting in a lift of 2.11. In contrast, the safest decile had an observed wicket rate of 3.12%.
+
+Furthermore, the riskiest 30% of deliveries accounted for 45.0% of all wickets. These findings indicate that Model 7 is more effective at identifying groups of deliveries with elevated wicket risk than at making highly precise predictions for individual deliveries.
+
+
+
+```{r}
+#| tbl-cap: "Observed wicket rates and distribution of wickets across groups ranked by predicted wicket probability. Decile 10 represents the highest-risk deliveries."
+
+q2$tables$decile
+```
+
+
+#### 3.4 Calibration and performance across phases
+
+In addition to ranking performance, calibration was examined by comparing the average predicted wicket probability with the observed wicket rate across ten equally sized groups of test deliveries. Predictions were closely aligned with observed outcomes in the lower-risk groups. For example, the fifth group had a predicted wicket rate of 4.56% and an observed rate of 4.57%. However, the model increasingly underestimated wicket probabilities towards the higher-risk end. In the ninth group, the predicted rate was 6.66%, compared with an observed rate of 7.52%. This difference was more pronounced in the highest-risk group, where the model predicted a wicket rate of 10.0%, while the observed rate was 11.6%.
+This suggests that although the model can distinguish between relatively low- and high-risk deliveries, its predicted probabilities are somewhat conservative among the highest-risk deliveries. The distinction between ranking and calibration is important: a model can successfully identify which deliveries are relatively riskier without accurately estimating their absolute probabilities of producing a wicket.
+
+Performance was also examined across the three phases of an innings. During the powerplay (overs 1–6), the model predicted 394 wickets against 398 observed. In the middle overs (7–16), it predicted 711 against 720 observed. These differences were relatively small. However, during the death overs (17–20), the model predicted 423 wickets compared with 481 observed. The predicted wicket rate was 8.51%, while the actual rate was 9.68%, representing an underestimation of 1.17 percentage points.
+
+The model therefore reproduced the observed wicket frequency reasonably closely in the powerplay and middle overs, but underestimated wickets during the death phase. This is an important limitation given the higher observed wicket frequency in the final overs of an innings.
+
+```{r}
+#| tbl-cap: Predicted and observed wicket counts and rates across the powerplay, middle and death phases.
+
+q2$tables$phase
+```
+
+
+#### 3.5 Interpretation of influential features
+
+SHAP values were used to examine how individual features contributed to Model 7's predictions. Figure 3.1 presents the distribution of SHAP values for the 15 most influential features across a sample of test deliveries. Positive SHAP values increase the predicted log-odds of a wicket, while negative values decrease them. The colour indicates the relative feature value, with purple representing lower values and yellow representing higher values.
+
+The innings resource measure was the most influential feature in the displayed analysis, followed by over number, required run rate and balls remaining. This highlights the importance of match state in the model's predictions. Higher over numbers generally corresponded to more positive SHAP contributions, indicating an association between later stages of the innings and increased predicted wicket risk. Required run rate and balls remaining also showed substantial variation in their contributions, suggesting that the model responds to the changing demands and constraints of an innings.
+
+Recent match events were also influential. The number of balls since the previous wicket displayed a wide distribution of SHAP values, indicating that recent wicket history contributes to differences in predicted risk. Score before the delivery, partnership information and batter-related historical measures also appeared among the influential features. This suggests that the model incorporates both the immediate match situation and information about player performance when estimating wicket probabilities.
+
+```{r}
+#| tbl-cap: SHAP values for the 15 most influential features in a sample of test deliveries. Positive values increase predicted wicket risk, while negative values decrease it.
+
+q2$plots$shap_beeswarm
+```
+
+
+Overall, the results show that match-state information plays an important role in predicting wicket risk, with player-performance measures and recent match events providing additional information. However, SHAP values describe how features contribute to the fitted model's predictions and should not be interpreted as causal effects. The model's modest discrimination, underestimation of high-risk probabilities and weaker performance in the death overs should also be considered when assessing its practical usefulness.
+
+#### 3.6 Model robustness and diagnostics
+
+Several assessments were conducted to examine the reliability of the predictive model. Match-grouped cross-validation ensured that deliveries from the same match were not shared between training and validation folds, while the chronological holdout set provided an assessment on later matches. Match-level bootstrap intervals were also used to quantify uncertainty in predictive performance while accounting for dependence between deliveries within a match.
+
+The calibration analysis identified some systematic underestimation of wicket probabilities among the highest-risk deliveries, indicating that ranking performance was stronger than probability estimation. Performance also varied across innings phases, with the model underestimating wickets during the death overs. Finally, comparison between Models 3 and 4 examined the sensitivity of predictive performance to the inclusion of historical player-performance features. Although the improvement in PR-AUC was inconclusive, ROC-AUC showed a small positive improvement. Together, these assessments provide insight into the model's reliability, predictive limitations and sensitivity to feature selection.
