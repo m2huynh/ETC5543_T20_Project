@@ -1,15 +1,24 @@
 ---
 title: "Modelling Match State and Player Performance in the Big Bash League"
-format: pdf
+format:
+  pdf:
+    toc: true
+    number-sections: true
+editor: visual
 ---
 
 ```{r}
 #| echo: false
 knitr::opts_chunk$set(echo= FALSE, warning= FALSE, message= FALSE)
 ```
+
 ```{r}
 library(tidyverse)
 library(here)
+library(lme4)
+library(sjPlot)
+library(cluster)
+library(knitr)
 q2   <- readRDS(here("Pranav", "data", "presentation_objects.rds"))
 q4 <- readRDS(here("Pranav", "data", "q4_presentation_objects.rds"))
 ```
@@ -395,3 +404,539 @@ Another major improvement would be to combine the match data with weather data b
 If historical weather information was available for each venue and match, variables such as rainfall, temperature and humidity could be combined with the ball-by-ball data. This would allow the dashboard to compare how teams and players have historically performed under different weather conditions and whether scoring rates or wicket patterns change depending on those conditions. This could add another important layer to understanding why the same venue or team matchup may behave very differently from one match to another.
 
 
+## Investigating the Impact of Toss Decisions on Match Outcomes and Identifying Distinct Player Performance Profiles
+
+### Strategic Evaluation of Coin Toss Advantage in the Big Bash League via Hierarchical Mixed-Effects Modeling
+
+#### Background, Theoretical Motivation, and Behavioral Economics
+
+In Twenty20 (T20) cricket, conventional wisdom strongly asserts that winning the pre-match coin toss bestows a major tactical advantage upon the victorious captain. Within major franchise leagues globally—and specifically across the Big Bash League (BBL) in Australia—captains overwhelmingly choose to field (bowl) first upon winning the toss. This preference is rooted in two primary theoretical mechanisms: information symmetry and micro-climatic environmental conditions. Fielding first grants the chasing side complete target clarity, allowing analytical staff and batters to calculate required run rates on a ball-by-ball basis and target vulnerable bowlers with precision. Environmentally, evening fixtures in Australian coastal grounds frequently accumulate dew on the turf during the second innings, saturating the leather ball and impairing bowlers' seam grip, spin control, and execution of late-over cutters or yorkers.
+
+However, behavioral economics suggests that strong operational preferences under high uncertainty often stem from cognitive biases—such as availability heuristics and status quo bias—rather than true causal advantages. Captains who observe high-profile successful run chases may over-attribute victory to the toss decision while ignoring counter-factual instances where defending a total was optimal. If electing to field first provides a genuine tactical edge, empirical data should demonstrate a robust, statistically significant increase in match win probability. Conversely, if the unadjusted win rate gap is statistically non-significant or vanishes once controlling for baseline franchise quality and venue effects, strategic focus must pivot from pre-match environmental choices to live in-game execution. This section systematically evaluates historical BBL toss outcomes ($N = 647$) using nonparametric contingency testing and Generalized Linear Mixed Models (GLMM).
+
+#### Data Preprocessing, Data Hygiene, and Feature Engineering
+
+To evaluate coin toss dynamics without observational bias, historical Big Bash League match logs were harmonized across multi-year tournament records.
+
+##### Venue Standardization and Harmonization
+
+Stadium identifiers in raw tournament logs frequently exhibit sponsorship renamings and regional string variations (e.g., Docklands appearing as `"Docklands Stadium"`, `"Marvel Stadium"`, or `"Docklands Stadium, Melbourne"`). A comprehensive lookup dictionary was implemented to standardize raw strings into 48 canonical venue classifications while mapping primary home franchises and geographic cities.
+
+```{r venue-standardization}
+# Create clean lookup table for stadium harmonization
+stadium_lookup <- tibble::tribble(
+  ~original_stadium, ~clean_stadium, ~home_team, ~city,
+  "Sydney Showground Stadium", "Sydney Showground Stadium", "Sydney Thunder", "Sydney",
+  "Adelaide Oval", "Adelaide Oval", "Adelaide Strikers", "Adelaide",
+  "Docklands Stadium", "Marvel Stadium", "Melbourne Renegades", "Melbourne",
+  "Sydney Cricket Ground", "Sydney Cricket Ground (SCG)", "Sydney Sixers", "Sydney",
+  "Western Australia Cricket Association Ground", "WACA Ground", "Western Australia", "Perth",
+  "Bellerive Oval", "Bellerive Oval (Ninja Stadium)", "Hobart Hurricanes", "Hobart",
+  "Brisbane Cricket Ground, Woolloongabba", "The Gabba", "Brisbane Heat", "Brisbane",
+  "Melbourne Cricket Ground", "Melbourne Cricket Ground (MCG)", "Melbourne Stars", "Melbourne",
+  "W.A.C.A. Ground", "WACA Ground", "Western Australia", "Perth",
+  "Aurora Stadium", "University of Tasmania Stadium", "Hobart Hurricanes", "Launceston",
+  "Simonds Stadium, South Geelong, Victoria", "Kardinia Park (GMHBA Stadium)", "Melbourne Renegades", "Geelong",
+  "Traeger Park", "Traeger Park", "Hobart Hurricanes", "Alice Springs",
+  "Manuka Oval", "Manuka Oval", "Sydney Thunder", "Canberra",
+  "Perth Stadium", "Optus Stadium", "Perth Scorchers", "Perth",
+  "Carrara Oval", "Metricon Stadium (Carrara Stadium)", "Brisbane Heat", "Gold Coast",
+  "Geelong Cricket Ground", "Kardinia Park (GMHBA Stadium)", "Melbourne Renegades", "Geelong",
+  "Ted Summerton Reserve", "Ted Summerton Reserve", "Melbourne Stars", "Moe",
+  "International Sports Stadium", "International Sports Stadium (Coffs Harbour)", "Sydney Sixers", "Coffs Harbour",
+  "Brisbane Cricket Ground", "The Gabba", "Brisbane Heat", "Brisbane",
+  "Manuka Oval, Canberra", "Manuka Oval", "Sydney Thunder", "Canberra",
+  "Docklands Stadium, Melbourne", "Marvel Stadium", "Melbourne Renegades", "Melbourne",
+  "Aurora Stadium, Launceston", "University of Tasmania Stadium", "Hobart Hurricanes", "Launceston",
+  "Bellerive Oval, Hobart", "Bellerive Oval (Ninja Stadium)", "Hobart Hurricanes", "Hobart",
+  "Brisbane Cricket Ground, Woolloongabba, Brisbane", "The Gabba", "Brisbane Heat", "Brisbane",
+  "GMHBA Stadium, South Geelong, Victoria", "Kardinia Park (GMHBA Stadium)", "Melbourne Renegades", "Geelong",
+  "Junction Oval, Melbourne", "Junction Oval", "Melbourne Stars", "Melbourne",
+  "International Sports Stadium, Coffs Harbour", "International Sports Stadium (Coffs Harbour)", "Sydney Sixers", "Coffs Harbour",
+  "Cazaly's Stadium, Cairns", "Cazalys Stadium", "Brisbane Heat", "Cairns",
+  "University of Tasmania Stadium, Launceston", "University of Tasmania Stadium", "Hobart Hurricanes", "Launceston",
+  "Lavington Sports Oval, Albury", "Lavington Sports Oval", "Sydney Thunder", "Albury",
+  "North Sydney Oval, Sydney", "North Sydney Oval", "Sydney Sixers", "Sydney",
+  "Stadium Australia", "Stadium Australia", "Sydney Thunder", "Sydney",
+  "Optus Stadium", "Optus Stadium", "Perth Scorchers", "Perth",
+  "SCG", "Sydney Cricket Ground (SCG)", "Sydney Sixers", "Sydney",
+  "The Gabba", "The Gabba", "Brisbane Heat", "Brisbane",
+  "Marvel Stadium", "Marvel Stadium", "Melbourne Renegades", "Melbourne",
+  "MCG", "Melbourne Cricket Ground (MCG)", "Melbourne Stars", "Melbourne",
+  "Coffs Harbour International Stadium", "International Sports Stadium (Coffs Harbour)", "Sydney Sixers", "Coffs Harbour",
+  "GMHBA Stadium", "Kardinia Park (GMHBA Stadium)", "Melbourne Renegades", "Geelong",
+  "Carrara Stadium", "Metricon Stadium (Carrara Stadium)", "Brisbane Heat", "Gold Coast",
+  "Lavington Sports Ground", "Lavington Sports Oval", "Sydney Thunder", "Albury",
+  "University Of Tasmania Stadium", "University of Tasmania Stadium", "Hobart Hurricanes", "Launceston",
+  "Metricon Stadium", "Metricon Stadium (Carrara Stadium)", "Brisbane Heat", "Gold Coast",
+  "Junction Oval", "Junction Oval", "Melbourne Stars", "Melbourne",
+  "Cazalys Stadium", "Cazalys Stadium", "Brisbane Heat", "Cairns",
+  "C.ex Coffs International Stadium", "International Sports Stadium (Coffs Harbour)", "Sydney Sixers", "Coffs Harbour",
+  "WACA Ground", "WACA Ground", "Western Australia", "Perth",
+  "ANZ Stadium", "Stadium Australia", "Sydney Thunder", "Sydney"
+)
+
+stadium_lookup %>%
+  head(4) %>%
+  knitr::kable(
+    caption = "First 4 rows of BBL Venue Standardization and Home-Team Mapping",
+    col.names = c("Original Venue String", "Standardized Venue", "Assigned Home Team", "City")
+  )
+```
+
+Each dictionary field serves a distinct methodological role: `original_stadium` preserves raw auditability; `clean_stadium` establishes a canonical grouping classifier for mixed-effects regression; `home_team` assigns ground-truth home franchise status; and `city` tags geographic location.
+
+##### Binary Feature Derivation
+
+Two binary features were derived: `toss_winner_is_home_team` ($1$ if the toss winner played at their home ground, $0$ otherwise) to isolate home-ground advantage, and `winner_same_as_toss_winner` ($1$ if the toss-winning team won the match, $0$ otherwise) as the primary dependent variable.
+
+```{r data-processing}
+# Load match info and pair data
+bbl_all <- read_csv(here::here("data/bbl_all.csv")) %>%
+  mutate(match_pair = paste(pmin(batting_team, bowling_team), pmax(batting_team, bowling_team), sep = " vs. "))
+
+bbl_match_pairings <- bbl_all %>%
+  select(match_id, match_pair) %>%
+  distinct()
+
+bbl_match_info <- read_csv(here::here("data/bbl_match_info.csv")) %>%
+  filter(!is.na(winner)) %>%
+  left_join(bbl_match_pairings, by = "match_id")
+
+# Execute stadium joining logic
+source(here::here("Mark/clean_stadium_names.R"))
+source(here::here("Mark/join_stadium_home_team.R"))
+
+# Add relationship indicators
+coin_toss_advantage <- bbl_match_info %>%
+  mutate(toss_winner_is_home_team = home_team == toss_winner, .after = toss_winner) %>%
+  mutate(winner_is_home_team = home_team == winner) %>%
+  mutate(winner_same_as_toss_winner = winner == toss_winner) %>%
+  mutate(across(where(is.character), as.factor))
+```
+
+#### Hypothesis Testing: Assessing Toss Advantage via Pearson's Chi-Square Test
+
+Across $N = 647$ BBL matches, toss-winning captains elected to **field first in 399 matches (61.67%)** and **bat first in 248 matches (38.33%)**, establishing a clear operational bias toward chasing.
+
+```{r toss-summary}
+toss_summary <- coin_toss_advantage %>%
+  group_by(toss_decision) %>%
+  summarise(
+    total_matches = n(),
+    toss_winner_wins = sum(winner_same_as_toss_winner, na.rm = TRUE),
+    win_rate_pct = round(mean(winner_same_as_toss_winner, na.rm = TRUE) * 100, 2)
+  )
+
+knitr::kable(toss_summary, col.names = c("Toss Decision", "Total Matches", "Toss Winner Wins", "Win Rate (%)"))
+```
+
+Teams choosing to field won 54.64% of matches compared to 50.40% for teams choosing to bat—a raw differential of 4.24 percentage points.
+
+To test independence, Pearson's Chi-Square ($\chi^2$) test was conducted ($H_0$: Match outcome is independent of toss decision):
+
+$$
+\chi^2 = \sum \frac{(O_{ij} - E_{ij})^2}{E_{ij}}
+$$
+
+```{r chisq-test}
+chisq_res <- chisq.test(
+  coin_toss_advantage$toss_decision,
+  coin_toss_advantage$winner_same_as_toss_winner
+)
+
+chisq_res %>%
+  broom::tidy() %>%
+  select(1:3) %>%
+  mutate(across(everything(), \(x) round(x, 2))) %>%
+  knitr::kable(col.names = c("Statistic (Chi-Sq)", "p-value", "Degrees of Freedom"))
+```
+
+The test yielded $\chi^2 = 0.94$ ($\text{df} = 1, p = 0.333$). Because $p > 0.05$, we **fail to reject the null hypothesis**. The 4.24% win-rate gap is statistically non-significant and consistent with random sampling noise.
+
+#### Hierarchical Mixed-Effects Modeling (GLMM)
+
+Standard fixed-effects logistic regression ($\text{GLM}$) across 48 raw venues induced quasi-complete separation due to low-sample regional grounds (e.g., Junction Oval). To resolve standard error inflation without discarding grounds, Generalized Linear Mixed Models ($\text{GLMM}$) were specified via `lme4`. Random intercepts apply Empirical Bayes partial pooling (shrinkage), pulling low-sample ground estimates toward the global mean.
+
+The full mathematical specification (Model 3) is expressed as:
+
+$$
+\operatorname{logit}(P(Y_{ijk} = 1)) = \beta_0 + \beta_1 (\text{Field}) + \beta_2 (\text{Home}) + u_{0j,\text{venue}} + u_{0k,\text{team}}
+$$
+
+where $u_{0j,\text{venue}} \sim N(0, \sigma^2_{\text{venue}})$ and $u_{0k,\text{team}} \sim N(0, \sigma^2_{\text{team}})$.
+
+```{r glmm-models}
+# Model 1: Unadjusted (Toss Decision only)
+m1 <- glm(
+  winner_same_as_toss_winner ~ toss_decision,
+  data = coin_toss_advantage,
+  family = binomial(link = "logit")
+)
+
+# Model 2: + Venue Random Effects & Home Advantage
+m2_glmm <- glmer(
+  winner_same_as_toss_winner ~ toss_decision + toss_winner_is_home_team + (1 | clean_stadium),
+  data = coin_toss_advantage,
+  family = binomial(link = "logit")
+)
+
+# Model 3: + Team Random Effects (Full Specification)
+m3_glmm <- glmer(
+  winner_same_as_toss_winner ~ toss_decision + toss_winner_is_home_team + (1 | clean_stadium) + (1 | toss_winner),
+  data = coin_toss_advantage,
+  family = binomial(link = "logit")
+)
+
+# Render Comparative Table
+tab_model(
+  m1, m2_glmm, m3_glmm,
+  pred.labels = c(
+    "(Intercept)" = "Intercept",
+    "toss_decisionfield" = "Toss Decision [Field]",
+    "toss_winner_is_home_teamTRUE" = "Toss Winner is Home Team [TRUE]"
+  ),
+  dv.labels = c("Model 1 (Toss Decision only)", "Model 2 (+ Venue GLMM)", "Model 3 (+ Team GLMM)"),
+  show.aicc = TRUE,
+  show.ci = 0.95,
+  show.p = TRUE
+)
+```
+
+##### Empirical Model Results
+
+1.  **Invariance of Toss Effect:** Choosing to field yields stable, non-significant odds ratios across specifications ($\text{OR} = 1.19, p = 0.294$ in Model 1; $\text{OR} = 1.16, p = 0.349$ in Model 2; $\text{OR} = 1.19, p = 0.289$ in Model 3).
+2.  **Home-Ground Advantage Trend:** Controlling for team quality in Model 3 increases home-ground odds to $\text{OR} = 1.35$ ($95\%\text{ CI: } 0.97 - 1.87, p = 0.073$), showing a weak positive trend.
+3.  **Variance Components & Selection:** Venue variance is negligible ($\sigma^2_{\text{venue}} \approx 0.000$), while team identity accounts for 3% of outcome variance ($\sigma^2_{\text{team}} = 0.103, \text{ICC} = 0.030$). Model 3 achieves superior fit ($\text{AICc} = 894.541$).
+4.  **Bounded Predictive Power:** Model 3 Tjur's marginal $R^2$ is $0.009$ ($0.9\%$) and conditional $R^2$ is $0.039$ ($3.9\%$). Over **96% of outcome variance remains unexplained by pre-game factors**, proving that live match execution overwhelmingly dictates victory.
+
+### Unsupervised Machine Learning for Player Archetype Discovery via PCA and K-Means Clustering
+
+#### Feature Engineering and Multi-Dimensional Performance Vectors
+
+Traditional aggregate summary metrics (e.g., career batting average or economy rate) obscure phase-specific tactical utility. To isolate functional roles, performance matrices were constructed for batters ($N = 227, \ge 100$ balls faced) and bowlers ($N = 217, \ge 120$ balls bowled) across five engineered features spanning four dimensions:
+
+##### Scoring Efficiency Dimensions
+
+Batter Strike Rate ($\text{SR} = (\text{Runs} / \text{Balls}) \times 100$) measures scoring speed independent of dismissal frequency, isolating pure scoring velocity. Bowler Economy Rate ($\text{Economy} = (\text{Runs Conceded} / \text{Overs}) \times 6$) measures defensive run restriction per over.
+
+##### Delivery Control Dimensions
+
+Batter Dot Percentage ($\text{Dot \%}_{\text{bat}} = (\text{Dots} / \text{Balls}) \times 100$) evaluates strike-rotation capability; high dot values reflect friction that elevates team pressure. Bowler Dot Percentage ($\text{Dot \%}_{\text{bowl}} = (\text{Dots} / \text{Balls}) \times 100$) measures pressure accumulation that forces batters into high-risk errors.
+
+##### Aggressive Impact Dimensions
+
+Batter Boundary Percentage ($\text{Boundary \%}_{\text{bat}} = ((\text{4s} + \text{6s}) / \text{Balls}) \times 100$) isolates boundary power. Bowler Boundary Conceded Percentage ($\text{Boundary Conceded \%}_{\text{bowl}} = ((\text{4s} + \text{6s Conceded}) / \text{Balls}) \times 100$) evaluates vulnerability under attack.
+
+##### Phase Specialization Dimensions
+
+Powerplay Delivery Share ($\text{PP \%} = (\text{Overs 1–6 Balls} / \text{Total Balls}) \times 100$) identifies top-order batters exploiting field restrictions and opening pace bowlers. Death Overs Share ($\text{Death \%} = (\text{Overs 17–20 Balls} / \text{Total Balls}) \times 100$) isolates late-innings finishers and execution bowlers.
+
+All features were standardized via $Z$-score normalization ($z_{ij} = (x_{ij} - \bar{x}_j)/s_j$) to ensure equal Euclidean distance weighting in $K$-Means clustering.
+
+#### Batter Archetype Analysis
+
+Candidate cluster configurations ($k \in \{2, \dots, 10\}$) were evaluated using average Silhouette Width $S(i) = (b(i) - a(i)) / \max(a(i), b(i))$. Optimal partitioning was achieved at $k = 3$ ($\bar{S} = 0.285$).
+
+```{r batter-pipeline}
+set.seed(1)
+
+# Feature engineering
+batter_stats <- bbl_all %>%
+  filter(is.na(wides)) %>%
+  mutate(
+    phase = case_when(ball < 6 ~ "Powerplay", ball < 16 ~ "Middle", TRUE ~ "Death"),
+    is_dot = ifelse(runs_off_bat == 0 & extras == 0, 1, 0),
+    is_boundary = ifelse(runs_off_bat %in% c(4, 6), 1, 0)
+  ) %>%
+  group_by(striker) %>%
+  filter(n() >= 100) %>%
+  summarise(
+    balls_faced = n(),
+    strike_rate = (sum(runs_off_bat) / balls_faced) * 100,
+    dot_pct = mean(is_dot) * 100,
+    boundary_pct = mean(is_boundary) * 100,
+    pp_ball_pct = mean(phase == "Powerplay") * 100,
+    death_ball_pct = mean(phase == "Death") * 100,
+    .groups = "drop"
+  )
+
+batter_matrix <- batter_stats %>%
+  column_to_rownames("striker") %>%
+  select(-balls_faced) %>%
+  scale()
+
+# Silhouette scores
+k_values <- 2:10
+silhouette_scores_bat <- sapply(k_values, function(k) {
+  km <- kmeans(batter_matrix, centers = k, nstart = 25)
+  sil <- silhouette(km$cluster, dist(batter_matrix))
+  mean(sil[, "sil_width"])
+})
+
+# Silhouette Plot
+ggplot(data.frame(k = k_values, silhouette = silhouette_scores_bat), aes(x = k, y = silhouette)) +
+  geom_line(color = "#2c3e50", size = 1) +
+  geom_point(color = "#e74c3c", size = 3) +
+  scale_x_continuous(breaks = k_values) +
+  labs(title = "Batter Clustering: Optimal k Selection via Silhouette Width", x = "Clusters (k)", y = "Average Silhouette Width S(i)") +
+  geom_vline(xintercept = 3, linetype = "dashed", color = "#3498db") +
+  theme_minimal()
+
+# K-Means & PCA
+km_res_bat <- kmeans(batter_matrix, centers = 3, nstart = 25)
+pca_batter <- prcomp(batter_matrix)
+pca_summary_bat <- summary(pca_batter)
+
+pca_batter_df <- as.data.frame(pca_batter$x[, 1:2]) %>%
+  mutate(cluster = as.factor(km_res_bat$cluster), striker = rownames(batter_matrix)) %>%
+  left_join(batter_stats, by = "striker")
+```
+
+##### 2D Visual Projection & PCA Loadings
+
+```{r batter-plotly}
+p_bat <- ggplot(pca_batter_df, aes(x = PC1, y = PC2, color = cluster)) +
+  geom_point(
+    aes(
+      text = paste0(
+        "<b>Striker: </b>", striker, "<br>",
+        "<b>Cluster: </b>", cluster, "<br>",
+        "<b>Strike Rate: </b>", round(strike_rate, 2), "<br>",
+        "<b>Dot %: </b>", round(dot_pct, 2), "%<br>",
+        "<b>Boundary %: </b>", round(boundary_pct, 2), "%"
+      )
+    ),
+    size = 3, 
+    alpha = 0.8
+  ) +
+  stat_ellipse(linetype = 2, alpha = 0.5) +
+  labs(
+    title = "BBL Batter Archetypes (PCA Subspace)",
+    x = "PC1 (47.4% Variance Explained)",
+    y = "PC2 (34.5% Variance Explained)",
+    color = "Cluster"
+  ) +
+  theme_minimal()
+p_bat
+```
+
+```{r batter-loadings}
+var_pc1_bat <- round(pca_summary_bat$importance[2, "PC1"] * 100, 1)
+var_pc2_bat <- round(pca_summary_bat$importance[2, "PC2"] * 100, 1)
+
+pca_table_df <- as.data.frame(pca_batter$rotation[, 1:2]) %>%
+  rownames_to_column("Feature Name") %>%
+  mutate(
+    `Feature Name` = paste0("`", `Feature Name`, "`"),
+    PC1 = sprintf("%+.3f", PC1), PC2 = sprintf("%+.3f", PC2),
+    `Dimensional Interpretation` = case_when(
+      str_detect(`Feature Name`, "strike_rate")    ~ "Scoring pace (runs / 100 balls)",
+      str_detect(`Feature Name`, "dot_pct")        ~ "Strike-rotation difficulty",
+      str_detect(`Feature Name`, "boundary_pct")   ~ "Big-hitting capability (4s & 6s)",
+      str_detect(`Feature Name`, "pp_ball_pct")    ~ "Powerplay phase specialization (Overs 1–6)",
+      str_detect(`Feature Name`, "death_ball_pct") ~ "Death-overs exposure (Overs 17–20)",
+      TRUE ~ ""
+    )
+  ) %>%
+  rename(!!paste0("PC1 Loading (", var_pc1_bat, "% Var)") := PC1, !!paste0("PC2 Loading (", var_pc2_bat, "% Var)") := PC2)
+
+knitr::kable(pca_table_df, align = c("l", "c", "c", "l"))
+```
+
+PCA extracted two components explaining **81.9% of total variance**:
+
+* **PC1 (47.4% Var):** Positive loadings indicate scoring aggression (`boundary_pct` $+0.571$, `strike_rate` $+0.510$, `pp_ball_pct` $+0.447$), whereas negative loadings capture death-over tailender volume (`death_ball_pct` $-0.455$).
+
+* **PC2 (34.5% Var):** Positive loadings reflect top-order dot absorption (`dot_pct` $+0.600$), while negative loadings capture middle-order strike rotation (`strike_rate` $-0.448$).
+
+```{r batter-cluster-summary}
+cluster_stats <- pca_batter_df %>%
+  group_by(cluster) %>%
+  summarise(
+    `Cluster Size (N)`    = paste0(n(), " players"),
+    `Centroid (PC1, PC2)` = sprintf("(%+.2f, %+.2f)", mean(PC1), mean(PC2)),
+    `Strike Rate`         = sprintf("%.2f", mean(strike_rate)),
+    `Dot Percentage`      = sprintf("%.2f%%", mean(dot_pct)),
+    `Boundary Percentage` = sprintf("%.2f%%", mean(boundary_pct)),
+    `Powerplay Ball %`    = sprintf("%.2f%%", mean(pp_ball_pct)),
+    `Death Overs Ball %`  = sprintf("%.2f%%", mean(death_ball_pct)),
+    `Examples`            = paste(head(striker[order(-balls_faced)], 3), collapse = ", "),
+    .groups = "drop"
+  )
+
+cluster_table_df <- cluster_stats %>%
+  pivot_longer(-cluster, names_to = "Metric / Parameter", values_to = "value") %>%
+  mutate(cluster_name = paste0("Cluster ", cluster)) %>%
+  select(-cluster) %>%
+  pivot_wider(names_from = cluster_name, values_from = value)
+
+knitr::kable(cluster_table_df, align = c("l", "c", "c", "c"))
+```
+
+1.  **Cluster 1: Tailenders & Lower-Order Bowlers (**$N = 43$, Centroid: $-2.26, +0.37$): Lowest strike rate ($105.47$), highest dot percentage ($48.20\%$), and heavy death-overs volume ($45.34\%$). *Examples: A. Zampa, B.J. Dwarshuis, K.W. Richardson.*
+2.  **Cluster 2: Powerplay Openers (**$N = 95$, Centroid: $+1.06, +0.91$): High Powerplay share ($51.78\%$) and boundary rate ($16.29\%$), absorbing higher dot friction ($37.59\%$). *Examples: A.J. Finch, D.J.M. Short, C.A. Lynn.*
+3.  **Cluster 3: Middle-Order Anchors & Finishers (**$N = 89$, Centroid: $-0.03, -1.15$): Lowest dot percentage ($31.25\%$) and highest strike rate ($133.53$) via active strike rotation. *Examples: G.J. Maxwell, M.S. Wade, J.A. Silk.*
+
+#### Bowler Archetype Analysis
+
+Bowler clustering similarly achieved peak separation at $k = 3$ ($\bar{S} = 0.274$).
+
+```{r bowler-pipeline}
+set.seed(1)
+
+bowler_stats <- bbl_all %>%
+  mutate(
+    phase = case_when(ball < 6 ~ "Powerplay", ball < 16 ~ "Middle", TRUE ~ "Death"),
+    total_runs_conceded = runs_off_bat + extras,
+    is_dot = ifelse(total_runs_conceded == 0, 1, 0),
+    is_boundary = ifelse(runs_off_bat %in% c(4, 6), 1, 0)
+  ) %>%
+  group_by(bowler) %>%
+  filter(n() >= 120) %>%
+  summarise(
+    balls_bowled = n(),
+    economy_rate = (sum(total_runs_conceded) / balls_bowled) * 6,
+    dot_pct = mean(is_dot) * 100,
+    boundary_conceded_pct = mean(is_boundary) * 100,
+    pp_ball_pct = mean(phase == "Powerplay") * 100,
+    death_ball_pct = mean(phase == "Death") * 100,
+    .groups = "drop"
+  )
+
+bowler_matrix <- bowler_stats %>%
+  column_to_rownames("bowler") %>%
+  select(-balls_bowled) %>%
+  scale()
+
+# Silhouette Plot
+silhouette_scores_bowl <- sapply(k_values, function(k) {
+  km <- kmeans(bowler_matrix, centers = k, nstart = 25)
+  sil <- silhouette(km$cluster, dist(bowler_matrix))
+  mean(sil[, "sil_width"])
+})
+
+ggplot(data.frame(k = k_values, silhouette = silhouette_scores_bowl), aes(x = k, y = silhouette)) +
+  geom_line(color = "#2c3e50", size = 1) +
+  geom_point(color = "#e74c3c", size = 3) +
+  scale_x_continuous(breaks = k_values) +
+  labs(title = "Bowler Clustering: Optimal k Selection via Silhouette Width", x = "Clusters (k)", y = "Average Silhouette Width S(i)") +
+  geom_vline(xintercept = 3, linetype = "dashed", color = "#3498db") +
+  theme_minimal()
+
+# K-Means & PCA
+km_res_bowl <- kmeans(bowler_matrix, centers = 3, nstart = 25)
+pca_bowler <- prcomp(bowler_matrix)
+pca_summary_bowl <- summary(pca_bowler)
+
+pca_bowler_df <- as.data.frame(pca_bowler$x[, 1:2]) %>%
+  mutate(cluster = as.factor(km_res_bowl$cluster), bowler = rownames(bowler_matrix)) %>%
+  left_join(bowler_stats, by = "bowler")
+```
+
+##### Visual Projection & PCA Loadings
+
+```{r bowler-plotly}
+p_bowl <- ggplot(pca_bowler_df, aes(x = PC1, y = PC2, color = cluster)) +
+  geom_point(
+    aes(
+      text = paste0(
+        "<b>Bowler: </b>", bowler, "<br>",
+        "<b>Cluster: </b>", cluster, "<br>",
+        "<b>Economy Rate: </b>", round(economy_rate, 2), "<br>",
+        "<b>Dot %: </b>", round(dot_pct, 1), "%<br>",
+        "<b>Boundary Conceded %: </b>", round(boundary_conceded_pct, 1), "%<br>",
+        "<b>Powerplay %: </b>", round(pp_ball_pct, 1), "%<br>",
+        "<b>Death %: </b>", round(death_ball_pct, 1), "%"
+      )
+    ),
+    size = 3,
+    alpha = 0.8
+  ) +
+  stat_ellipse(linetype = 2, alpha = 0.5) +
+  labs(
+    title = "BBL Bowler Archetypes (PCA Subspace)",
+    x = "PC1 (41.8% Variance Explained)",
+    y = "PC2 (34.6% Variance Explained)",
+    color = "Cluster"
+  ) +
+  theme_minimal()
+p_bowl
+```
+
+```{r bowler-loadings}
+var_pc1_bowl <- round(pca_summary_bowl$importance[2, "PC1"] * 100, 1)
+var_pc2_bowl <- round(pca_summary_bowl$importance[2, "PC2"] * 100, 1)
+
+pca_bowler_table_df <- as.data.frame(pca_bowler$rotation[, 1:2]) %>%
+  rownames_to_column("Feature Name") %>%
+  mutate(
+    `Feature Name` = paste0("`", `Feature Name`, "`"),
+    PC1 = sprintf("%+.3f", PC1), PC2 = sprintf("%+.3f", PC2),
+    `Dimensional Interpretation` = case_when(
+      str_detect(`Feature Name`, "economy_rate")          ~ "Overall run concession rate (runs / over)",
+      str_detect(`Feature Name`, "dot_pct")                ~ "Pressure generation (zero-run delivery %)",
+      str_detect(`Feature Name`, "boundary_conceded_pct") ~ "Boundary vulnerability (4s & 6s conceded %)",
+      str_detect(`Feature Name`, "pp_ball_pct")            ~ "Powerplay delivery share (Overs 1–6)",
+      str_detect(`Feature Name`, "death_ball_pct")         ~ "Death overs delivery share (Overs 17–20)",
+      TRUE ~ ""
+    )
+  ) %>%
+  rename(!!paste0("PC1 Loading (", var_pc1_bowl, "% Var)") := PC1, !!paste0("PC2 Loading (", var_pc2_bowl, "% Var)") := PC2)
+
+knitr::kable(pca_bowler_table_df, align = c("l", "c", "c", "l"))
+```
+
+Bowler PCA components explain **76.5% of total variance**:
+
+* **PC1 (41.8% Var):** Positive loadings indicate scoring permeability (`boundary_conceded_pct` $+0.651$, `economy_rate` $+0.640$, `death_ball_pct` $+0.357$). Negative values reflect run suppression.
+
+* **PC2 (34.6% Var):** Negative loadings indicate new-ball pressure generation (`dot_pct` $-0.698$, `pp_ball_pct` $-0.660$).
+
+```{r bowler-cluster-summary}
+bowler_cluster_stats <- pca_bowler_df %>%
+  group_by(cluster) %>%
+  summarise(
+    `Cluster Size (N)`          = paste0(n(), " players"),
+    `Centroid (PC1, PC2)`       = sprintf("(%+.2f, %+.2f)", mean(PC1), mean(PC2)),
+    `Economy Rate`              = sprintf("%.2f", mean(economy_rate)),
+    `Dot Percentage`            = sprintf("%.2f%%", mean(dot_pct)),
+    `Boundary Conceded %`       = sprintf("%.2f%%", mean(boundary_conceded_pct)),
+    `Powerplay Ball %`          = sprintf("%.2f%%", mean(pp_ball_pct)),
+    `Death Overs Ball %`        = sprintf("%.2f%%", mean(death_ball_pct)),
+    `Examples`                  = paste(head(bowler[order(-balls_bowled)], 3), collapse = ", "),
+    .groups = "drop"
+  )
+
+bowler_cluster_table_df <- bowler_cluster_stats %>%
+  pivot_longer(-cluster, names_to = "Metric / Parameter", values_to = "value") %>%
+  mutate(cluster_name = case_when(
+    cluster == 1 ~ "Cluster 1: Late-Over Change-Up Specialists",
+    cluster == 2 ~ "Cluster 2: Middle-Over Run Suppressors",
+    cluster == 3 ~ "Cluster 3: Frontline New-Ball & Death Attackers"
+  )) %>%
+  select(-cluster) %>%
+  pivot_wider(names_from = cluster_name, values_from = value)
+
+knitr::kable(bowler_cluster_table_df, align = c("l", "c", "c", "c"))
+```
+
+1.  **Cluster 1: Late-Over Change-Up Specialists (**$N = 55$, Centroid: $+0.65, +1.47$): Highest economy rate ($8.50$) and lowest dot percentage ($27.24\%$), absorbing volatile late-overs duties. *Examples: A.J. Tye, B. Laughlin, D.T. Christian.*
+2.  **Cluster 2: Middle-Over Run Suppressors (**$N = 72$, Centroid: $-1.53, +0.16$): Lowest economy rate ($7.18$) and lowest boundary concession rate ($11.37\%$) during Overs 7–16. *Examples: A. Zampa, C.J. Green, C.J. Boyce.*
+3.  **Cluster 3: Frontline New-Ball & Death Attackers (**$N = 90$, Centroid: $+0.83, -1.03$): Highest dot percentage ($36.23\%$) and heavy Powerplay ($44.10\%$) plus death ($21.26\%$) usage. *Examples: B.J. Dwarshuis, S.A. Abbott, K.W. Richardson.*
+
+#### Strategic Conclusion: Player Archetypes and Lineup Optimization
+
+Unsupervised $K$-means clustering ($k = 3$) combined with Principal Component Analysis transforms raw delivery data into actionable, phase-specific player roles. Evaluating players across efficiency, control, impact, and phase exposure provides a robust foundation for modern recruitment and match-up optimization.
+
+##### Methodological Limitations: Cluster Separation & Model Fit
+
+Across both batter and bowler models, peak average silhouette width remained below $0.30$ ($\bar{S} = 0.285$ for batters, $\bar{S} = 0.274$ for bowlers). Scores below $0.30$ indicate **weak structural partitioning with boundary overlap**. In T20 cricket, player performance exists on a continuous operational spectrum rather than discrete geometric islands. Thus, cluster assignments represent broad tactical role approximations rather than rigid boundaries.
+
+##### Strategic Roster Optimization & Synthesis
+
+Integrating clustering insights with the earlier GLMM toss findings leads to two key strategic takeaways:
+
+1. **Pre-Match Factors Are Non-Determinative:** Pre-match factors (toss decision and home ground) explain under 4% of outcome variance ($R^2_{\text{conditional}} = 0.039$). Over 96% of variance is driven by live match execution.
+
+2. **Phase-Matched Roster Construction:** Strategic success requires phase-specific archetype pairing. Teams should balance Powerplay Openers (Cluster 2) with Middle-Order Anchors (Cluster 3) to protect tailenders (Cluster 1). On the bowling side, attacks require Frontline Attackers (Cluster 3) for new-ball pressure, Middle Suppressors (Cluster 2) for run restriction, and Change-Up Specialists (Cluster 1) for volatile late overs.
