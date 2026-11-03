@@ -1,0 +1,337 @@
+---
+title: "Model-iteration-6 (lean)"
+format: html
+---
+
+Model 6: a lean feature set. One column per idea, no redundant forms of the same information,
+and no groups that the ablation or the paired tests showed to add nothing.
+Same hyperparameters, grouped CV and chronological cutoff as Models 3 to 5.
+
+
+```{r}
+library(tidyverse)
+library(xgboost)
+library(yardstick)
+library(shapviz)
+library(here)
+```
+
+Read data, keep innings 1 and 2
+
+```{r}
+target_col <- "wickets"
+
+bbl_inn <- readRDS(here("Pranav", "data", "bbl_t20_data.rds")) |>
+  ungroup() |>
+  filter(innings %in% c(1, 2))
+```
+
+Chronological cutoff, identical to Models 3 to 5. League priors use training matches only.
+
+```{r}
+match_dates <- bbl_inn |>
+  filter(shortened_match == 0) |>
+  distinct(match_id, start_date) |>
+  arrange(start_date, match_id)
+
+cutoff_index <- floor(nrow(match_dates) * 0.8)
+cutoff_date  <- match_dates$start_date[cutoff_index]
+
+train_match_ids <- match_dates |> filter(start_date <= cutoff_date) |> pull(match_id)
+match_lookup    <- bbl_inn |> distinct(match_id, start_date)
+```
+
+Player-identity features : shrunk, lagged batter dismissal rate and bowler wicket rate
+
+```{r}
+K_bat  <- 120
+K_bowl <- 150
+
+bat_faced <- bbl_inn |>
+  group_by(match_id, striker) |>
+  summarise(balls = sum(ifelse(is.na(wides), 1, 0)), .groups = "drop")
+
+bat_out <- bbl_inn |>
+  filter(wickets == 1, !is.na(player_dismissed)) |>
+  group_by(match_id, striker = player_dismissed) |>
+  summarise(dism = n(), .groups = "drop")
+
+bat_match <- full_join(bat_faced, bat_out, by = c("match_id", "striker")) |>
+  left_join(match_lookup, by = "match_id") |>
+  mutate(balls = coalesce(balls, 0), dism = coalesce(dism, 0))
+
+league_bat <- bat_match |> filter(match_id %in% train_match_ids) |>
+  summarise(r = sum(dism) / sum(balls)) |> pull(r)
+
+bat_rate <- bat_match |>
+  arrange(striker, start_date, match_id) |>
+  group_by(striker) |>
+  mutate(b = lag(cumsum(balls), default = 0),
+         d = lag(cumsum(dism),  default = 0),
+         sk_bat_dismissal_rate = (d + K_bat * league_bat) / (b + K_bat)) |>
+  ungroup() |>
+  select(match_id, striker, sk_bat_dismissal_rate)
+
+bowl_match <- bbl_inn |>
+  group_by(match_id, start_date, bowler) |>
+  summarise(balls = sum(legal_ball), wkts = sum(bowler_wicket), .groups = "drop")
+
+league_bowl <- bowl_match |> filter(match_id %in% train_match_ids) |>
+  summarise(r = sum(wkts) / sum(balls)) |> pull(r)
+
+bowl_rate <- bowl_match |>
+  arrange(bowler, start_date, match_id) |>
+  group_by(bowler) |>
+  mutate(b = lag(cumsum(balls), default = 0),
+         w = lag(cumsum(wkts),  default = 0),
+         sk_bowl_wicket_rate = (w + K_bowl * league_bowl) / (b + K_bowl)) |>
+  ungroup() |>
+  select(match_id, bowler, sk_bowl_wicket_rate)
+
+n0 <- nrow(bbl_inn)
+
+bbl_all <- bbl_inn |>
+  left_join(bat_rate,  by = c("match_id", "striker")) |>
+  left_join(bowl_rate, by = c("match_id", "bowler"))
+
+stopifnot(nrow(bbl_all) == n0)
+
+bbl_all <- bbl_all |> filter(shortened_match == 0)
+```
+
+The lean feature set 
+
+```{r}
+stage_cols  <- c("innings", "balls_remaining", "wickets_lost_before",
+                 "score_before", "required_rr", "free_hit")
+
+batter_cols <- c("sk_bat_dismissal_rate", "career_matches_before",
+                 "career_boundary_p_before", "batsman_balls_faced_before",
+                 "batsman_strike_rate_before")
+
+bowler_cols <- c("sk_bowl_wicket_rate", "career_economy_before")
+
+feature_cols <- c(stage_cols, batter_cols, bowler_cols)
+length(feature_cols)
+```
+
+Select and split (same cutoff as before)
+
+```{r}
+model_data <- bbl_all |>
+  select(match_id, start_date, all_of(feature_cols), all_of(target_col))
+
+train_data <- model_data |> filter(start_date <= cutoff_date)
+test_data  <- model_data |> filter(start_date >  cutoff_date)
+
+y_train <- train_data[[target_col]]
+y_test  <- test_data[[target_col]]
+
+x_train <- train_data |> select(all_of(feature_cols)) |> as.matrix()
+x_test  <- test_data  |> select(all_of(feature_cols)) |> as.matrix()
+
+dtrain <- xgb.DMatrix(data = x_train, label = y_train)
+dtest  <- xgb.DMatrix(data = x_test,  label = y_test)
+
+c(train_rows = nrow(train_data), test_rows = nrow(test_data),
+  base_rate_train = mean(y_train), base_rate_test = mean(y_test))
+
+# Missingness in the lean set (NA is expected for required_rr in innings 1)
+train_data |> summarise(across(all_of(feature_cols), ~ mean(is.na(.x)))) |>
+  pivot_longer(everything(), names_to = "col", values_to = "prop_na") |>
+  filter(prop_na > 0)
+```
+
+Evaluation helper, parameters (same as Model 2) and grouped 5-fold CV
+
+```{r}
+eval_preds <- function(truth, p) {
+  p <- pmin(pmax(p, 1e-15), 1 - 1e-15)
+  tibble(
+    pr_auc  = pr_auc_vec(factor(truth, levels = c(0, 1)), p, event_level = "second"),
+    roc_auc = roc_auc_vec(factor(truth, levels = c(0, 1)), p, event_level = "second"),
+    logloss = -mean(truth * log(p) + (1 - truth) * log(1 - p)),
+    brier   = mean((p - truth)^2)
+  )
+}
+
+params <- list(
+  objective = "binary:logistic",
+  eval_metric = "aucpr",
+  max_depth = 6,
+  eta = 0.05,
+  subsample = 0.8,
+  colsample_bytree = 0.8,
+  min_child_weight = 5
+)
+
+set.seed(35571381)
+
+train_matches <- unique(train_data$match_id)
+fold_of_match <- sample(rep(1:5, length.out = length(train_matches)))
+folds <- lapply(1:5, function(k) {
+  which(train_data$match_id %in% train_matches[fold_of_match == k])
+})
+
+t20_cv <- xgb.cv(
+  params = params,
+  data = dtrain,
+  nrounds = 1000,
+  folds = folds,
+  early_stopping_rounds = 25,
+  print_every_n = 25,
+  maximize = TRUE
+)
+
+best_nrounds <- t20_cv$evaluation_log$iter[
+  which.max(t20_cv$evaluation_log$test_aucpr_mean)
+]
+best_nrounds
+```
+
+Final model and test evaluation
+
+```{r}
+t20_final <- xgb.train(
+  params = params,
+  data = dtrain,
+  nrounds = best_nrounds,
+  evals = list(train = dtrain),
+  print_every_n = 50
+)
+
+pred_probs <- predict(t20_final, dtest)
+
+m4 <- readRDS(here("Pranav", "data", "model_4_results.rds"))
+stopifnot(identical(as.numeric(m4$y_test), as.numeric(y_test)))   # same test rows
+
+results <- bind_rows(
+  base_rate = eval_preds(y_test, rep(mean(y_train), length(y_test))),
+  model_4   = eval_preds(y_test, m4$pred_probs),
+  model_6   = eval_preds(y_test, pred_probs),
+  .id = "model"
+)
+results
+```
+
+Bootstrap CIs (whole matches resampled): the lean model on its own, and its paired difference from Model 4.
+A difference interval that includes zero means the lean model loses nothing detectable.
+
+```{r}
+set.seed(35571381)
+
+idx_by_match <- split(seq_len(nrow(test_data)), test_data$match_id)
+
+boot <- map_dfr(1:200, function(i) {
+  m   <- sample(names(idx_by_match), replace = TRUE)
+  idx <- unlist(idx_by_match[m], use.names = FALSE)
+  a <- eval_preds(y_test[idx], pred_probs[idx])
+  b <- eval_preds(y_test[idx], m4$pred_probs[idx])
+  tibble(m6_pr = a$pr_auc, m6_roc = a$roc_auc,
+         pr_diff_vs_m4 = a$pr_auc - b$pr_auc, roc_diff_vs_m4 = a$roc_auc - b$roc_auc)
+})
+
+boot |>
+  pivot_longer(everything(), names_to = "metric") |>
+  group_by(metric) |>
+  summarise(mean = mean(value),
+            lo = quantile(value, 0.025),
+            hi = quantile(value, 0.975), .groups = "drop")
+```
+
+Calibration
+
+```{r}
+calibration <- tibble(pred = pred_probs, actual = y_test) |>
+  mutate(bucket = ntile(pred, 10)) |>
+  group_by(bucket) |>
+  summarise(mean_pred = mean(pred), mean_actual = mean(actual), n = n(), .groups = "drop")
+calibration
+```
+
+Permutation importance, by group and by feature (drop in test PR-AUC when the columns are shuffled)
+
+```{r}
+y_f <- factor(y_test, levels = c(0, 1))
+base_pr <- pr_auc_vec(y_f, pred_probs, event_level = "second")
+
+perm_drop <- function(cols, n_rep = 5) {
+  drops <- map_dbl(1:n_rep, function(r) {
+    Xp <- x_test
+    Xp[, cols] <- x_test[sample(nrow(x_test)), cols, drop = FALSE]   # shuffle jointly
+    base_pr - pr_auc_vec(y_f, predict(t20_final, xgb.DMatrix(Xp)), event_level = "second")
+  })
+  tibble(pr_auc_drop = mean(drops), sd = sd(drops))
+}
+
+set.seed(35571381)
+
+groups <- list(stage_of_innings = stage_cols, batter = batter_cols, bowler = bowler_cols)
+
+perm_groups <- imap_dfr(groups, ~ perm_drop(.x) |> mutate(group = .y)) |>
+  arrange(desc(pr_auc_drop))
+perm_features <- map_dfr(feature_cols, ~ perm_drop(.x) |> mutate(feature = .x)) |>
+  arrange(desc(pr_auc_drop))
+
+perm_groups
+perm_features
+```
+
+SHAP explanations (values are in log-odds)
+
+```{r}
+set.seed(35571381)
+samp <- test_data |> slice_sample(n = 5000)
+X    <- samp |> select(all_of(feature_cols)) |> as.matrix()
+
+contrib <- predict(t20_final, X, predcontrib = TRUE)
+stopifnot(ncol(contrib) == length(feature_cols) + 1)   # features + bias
+
+S  <- contrib[, seq_along(feature_cols), drop = FALSE]
+colnames(S) <- feature_cols
+sv <- shapviz(S, X = as.data.frame(X), baseline = contrib[1, ncol(contrib)])
+
+# 1. Which features push wicket risk up or down
+sv_importance(sv, kind = "beeswarm", max_display = 13)
+
+# 2. Where the signal comes from, by group
+imap_dfr(groups, ~ tibble(group = .y,
+                          mean_abs_shap = mean(abs(rowSums(S[, .x, drop = FALSE]))))) |>
+  ggplot(aes(reorder(group, mean_abs_shap), mean_abs_shap)) +
+  geom_col() + coord_flip() +
+  labs(x = NULL, y = "Mean |SHAP| (log-odds)",
+       title = "Where the model's wicket signal comes from")
+
+# 3. Shape of the effects
+sv_dependence(sv, "balls_remaining", color_var = "wickets_lost_before")
+sv_dependence(sv, "batsman_balls_faced_before", color_var = "balls_remaining")
+
+# 4. One delivery explained: the highest-risk ball in the sample
+i <- which.max(rowSums(S))
+sv_waterfall(sv, row_id = i, max_display = 10)
+
+# 5. Average predicted wicket probability by over and wickets lost
+test_data |>
+  mutate(pred = pred_probs,
+         over  = (120 - balls_remaining) %/% 6 + 1) |>
+  filter(wickets_lost_before <= 8) |>
+  group_by(over, wickets_lost_before) |>
+  summarise(pred = mean(pred), n = n(), .groups = "drop") |>
+  filter(n >= 30) |>
+  ggplot(aes(over, wickets_lost_before, fill = pred)) +
+  geom_tile() +
+  scale_fill_viridis_c(labels = scales::percent) +
+  labs(x = "Over", y = "Wickets lost", fill = "P(wicket)")
+```
+
+Save
+
+```{r}
+saveRDS(
+  list(model = t20_final, cv = t20_cv, params = params, feature_cols = feature_cols,
+       results = results, boot = boot, calibration = calibration,
+       perm_groups = perm_groups, perm_features = perm_features,
+       pred_probs = pred_probs, y_test = y_test, test_data = test_data),
+  here("Pranav", "data", "model_6_results.rds")
+)
+```

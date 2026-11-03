@@ -1,0 +1,343 @@
+---
+title: "Model-iteration-4"
+format: html
+---
+
+Model 4: Model 3 (same features, hyperparameters, grouped CV) plus two player-identity features,
+built inside this file from the saved data. Target = any wicket (`wickets`).
+
+```{r}
+library(tidyverse)
+library(xgboost)
+library(pROC)
+library(yardstick)
+library(here)
+```
+
+Read data, keep innings 1 and 2
+
+```{r}
+target_col <- "wickets"   
+
+bbl_inn <- readRDS(here("Pranav", "data", "bbl_t20_data.rds")) |>
+  ungroup() |>
+  filter(innings %in% c(1, 2))
+```
+
+Chronological cutoff, identical to Model 3 (computed before the new features so the league priors can use training matches only)
+
+```{r}
+match_dates <- bbl_inn |>
+  filter(shortened_match == 0) |>
+  distinct(match_id, start_date) |>
+  arrange(start_date, match_id)
+
+cutoff_index <- floor(nrow(match_dates) * 0.8)
+cutoff_date  <- match_dates$start_date[cutoff_index]
+
+train_match_ids <- match_dates |> filter(start_date <= cutoff_date) |> pull(match_id)
+match_lookup    <- bbl_inn |> distinct(match_id, start_date)
+```
+
+New features: shrunk, lagged player-identity rates.
+Each value uses only matches before the current one. Shortened matches still count towards a player's history (their balls and wickets are real); they are only excluded from the modelling rows below.
+
+```{r}
+K_bat  <- 120   # prior strength in balls 
+K_bowl <- 150
+
+# Batter: dismissals per ball faced. Dismissals come from player_dismissed variable,
+# a batter run out at the non-striker's end is counted.
+bat_faced <- bbl_inn |>
+  group_by(match_id, striker) |>
+  summarise(balls = sum(ifelse(is.na(wides), 1, 0)), .groups = "drop")
+
+bat_out <- bbl_inn |>
+  filter(wickets == 1, !is.na(player_dismissed)) |>
+  group_by(match_id, striker = player_dismissed) |>
+  summarise(dism = n(), .groups = "drop")
+
+bat_match <- full_join(bat_faced, bat_out, by = c("match_id", "striker")) |>
+  left_join(match_lookup, by = "match_id") |>
+  mutate(balls = coalesce(balls, 0), dism = coalesce(dism, 0))
+
+league_bat <- bat_match |>
+  filter(match_id %in% train_match_ids) |>
+  summarise(r = sum(dism) / sum(balls)) |> pull(r)
+
+bat_rate <- bat_match |>
+  arrange(striker, start_date, match_id) |>
+  group_by(striker) |>
+  mutate(b = lag(cumsum(balls), default = 0),
+         d = lag(cumsum(dism),  default = 0),
+         sk_bat_dismissal_rate = (d + K_bat * league_bat) / (b + K_bat)) |>
+  ungroup() |>
+  select(match_id, striker, sk_bat_dismissal_rate)
+
+# Bowler: bowler-credited wickets per legal ball
+bowl_match <- bbl_inn |>
+  group_by(match_id, start_date, bowler) |>
+  summarise(balls = sum(legal_ball), wkts = sum(bowler_wicket), .groups = "drop")
+
+league_bowl <- bowl_match |>
+  filter(match_id %in% train_match_ids) |>
+  summarise(r = sum(wkts) / sum(balls)) |> pull(r)
+
+bowl_rate <- bowl_match |>
+  arrange(bowler, start_date, match_id) |>
+  group_by(bowler) |>
+  mutate(b = lag(cumsum(balls), default = 0),
+         w = lag(cumsum(wkts),  default = 0),
+         sk_bowl_wicket_rate = (w + K_bowl * league_bowl) / (b + K_bowl)) |>
+  ungroup() |>
+  select(match_id, bowler, sk_bowl_wicket_rate)
+
+#  applying the Model 3 filters
+n0 <- nrow(bbl_inn)
+
+bbl_all <- bbl_inn |>
+  left_join(bat_rate,  by = c("match_id", "striker")) |>
+  left_join(bowl_rate, by = c("match_id", "bowler"))
+
+stopifnot(nrow(bbl_all) == n0)
+
+bbl_all <- bbl_all |>
+  filter(shortened_match == 0) |>
+  mutate(
+    phase_Powerplay = as.integer(phase == "Powerplay"),
+    phase_Middle    = as.integer(phase == "Middle"),
+    phase_Death     = as.integer(phase == "Death")
+  )
+```
+
+Checks on the new features 
+
+```{r}
+c(league_bat = league_bat, league_bowl = league_bowl)
+
+bbl_all |>
+  summarise(across(c(sk_bat_dismissal_rate, sk_bowl_wicket_rate),
+                   list(min = min, median = median, max = max, n_na = ~ sum(is.na(.x))))) |>
+  pivot_longer(everything()) |> print(n = Inf)
+```
+
+Feature groups
+
+```{r}
+base_cols <- c(
+  "innings", "over_no", "balls_remaining", "score_before",
+  "wickets_lost_before", "required_runs", "free_hit",
+  "bowler_balls_bowled_before", "bowler_economy_before",
+  "bowler_boundary_p_before", "bowler_dot_ball_p_before",
+  "batsman_runs_scored_before", "batsman_balls_faced_before",
+  "batsman_strike_rate_before", "batsman_boundary_p_before",
+  "career_matches_before", "career_batting_avg_before",
+  "career_bowling_strike_rate_before", "career_batting_strike_rate_before",
+  "career_boundary_p_before", "career_matches_bowled_before",
+  "career_economy_before", "career_bowling_avg_before", "career_dot_p_before",
+  "phase_Powerplay", "phase_Middle", "phase_Death"
+)
+
+ratio_cols <- c("current_rr", "required_rr", "rr_gap", "resources",
+                "runs_per_wkt_in_hand", "batsman_sr_vs_rr", "batter_new")
+
+momentum_cols <- c("ball_in_over", "balls_since_wicket", "balls_since_boundary",
+                   "runs_last_6", "runs_last_12", "dots_last_6", "dots_last_12",
+                   "wkts_last_12", "bnds_last_12")
+
+partnership_cols <- c("partnership_runs_before", "partnership_balls_before")
+
+player_cols <- c("sk_bat_dismissal_rate", "sk_bowl_wicket_rate")   # new in Model 4
+
+feature_cols <- c(base_cols, ratio_cols, momentum_cols,
+                  partnership_cols, player_cols)
+```
+
+Select and split 
+
+```{r}
+model_data <- bbl_all |>
+  select(match_id, start_date, all_of(feature_cols), all_of(target_col))
+
+train_data <- model_data |> filter(start_date <= cutoff_date)
+test_data  <- model_data |> filter(start_date >  cutoff_date)
+
+y_train <- train_data[[target_col]]
+y_test  <- test_data[[target_col]]
+
+x_train <- train_data |> select(all_of(feature_cols)) |> as.matrix()
+x_test  <- test_data  |> select(all_of(feature_cols)) |> as.matrix()
+
+dtrain <- xgb.DMatrix(data = x_train, label = y_train)
+dtest  <- xgb.DMatrix(data = x_test,  label = y_test)
+
+c(train_rows = nrow(train_data), test_rows = nrow(test_data),
+  base_rate_train = mean(y_train), base_rate_test = mean(y_test))
+```
+
+Evaluation helper
+
+```{r}
+eval_preds <- function(truth, p) {
+  p <- pmin(pmax(p, 1e-15), 1 - 1e-15)
+  tibble(
+    pr_auc  = pr_auc_vec(factor(truth, levels = c(0, 1)), p, event_level = "second"),
+    roc_auc = roc_auc_vec(factor(truth, levels = c(0, 1)), p, event_level = "second"),
+    logloss = -mean(truth * log(p) + (1 - truth) * log(1 - p)),
+    brier   = mean((p - truth)^2)
+  )
+}
+```
+
+Baselines: constant base rate and simple logistic regression on basic match state
+
+```{r}
+base_pred <- rep(mean(y_train), length(y_test))
+
+glm_fit <- glm(
+  reformulate(c("innings", "over_no", "wickets_lost_before",
+                "score_before", "free_hit"), response = target_col),
+  data = train_data, family = binomial
+)
+glm_pred <- predict(glm_fit, newdata = test_data, type = "response")
+
+baselines <- bind_rows(
+  base_rate = eval_preds(y_test, base_pred),
+  logistic  = eval_preds(y_test, glm_pred),
+  .id = "model"
+)
+baselines
+```
+
+Grouped 5-fold CV: folds are built by match so no match is split across folds
+
+```{r}
+params <- list(
+  objective = "binary:logistic",
+  eval_metric = "aucpr",
+  max_depth = 6,
+  eta = 0.05,
+  subsample = 0.8,
+  colsample_bytree = 0.8,
+  min_child_weight = 5
+)
+
+set.seed(35571381)
+
+train_matches <- unique(train_data$match_id)
+fold_of_match <- sample(rep(1:5, length.out = length(train_matches)))
+folds <- lapply(1:5, function(k) {
+  which(train_data$match_id %in% train_matches[fold_of_match == k])
+})
+
+t20_cv <- xgb.cv(
+  params = params,
+  data = dtrain,
+  nrounds = 1000,
+  folds = folds,
+  early_stopping_rounds = 25,
+  print_every_n = 25,
+  maximize = TRUE
+)
+
+best_nrounds <- t20_cv$evaluation_log$iter[
+  which.max(t20_cv$evaluation_log$test_aucpr_mean)
+]
+
+best_nrounds
+```
+
+Final model and test evaluation
+
+```{r}
+t20_final <- xgb.train(
+  params = params,
+  data = dtrain,
+  nrounds = best_nrounds,
+  evals = list(train = dtrain),
+  print_every_n = 50
+)
+
+pred_probs <- predict(t20_final, dtest)
+
+results <- bind_rows(
+  baselines,
+  xgb_model4 = eval_preds(y_test, pred_probs) |> mutate(model = "xgb_model4")
+)
+results
+```
+
+Bootstrap CIs, resampling whole matches from the test set
+
+```{r}
+set.seed(35571381)
+
+idx_by_match <- split(seq_len(nrow(test_data)), test_data$match_id)
+
+boot <- map_dfr(1:200, function(i) {
+  m   <- sample(names(idx_by_match), replace = TRUE)
+  idx <- unlist(idx_by_match[m], use.names = FALSE)
+  x <- eval_preds(y_test[idx], pred_probs[idx])
+  b <- eval_preds(y_test[idx], glm_pred[idx])
+  tibble(
+    xgb_pr = x$pr_auc, xgb_roc = x$roc_auc,
+    pr_gain_vs_logistic  = x$pr_auc  - b$pr_auc,
+    roc_gain_vs_logistic = x$roc_auc - b$roc_auc
+  )
+})
+
+boot |>
+  pivot_longer(everything(), names_to = "metric") |>
+  group_by(metric) |>
+  summarise(mean = mean(value),
+            lo = quantile(value, 0.025),
+            hi = quantile(value, 0.975), .groups = "drop")
+```
+
+Paired comparison against Model 3 on the same test rows 
+```{r}
+m3 <- readRDS(here("Pranav", "data", "model_3_results.rds"))
+stopifnot(identical(as.numeric(m3$y_test), as.numeric(y_test)))   # same test rows
+
+set.seed(35571381)
+
+boot_vs_m3 <- map_dfr(1:200, function(i) {
+  m   <- sample(names(idx_by_match), replace = TRUE)
+  idx <- unlist(idx_by_match[m], use.names = FALSE)
+  a <- eval_preds(y_test[idx], pred_probs[idx])
+  b <- eval_preds(y_test[idx], m3$pred_probs[idx])
+  tibble(pr_diff = a$pr_auc - b$pr_auc, roc_diff = a$roc_auc - b$roc_auc)
+})
+
+boot_vs_m3 |>
+  pivot_longer(everything(), names_to = "metric") |>
+  group_by(metric) |>
+  summarise(mean = mean(value),
+            lo = quantile(value, 0.025),
+            hi = quantile(value, 0.975), .groups = "drop")
+```
+
+Calibration and feature importance
+
+```{r}
+calibration <- tibble(pred = pred_probs, actual = y_test) |>
+  mutate(bucket = ntile(pred, 10)) |>
+  group_by(bucket) |>
+  summarise(mean_pred = mean(pred), mean_actual = mean(actual), n = n(), .groups = "drop")
+calibration
+
+importance <- xgb.importance(model = t20_final)
+importance |> as_tibble() |> print(n = 30)
+```
+
+Save
+
+```{r}
+saveRDS(
+  list(model = t20_final, cv = t20_cv, params = params, feature_cols = feature_cols,
+       results = results, boot = boot, boot_vs_m3 = boot_vs_m3,
+       calibration = calibration, importance = importance,
+       pred_probs = pred_probs, y_test = y_test, test_data = test_data),
+  here("Pranav", "data", "model_4_results.rds")
+)
+```
