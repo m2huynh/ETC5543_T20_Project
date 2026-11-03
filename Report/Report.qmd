@@ -1,12 +1,13 @@
 ---
 title: "Modelling Match State and Player Performance in the Big Bash League"
+subtitle: "ETC5543 Project Report"
 author:
-  - "Hieu Xuan Nguyen (Mark) - 35614978"
-  - "Pranav Sajeev - 35571381"
-  - "Prem Mallapuram - 35773499"
+  - name: Hieu Xuan Nguyen (Mark) 35614978
+  - name: Pranav Sajeev 35571381
+  - name: Prem Mallapuram 35773499
 format:
   pdf:
-    documentclass: scrreprt    # Automatically gives you a dedicated title/cover page
+    documentclass: scrreprt    
     toc: true
     linkcolor: black
     toccolor: black
@@ -34,11 +35,12 @@ q2   <- readRDS(here("Pranav", "data", "presentation_objects.rds"))
 q4 <- readRDS(here("Pranav", "data", "q4_presentation_objects.rds"))
 ```
 
+
 ## Abstract
 
-Historical ball-by-ball data from the Big Bash League (BBL) was used to examine how match situations affect scoring, wickets and player performance. The analysis combines data exploration and statistical modelling to study different stages and situations within T20 matches. An interactive dashboard was developed to explore scoring rates, wicket patterns and batter performance across teams, opponents, seasons and different match situations. Logistic regression was also used to estimate the probability of winning during run chases. These probabilities were then used to group match situations into pressure levels and compare batter performance under different levels of pressure.
+Historical ball-by-ball and match-level data from the Big Bash League (BBL) were used to investigate how match state, player performance and strategic decisions influence outcomes in T20 cricket. The project combined exploratory analysis, feature engineering, statistical modelling and interactive visualisation across six research questions. An interactive dashboard was developed to explore scoring rates, wicket patterns and batter performance across teams, opponents, seasons and match situations. Logistic regression was used to estimate win probability during run chases using required run rate, wickets in hand and balls remaining, with the resulting probabilities converted into pressure scores to compare batter strike rates under low and high-pressure situations.
 
-The project also examines whether the likelihood of a wicket can be predicted before a delivery and which bowlers perform best during the death overs after accounting for the situations in which they bowl. An XGBoost model was used to predict the probability of a wicket on each delivery using match-state, recent performance and player-related features. Mixed-effects models were used to compare death-over bowlers based on their ability to restrict runs and take wickets, while accounting for differences in match state, batters and venues. Together, these analyses provide a better understanding of how player performance changes across different match situations and demonstrate how data exploration and statistical modelling can be used to analyse BBL performance.
+The project also examined delivery-level wicket risk, death-over bowling effectiveness, toss decisions and player performance archetypes. An XGBoost ensemble was used to predict wicket probability using match-state, recent-performance, player and contextual features, achieving a ROC-AUC of 0.613 and identifying groups of deliveries with elevated wicket risk, although discrimination remained modest and wicket risk was underestimated during the death overs. Linear and logistic mixed-effects models were used to compare death-over bowlers while accounting for match state, batters and venues, identifying differences between run-restricting and wicket-taking effectiveness. Toss analysis using hypothesis testing and mixed-effects logistic modelling found no statistically significant evidence that choosing to field after winning the toss produced a meaningful advantage. Finally, Principal Component Analysis and K-means clustering were used to identify broad batting and bowling archetypes based on multidimensional performance characteristics, although cluster separation was relatively weak. Together, the analyses demonstrate how combining historical match-state information, predictive modelling and interactive tools can provide a more contextual understanding of team strategy and player performance in the BBL.
 
 ## Introduction
 
@@ -305,7 +307,7 @@ The calibration analysis identified some systematic underestimation of wicket pr
 
 ### Which bowlers are most effective at restricting runs and taking wickets in the death overs, after controlling for the match state in which they bowl?
 
-This question uses linear and logistic mixed-effects models to estimate differences between bowlers in runs conceded and bowler-credited wickets, respectively \[ref\]. The models account for match-state variables and include random effects for bowler, striker and venue. Partial pooling moderates estimates for bowlers with limited observations, helping to avoid rankings driven by unusually favourable or unfavourable small samples.
+This question uses linear and logistic mixed-effects models to estimate differences between bowlers in runs conceded and bowler-credited wickets, respectively. The models account for match-state variables and include random effects for bowler, striker and venue. Partial pooling moderates estimates for bowlers with limited observations, helping to avoid rankings driven by unusually favourable or unfavourable small samples.
 
 #### Modelling approach
 
@@ -919,6 +921,13 @@ The wicket prediction model demonstrates modest predictive performance (PR-AUC: 
 The dashboard could be extended by incorporating more detailed information, such as exact Power Surge overs and bowler types. This would allow a closer examination of when teams use the Power Surge and how their performance varies against different bowling styles. The win-probability model could also benefit from additional variables, including batter and bowler information, partnerships, venue, recent performance and target size. Historical weather information, such as rainfall, temperature and humidity, could provide further insight into how playing conditions influence scoring rates and wicket patterns.
 
 Further improvements to the modelling analyses could include exploring alternative approaches, incorporating additional contextual features and giving more attention to death-over deliveries. Expanding the dataset and validating the models using other T20 competitions would also help establish whether the findings generalise beyond the BBL. Together, these improvements could provide a more detailed understanding of how match situations and playing conditions influence player performance.
+
+## Key Takeaways
+Overall, the analysis shows that performance in the Big Bash League is highly dependent on match context rather than being fully explained by traditional aggregate statistics or simple pre-match factors. Scoring rates, wicket patterns, batter performance under pressure and bowling effectiveness all change according to the stage and situation of the match, while toss decisions alone showed limited explanatory value.
+
+Contextual and model-based analysis provides a more useful view of performance than relying only on overall strike rates, economy rates or total wickets. At the same time, the results also show the limits of prediction in a highly variable sport such as T20 cricket, with several models providing useful discrimination and comparison without fully explaining match outcomes.
+
+The practical value of the work therefore lies in using historical data to support more informed interpretation of team and player performance rather than treating the results as deterministic predictions. 
 
 ## References
 

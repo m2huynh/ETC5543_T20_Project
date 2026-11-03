@@ -176,6 +176,7 @@ For the dashboard follow the following steps,
 2. PREM/Clean Build/Dashboard.R
 
 ---
+
 # AI Acknowledgement
 
 Generative AI tools, including ChatGPT, were used as a supporting tool during the development of this project. AI was used during the early stages to brainstorm dashboard ideas, presentation structure, possible analytical approaches and suitable modelling techniques for the research questions.
@@ -183,6 +184,7 @@ Generative AI tools, including ChatGPT, were used as a supporting tool during th
 AI assistance was also used while developing and checking the technical work. This included discussing possible model parameters and tuning strategies, checking R syntax, reviewing code logic, troubleshooting errors, and evaluating whether the chosen analytical approach was appropriate for the intended research question.
 
 In addition, AI was used to support background research and improve the presentation of the final work. This included checking grammar, improving clarity in written sections, refining presentation wording, and reviewing how the analysis and results could be communicated more clearly.
+
 ---
 
 # License
