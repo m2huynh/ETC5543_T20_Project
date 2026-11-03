@@ -1,13 +1,23 @@
 ---
 title: "Modelling Match State and Player Performance in the Big Bash League"
 format: pdf
-editor: visual
 ---
+
+```{r}
+#| echo: false
+knitr::opts_chunk$set(echo= FALSE, warning= FALSE, message= FALSE)
+```
+```{r}
+library(tidyverse)
+library(here)
+q2   <- readRDS(here("Pranav", "data", "presentation_objects.rds"))
+q4 <- readRDS(here("Pranav", "data", "q4_presentation_objects.rds"))
+```
+
 
 ### Abstract
 
 Historical ball-by-ball data from the Big Bash League (BBL) was used to examine how match situations affect scoring, wickets and player performance. The analysis combines data exploration and statistical modelling to study different stages and situations within T20 matches. An interactive dashboard was developed to explore scoring rates, wicket patterns and batter performance across teams, opponents, seasons and different match situations. Logistic regression was also used to estimate the probability of winning during run chases. These probabilities were then used to group match situations into pressure levels and compare batter performance under different levels of pressure.
-
 
 The project also examines whether the likelihood of a wicket can be predicted before a delivery and which bowlers perform best during the death overs after accounting for the situations in which they bowl. An XGBoost model was used to predict the probability of a wicket on each delivery using match-state, recent performance and player-related features. Mixed-effects models were used to compare death-over bowlers based on their ability to restrict runs and take wickets, while accounting for differences in match state, batters and venues. Together, these analyses provide a better understanding of how player performance changes across different match situations and demonstrate how data exploration and statistical modelling can be used to analyse BBL performance.
 
@@ -21,20 +31,21 @@ Traditional statistics such as batting averages, strike rates and bowling econom
 
 This project examines match state and player performance in the Big Bash League (BBL) using historical ball-by-ball data. The delivery-level structure of the data allows matches to be analysed as they develop, rather than only through final match or innings summaries.
 
-### The overall project consisted of six key research questions which were divided among the three members of the group. 
-1. How do scoring rates and wicket probabilities vary across the three phases of a T20 innings — the Powerplay (overs 1–6), the middle overs (7–16), and the death overs (17–20)?
+### The overall project consisted of six key research questions which were divided among the three members of the group.
 
-2. Can we build a model that predicts the probability of a wicket falling on any given delivery, using match-state and player-identity features?
+1.  How do scoring rates and wicket probabilities vary across the three phases of a T20 innings — the Powerplay (overs 1–6), the middle overs (7–16), and the death overs (17–20)?
 
-3. Which batters perform best under high-pressure chase situations — defined by a high required run rate and few wickets in hand — relative to their performance in low-pressure situations?
+2.  Can we build a model that predicts the probability of a wicket falling on any given delivery, using match-state and player-identity features?
 
-4. Which bowlers are most effective at restricting runs and taking wickets in the death overs, after controlling for the match state they bowl in?
+3.  Which batters perform best under high-pressure chase situations — defined by a high required run rate and few wickets in hand — relative to their performance in low-pressure situations?
 
-5. Does winning the toss and choosing to field (the more common decision in T20) actually translate into a meaningful advantage?
+4.  Which bowlers are most effective at restricting runs and taking wickets in the death overs, after controlling for the match state they bowl in?
 
-6. Do players naturally cluster into distinct batting or bowling archetypes based on their ball-by-ball performance profiles?
+5.  Does winning the toss and choosing to field (the more common decision in T20) actually translate into a meaningful advantage?
 
-#### ### Data provided
+6.  Do players naturally cluster into distinct batting or bowling archetypes based on their ball-by-ball performance profiles?
+
+### The Data 
 
 Data for the project was obtained from CricSheet, which provided ball-by-ball data. For the analysis, two datasets were provided through bbl_all.csv and bbl_match_info.csv.
 
@@ -44,21 +55,23 @@ The second dataset bbl_match_info.csv contained information at the match level w
 
 The two datasets were therefore used together. The ball-by-ball dataset provided the changing match state after every delivery, while the match-level dataset provided the final match information needed to understand the result of the chase. In the feature-engineering stage, the target information was joined to the delivery-level dataset using the match ID.
 
-### Analysis
 
-1.1 BBL format vs traditional format
+
+### BBL format vs traditional format
 
 Before getting into the deeper analysis, lets understand how a T20 innings is usually structured and why the different parts of the innings matter. Traditionally, a T20 innings is looked at in three phases they are Powerplay from overs 1–6, Mid-Game from overs 7–16 and Death Overs from overs 17–20. This traditional phase structure was followed throughout the analysis so that the same method could be used across all seasons in the dataset.
 
 Each phase usually has a different style of play. During the Powerplay, only a limited number of fielders are allowed outside the inner circle which generally gives the batting team more opportunities to attack and score boundaries. The bowling team has fewer options to protect the boundary during this period so the first few overs can often be more favourable to the batting side. Once the Powerplay ends the fielding team gets more freedom to spread the field and helps them restrict the batting team from getting scoring more which changes how both teams approach the game.
 
-The Mid-Game usually becomes more about controlling the innings. Batters may focus more on rotating strike, building partnerships and avoiding unnecessary wickets while bowlers try to reduce the scoring rate and build pressure. In the Death Overs the situation changes again because only a few overs remain. Batting teams generally become much more aggressive and try to maximise the final score while bowling teams focus more on limiting boundaries and taking wickets.
+The Mid-Game(or Middle phase) usually becomes more about controlling the innings. Batters may focus more on rotating strike, building partnerships and avoiding unnecessary wickets while bowlers try to reduce the scoring rate and build pressure. In the Death Overs the situation changes again because only a few overs remain. Batting teams generally become much more aggressive and try to maximise the final score while bowling teams focus more on limiting boundaries and taking wickets.
 
 However BBL introduced a different Powerplay rule from the 2020–21 season. Under the traditional format, all six Powerplay overs were played at the beginning of the innings. After the BBL rule change, only the first four overs remained as the opening Powerplay. The remaining two overs became the Power Surge, which could be taken by the batting team from the 11th over onwards. During the Power Surge, the same fielding restriction applied, with only two fielders allowed outside the inner circle.
 
 This made the BBL more complicated to analyse across different seasons because the fielding restrictions were no longer attached to the same overs throughout the entire dataset. Before the rule change overs 1–6 represented the full Powerplay. After the rule change only overs 1–4 followed the Powerplay restrictions, while the other two restricted overs could appear later in the innings depending on when the batting team chose to use the Power Surge. Because the exact Power Surge period was not available in the data used the traditional 1–6, 7–16 and 17–20 phase structure was continued so that the historical comparison remained consistent across all seasons.
 
-2.1 Feature Engineering - Dashboard
+## Understanding Scoring Patterns Across T20 Innings and Evaluating Batter Performance Under Pressure
+
+### Feature Engineering - Dashboard
 
 Before answering both research questions a major part of the work was feature engineering. The raw ball-by-ball data gave detailed information about what happened on every delivery but by itself it did not completely describe the situation of the match at that point. For example the data contained runs scored from the bat, extras, wickets and player information but important match-state variables such as the current score, current run rate, wickets already lost, number of legal balls completed and the phase of the innings were not directly available. Since both research questions depend heavily on understanding what was happening in the match at a particular point these variables first had to be derived from the available information.
 
@@ -80,7 +93,7 @@ Overall, the feature engineering was mainly about converting individual delivery
 
 The direction taken to answer these research questions was through an interactive dashboard. Instead of focusing on predicting what might happen in a future BBL match, the dashboard analysis focused more on understanding what has already happened across the historical data available. The idea was to use previous matches to capture scoring, wicket and player-performance patterns and allow the user to explore how these patterns changed depending on the season, team, opposition and match situation. The dashboard therefore acts more as a historical analysis tool rather than a future prediction tool helping users understand how teams and players have performed in different situations over the years.
 
-2.2 Phase Overview -> Score
+### Phase Overview -\> Score
 
 Before jumping into the deeper scoring rate, wicket and pressure analysis, a clear way to understand how an actual match progressed was first created. For this the scoring progression of both innings was recreated using an interactive line graph in the dashboard. Instead of only looking at the final score the graph shows how both teams moved through the innings over the 20 overs and where the match started shifting in favour of one team and is done so by using a simple line graph
 
@@ -88,9 +101,9 @@ The user can select a season and then choose a particular match from that season
 
 The main purpose of this graph was to give a simple overall picture of the match before moving into the more detailed analysis. It helps the user first understand how the score developed, where wickets were lost and how the match moved through different phases before looking at deeper historical patterns in scoring rates, wickets and pressure situations.
 
-2.3 How do scoring rates and wicket patterns vary across the different phases of a T20 innings?
+### How do scoring rates and wicket patterns vary across the different phases of a T20 innings?
 
-2.3A Phase Overview -> Scoring Rate -> Run Rate Progression Tab
+#### Phase Overview -\> Scoring Rate -\> Run Rate Progression Tab
 
 Before going into the wicket analysis the aim was first to understand how a team has historically scored against a particular opponent across the innings. For that the Scoring Rate section was created in the dashboard and one of the main tabs inside it is the Run Rate Progression tab.
 
@@ -104,7 +117,7 @@ The coloured background also helps interpret the innings visually. The blue sect
 
 The three boxes shown below the graph give a summary of the same information by phase. The Powerplay Run Rate box gives the run rate for overs 1 to 6, the Mid-Game Run Rate box gives the run rate for overs 7 to 16 and the Death Run Rate box gives the run rate for overs 17 to 20. So while the graph shows the scoring pattern continuously across the innings these boxes summarise the scoring rate within each phase. These boxes mainly help when filtered match wise more than cumulative so it helps understand in each match what each team is able to get the run rate against the opponent in each phase of the match.
 
-2.3B Phase Overview -> Scoring Rate -> Over Run Rate Progression 
+#### Phase Overview -\> Scoring Rate -\> Over Run Rate Progression
 
 The next tab inside the Scoring Rate section is the Over Run Rate tab. While the previous graph showed the cumulative run rate progression across the innings this tab focuses on each over separately. This was added because sometimes the cumulative graph can smooth out what is happening whereas this graph helps clearly identify which exact overs a team has historically scored faster or slower against a particular opponent.
 
@@ -112,67 +125,51 @@ Here again, the user selects a base team, an opponent and optionally a season. I
 
 The line in this graph represents the run rate for each over individually from over 1 to over 20. In other words, this is not cumulative. For each over, the total runs scored in that over across the selected matches were calculated, divided by the total number of legal balls bowled in that over, and multiplied by 6. So each point on the graph shows how quickly the team has historically scored in that specific over against that specific opponent.
 
-Because this graph is over-by-over, the movement of the line is interpreted a bit differently from the previous tab. If the line rises at a certain over, it means that over has historically produced a higher scoring rate. If it falls, it means scoring was relatively slower in that over. This makes it easier to pick out overs where the batting team tends to accelerate, slow down, or face more difficulty.
-This is useful because in T20 cricket, not all overs are played in the same way. Some overs may be more attacking, some may be more controlled, and some may be more wicket-prone. So instead of just saying a team scored well in the Powerplay or Death Overs overall, this graph goes one step deeper and identifies the exact overs where the scoring pattern changes.
+Because this graph is over-by-over, the movement of the line is interpreted a bit differently from the previous tab. If the line rises at a certain over, it means that over has historically produced a higher scoring rate. If it falls, it means scoring was relatively slower in that over. This makes it easier to pick out overs where the batting team tends to accelerate, slow down, or face more difficulty. This is useful because in T20 cricket, not all overs are played in the same way. Some overs may be more attacking, some may be more controlled, and some may be more wicket-prone. So instead of just saying a team scored well in the Powerplay or Death Overs overall, this graph goes one step deeper and identifies the exact overs where the scoring pattern changes.
 
 The summary boxes below the graph give an even simpler interpretation of the same results. The Highest Run Rate Over box shows the over in which the selected team historically scored at the fastest rate, along with the run rate and total runs scored in that over. The Lowest Run Rate Over box shows the slowest scoring over. The Most Wicket-Prone Over box identifies the over in which the team lost the most wickets, while the Least Wicket-Prone Over box shows the over where the fewest wickets fell.
 
 Overall, this tab helps understand over-level scoring behaviour rather than innings-level progression. It gives a much more detailed historical view of how a team has performed against a particular opponent and helps identify the overs where scoring is strongest, weakest, or where wickets tend to fall more often.
 
-2.3C Phase Overview -> Wicket Analysis -> By over & By Wickets
+#### Phase Overview -\> Wicket Analysis -\> By over & By Wickets
 
 The next part of the dashboard focuses on wicket analysis which is divided into two views: By Over and By Bowler. The same filters are used here as in the scoring-rate analysis. The user can select a season, a base team and an opponent. If a particular season is selected, only matches from that season are included. If the season filter shows "---", the analysis combines all the available matches between the selected teams across all seasons.
 
 The By Over tab shows how many wickets the selected batting team has historically lost in each over against the chosen opponent. Each bar represents one over from 1 to 20, while the height of the bar represents the total number of wickets lost in that over across the selected matches. The background is again separated into Powerplay, Mid-Game and Death Overs so that the wicket pattern can be connected back to the different stages of the innings. This makes it easier to identify overs where wickets have historically fallen more often and whether those wickets are concentrated in a particular phase of the game.
 
-For example a higher bar in the Death Overs does not automatically mean that the over itself causes more wickets. Teams are usually trying to score much more aggressively towards the end of an innings, which can naturally increase the chance of losing wickets. Because of this, the graph is mainly used to capture historical wicket patterns rather than predict the probability of a wicket falling in a future match.
-The By Bowler tab takes the same idea one step further and looks at the bowlers who have historically taken wickets against the selected batting team. Instead of grouping the wickets by over, the wickets are grouped by bowler and the bowlers are arranged based on the number of wickets they have taken against that opponent. Only wickets that can be credited to the bowler are included, so dismissals such as run outs are not counted as a bowler's wicket.
+For example a higher bar in the Death Overs does not automatically mean that the over itself causes more wickets. Teams are usually trying to score much more aggressively towards the end of an innings, which can naturally increase the chance of losing wickets. Because of this, the graph is mainly used to capture historical wicket patterns rather than predict the probability of a wicket falling in a future match. The By Bowler tab takes the same idea one step further and looks at the bowlers who have historically taken wickets against the selected batting team. Instead of grouping the wickets by over, the wickets are grouped by bowler and the bowlers are arranged based on the number of wickets they have taken against that opponent. Only wickets that can be credited to the bowler are included, so dismissals such as run outs are not counted as a bowler's wicket.
 
 One important thing to keep in mind while using the all-seasons option is that BBL squads are not fixed across seasons. Players can move between teams, leave the competition or join a team in a later season. Because of this, when "---" is selected, the bowler graph represents the historical players who have taken wickets for that team across the full period available in the dataset. This means that a player may still appear in the graph even if they are not part of the current squad because they represented that team and took wickets against the selected opponent in an earlier season.
 
 This was also one of the reasons both the season-specific and all-season options were kept. The season filter allows the user to understand the bowlers and wicket patterns relevant to a particular season, while the all-season option gives a broader historical picture of the matchup between the two franchises. Together, the By Over and By Bowler views help explain not only when wickets have historically fallen, but also which bowlers were responsible for those wickets.
 
-
-3.1	Which batters perform better under high-pressure chase situations compared with low-pressure situations?
+### Which batters perform best under high-pressure chase situations — defined by a high required run rate and few wickets in hand — relative to their performance in low-pressure situations?
 
 The second research question was a bit more complicated because pressure was not directly available in the dataset. Unlike runs, wickets or overs there was no variable which directly showed whether the batter was playing under high pressure or low pressure. So before comparing the batters, a way to measure how difficult the match situation was at every point of the chase first had to be found.
 
-This analysis only focuses on the second innings, because this is when the batting team is chasing a target and the match situation can be measured based on how many runs are still required. Shortened or interrupted matches were also removed because the normal 120-ball structure would not correctly represent those matches. 
+This analysis only focuses on the second innings, because this is when the batting team is chasing a target and the match situation can be measured based on how many runs are still required. Shortened or interrupted matches were also removed because the normal 120-ball structure would not correctly represent those matches.
 
-To understand the situation before every delivery, three main variables were used - required run rate, wickets in hand and balls remaining. Required run rate shows how quickly the team needs to score from that point, wickets in hand shows how many wickets the batting team still has available and balls remaining shows how much time is left in the innings. Using all three variables together gives a much better picture of the match situation than using only one variable.For example - needing 40 runs with 50 balls remaining and eight wickets in hand is very different from needing 40 runs from 20 balls with only three wickets in hand. The number of runs required is the same in both cases, but the difficulty of the chase is completely different. This was the main reason why required run rate alone was not enough to represent pressure. 
+To understand the situation before every delivery, three main variables were used - required run rate, wickets in hand and balls remaining. Required run rate shows how quickly the team needs to score from that point, wickets in hand shows how many wickets the batting team still has available and balls remaining shows how much time is left in the innings. Using all three variables together gives a much better picture of the match situation than using only one variable.For example - needing 40 runs with 50 balls remaining and eight wickets in hand is very different from needing 40 runs from 20 balls with only three wickets in hand. The number of runs required is the same in both cases, but the difficulty of the chase is completely different. This was the main reason why required run rate alone was not enough to represent pressure.
 
 After creating these match-state variables a logistic regression model was used to estimate the probability of the chasing team winning from that situation. Logistic regression was used because the final outcome had only two possibilities either the chasing team won or lost. The final result was therefore converted into a binary variable where 1 represented a win and 0 represented a loss. The model then used required run rate, wickets in hand and balls remaining to calculate the probability of winning before each delivery.
 
 Before using the final model the matches were split into training and testing data. Around 80% of the matches were used for training and the remaining 20% were used for testing. One important thing here was that the split used the match ID rather than randomly splitting individual deliveries. This was done so that deliveries from the same match would not be present in both the training and testing data. After training the model the performance was checked using the predicted win probabilities, accuracy, confusion matrix and ROC-AUC. The model values are as follows -
 
-Accuracy – 80.32%, logistic regression achieved a test classification accuracy of 80.32% using 0.5 prob of threshold meaning if predictied probability was higher than 0.5, then that observation would be classified as a win and vice-versa.
-Confusion Matrix - 
-            Predicted
-                 0        1
-Actual    0     5103    1901
-          1     871     6215
+Accuracy – 80.32%, logistic regression achieved a test classification accuracy of 80.32% using 0.5 prob of threshold meaning if predictied probability was higher than 0.5, then that observation would be classified as a win and vice-versa. Confusion Matrix - Predicted 0 1 Actual 0 5103 1901 1 871 6215
 
-The model correctly classified 5103 losing observations and 6215 winning observations while 1901 losing observations were classified as wins and 871 winning observations were classified as losses.
-ROC-AUC Values - The ROC-AUC score was 0.8915 meaning the model was able to separate winning and losing chase situations quite well across different probability thresholds. 
+The model correctly classified 5103 losing observations and 6215 winning observations while 1901 losing observations were classified as wins and 871 winning observations were classified as losses. ROC-AUC Values - The ROC-AUC score was 0.8915 meaning the model was able to separate winning and losing chase situations quite well across different probability thresholds.
 
-The above was the models performance on the test data, the logistic regression was fit again using the complete pressure data-set. The below is the summary of the model values -
-Accuracy – 81.30%, logistic regression achieved in-sample classification accuracy of 81.30%
+The above was the models performance on the test data, the logistic regression was fit again using the complete pressure data-set. The below is the summary of the model values - Accuracy – 81.30%, logistic regression achieved in-sample classification accuracy of 81.30%
 
-Confusion Matrix - 
-             Predicted
-                 0          1
-Actual    0     26917    7200
-          1     6079     30828
-          
+Confusion Matrix - Predicted 0 1 Actual 0 26917 7200 1 6079 30828
+
 Once the final model was created, the predicted win probability from each delivery was converted into a pressure score using 1 - predicted win probability. This means a situation with a high chance of winning would have a lower pressure score, while a situation with a low chance of winning would have a higher pressure score. The pressure scores were then divided using the 25th and 75th percentiles, where the bottom 25% was classified as Low Pressure, the top 25% as High Pressure and the middle 50% as Medium Pressure. These pressure levels were then used to compare how each batter performed under different chase situations.
 
-
-3.2 Batsmen Pressure Analysis
+#### Batsmen Pressure Analysis
 
 Once the pressure level was calculated for every delivery the next step was to use that and compare how each batter performed under low-pressure and high-pressure chase situations. The final result of this analysis is shown in the Batsmen Pressure Analysis tab of the dashboard.
 
-The dashboard has two filters, Team A and Team B, where the user can select any two teams which have played against each other. Once the teams are selected, the graph shows the batters from both teams who have experienced both low-pressure and high-pressure situations while chasing against that opponent.
-The graph compares the batter's strike rate under the two pressure levels across all the available seasons. The grey bar represents low pressure and the green bar represents high pressure. So if the green bar is longer than the grey bar, it means that batter historically scored at a higher rate when the match situation was classified as high pressure. If the grey bar is longer, it means the batter scored faster in lower-pressure situations.
+The dashboard has two filters, Team A and Team B, where the user can select any two teams which have played against each other. Once the teams are selected, the graph shows the batters from both teams who have experienced both low-pressure and high-pressure situations while chasing against that opponent. The graph compares the batter's strike rate under the two pressure levels across all the available seasons. The grey bar represents low pressure and the green bar represents high pressure. So if the green bar is longer than the grey bar, it means that batter historically scored at a higher rate when the match situation was classified as high pressure. If the grey bar is longer, it means the batter scored faster in lower-pressure situations.
 
 The main comparison here is not really between one player and another, but between the two bars of the same player. A player may not have the highest strike rate overall, but if their high-pressure strike rate is much higher than their low-pressure strike rate, it shows that their scoring rate increased when the match situation became more difficult.
 
@@ -184,8 +181,7 @@ The graph is also interactive. When the user hovers over the bars, it shows more
 
 Overall, the purpose of this graph is not to simply say that one player is a good or bad pressure player. It is mainly used to understand how the same batter has historically performed when the chase became easier or more difficult based on the pressure score created from the model.
 
-
-### Findings
+### Dashboard Insights
 
 The dashboard was mainly used to answer the research questions by allowing the user to explore the historical data under different situations. Because the results change depending on the team, opponent, season and match situation selected there is not one single finding that can be applied to the complete BBL dataset. For example the scoring rate or wicket pattern seen for one team against a particular opponent may be completely different for another matchup. Because of this, the purpose of the analysis was not to conclude that one particular phase always has the highest scoring rate or that wickets always fall more often in one specific over. Instead, the dashboard allows these patterns to be identified depending on the situation the user wants to analyse. The same applies to the batter pressure analysis, where the comparison depends on the batter and opponent selected rather than producing one overall result for every player.
 
@@ -197,7 +193,196 @@ Another limitation is the limited amount of information available in the dataset
 
 Another thing to keep in mind is that players are not permanent to one BBL team. Players can move between teams, leave the competition or join a team in later seasons. This is especially important when using the all-seasons view because a player shown under a particular team may have represented that team only during certain seasons and may not be part of the current squad.
 
-### Scope for improvement/Future Analysis
+
+
+## Predicting Delivery-Level Wicket Risk and Evaluating Bowler Effectiveness Under Different Match Conditions
+
+
+
+### Data preparation and feature engineering
+#### Data preparation
+ The delivery-level data records the match, season, date, venue, innings, batting and bowling teams, striker, bowler, runs, extras and dismissal information. A supplementary match-information table provides additional match-level details. These records are prepared in R, with dates converted to date objects and delivery-level calculations grouped by match and innings where necessary.
+
+An important preprocessing step is distinguishing legal deliveries from wides and no-balls. These deliveries can add runs without counting towards the six legal balls in an over, affecting calculations of balls remaining, bowling economy and player performance. The data also distinguishes between any dismissal and a wicket credited to the bowler. This distinction matters because the wicket-prediction model targets any recorded dismissal other than a retired hurt, whereas the death-over analysis considers only dismissals credited to the bowler. For example, a run-out contributes to the first outcome but not the second.
+
+Matches identified as shortened are flagged during preprocessing. The final wicket-prediction model excludes these matches because revised innings lengths and targets can distort comparisons of match state. The death-over analysis applies the same exclusion. This restriction improves consistency in the definition of the innings and chase conditions being modelled.
+
+#### Match-state features
+The raw delivery records do not directly provide all the predictors needed to describe the state of an innings. These are derived from the sequence of deliveries, ensuring that the model can represent conditions immediately before the delivery being evaluated.
+The score before the delivery is calculated from cumulative runs, while wickets lost before the delivery are derived from the dismissal records. Balls remaining are based on the number of legal deliveries already bowled, with wides and no-balls excluded from the count. For second-innings deliveries, the first-innings total is used to calculate the target and runs required. These variables support additional features such as current run rate, required run rate, the difference between required and current run rates, wickets in hand and runs required per wicket in hand.
+
+The phase of play is also encoded as a categorical distinction between the powerplay, middle and death overs. For the final model, these phases are represented by indicator variables. Additional features describe the position within an over and recent match momentum, including runs and dot balls across the previous six and twelve deliveries, wickets and boundaries over the previous twelve deliveries, and balls since the most recent wicket or boundary. Partnership runs and legal balls faced within the current partnership provide further information about the immediate batting context.
+
+These features allow the prediction model to represent more than the current score alone. Two deliveries at the same score may have different wicket probabilities depending on the wickets already lost, the number of balls remaining, recent scoring patterns and the requirements of the chase.
+
+#### Player-performance and contextual features
+The final wicket-prediction model incorporates both within-match performance and historical information. Within-match batter features include runs scored, balls faced, strike rate and boundary-scoring proportion before the current delivery. Bowler features include legal balls bowled, economy rate, dot-ball percentage and boundary percentage before the delivery. Using lagged values ensures that these statistics do not include the outcome of the delivery being predicted.
+
+Historical career features summarise previous performances by each batter and bowler. Batter statistics include previous appearances, batting average, strike rate and boundary-scoring proportion. Bowler statistics include previous appearances, economy rate, bowling average, bowling strike rate and dot-ball percentage. These measures provide information about prior performance without relying on the player's final statistics from the current match.
+
+The final model, documented in model_7_ensemble.qmd, extends the features developed in earlier model iterations. It includes smoothed estimates of batter dismissal rate and bowler-credited wicket rate, using league-level rates as reference values so that estimates based on limited prior observations are not treated as equally reliable as those supported by substantial data. It also includes venue-level wicket rates and player–venue adjustments, as well as the striker's current batting position, historical usual position and the difference between them. These features allow the model to account for differences in player performance and context without simply treating every player's observed rate as a stable measure of ability.
+
+The historical features are constructed from prior matches, while league-level reference rates are calculated using training matches only. This is intended to prevent future information from influencing the predictors. The final model therefore combines match state, recent performance, historical player statistics, venue context and batting position.
+
+#### Modelling datasets
+The final wicket-prediction model uses a chronological split, with approximately 80% of eligible matches allocated to training and later matches reserved for testing. Hyperparameter selection is conducted using five-fold cross-validation grouped by match, so deliveries from a single match are not split across validation folds. The final ensemble averages predictions from the three highest-performing configurations, with each configuration fitted using three random seeds. The test set is reserved for final evaluation rather than repeated model selection.
+
+The death-over analysis uses a separate modelling dataset restricted to overs 17–20 of eligible matches. It models runs conceded by the bowler and bowler-credited wickets as distinct outcomes, using match-state predictors and random effects for bowler, striker and venue. This separation ensures that the wicket-prediction task evaluates the probability of any dismissal, whereas the death-over analysis focuses on bowling effectiveness in terms of runs conceded and wickets credited to the bowler.
+
+### Can we build a model that predicts the probability of a wicket falling on any given delivery, using match-state and player-identity features?
+
+#### Model development and feature selection
+The first research question investigates whether the probability of a wicket falling on a delivery can be predicted using match-state and player-performance features. This was approached as a binary classification problem, with the occurrence of a wicket as the response variable. XGBoost was selected as the primary modelling method because it can capture non-linear relationships and interactions between the features.
+
+An important part of the modelling process was assessing whether historical player-performance information provided additional predictive value. Model 3 provided the initial feature set, incorporating match-state, momentum and partnership information. Model 4 extended this by including two smoothed historical performance measures: batter dismissal rate and bowler wicket rate. These features were calculated using previous matches and shrunk towards league averages to reduce the influence of limited playing histories.
+
+The comparison between Models 3 and 4 provides an indication of the contribution of these additional player features. Both models were evaluated on the same test deliveries, with differences assessed using paired bootstrap resampling at the match level. Model 4 achieved a PR-AUC improvement of 0.00146 over Model 3, although its 95% bootstrap interval ranged from -0.000804 to 0.00422. This interval includes zero, so the results do not establish a statistically clear improvement in PR-AUC. However, ROC-AUC increased by 0.00426, with a 95% interval of 0.000253–0.00862, providing evidence of a small improvement in overall discrimination.
+
+The feature importance results for Model 4 also indicated that historical player information contributed to the predictions. Batter dismissal rate was the seventh most influential feature according to XGBoost gain, while bowler wicket rate ranked twenty-fourth. These findings supported retaining player-performance information in subsequent modelling, although feature importance alone does not establish the independent predictive contribution of either feature.
+
+#### Final model development
+
+Following the feature-engineering experiments, Model 7 was developed as the final XGBoost ensemble. It incorporated match-state, momentum, partnership, historical player-performance, venue-related and batting-position features. Historical player and venue measures were smoothed towards relevant league averages to reduce instability arising from limited observations.
+
+Model development used a chronological training and test split, with approximately 80% of matches allocated to training and the remaining matches reserved for final evaluation. Hyperparameter selection was conducted using random search and five-fold cross-validation, with deliveries from the same match kept within a single fold. This reduced the risk of information leakage between training and validation observations from the same match.
+
+PR-AUC was prioritised during model selection because wickets represent a relatively rare outcome. Early stopping was used to determine the appropriate number of boosting iterations. The final ensemble combined the three best-performing hyperparameter configurations, each fitted using three different random seeds. Predictions from the resulting nine models were averaged to produce the final wicket probabilities.
+
+#### Predictive performance
+
+Model 7 was evaluated on a chronological holdout test set containing 29,111 deliveries and 1,599 wickets, representing an observed wicket rate of 5.49%. Its PR-AUC was 0.0906, with a 95% match-bootstrap confidence interval of 0.0826–0.0983. This exceeded the baseline value corresponding to the overall wicket rate. The model also achieved a ROC-AUC of 0.613 (95% CI: 0.597–0.629). While this indicates that the model ranks wicket deliveries above non-wicket deliveries more often than chance, its overall discriminatory ability remains modest.
+
+The model's ability to distinguish between deliveries with different levels of wicket risk is more apparent when examining the predicted-risk deciles. Test deliveries were ranked by predicted wicket probability and divided into ten approximately equal-sized groups. The highest-risk decile contained 21.1% of all test-set wickets despite representing only 10% of deliveries. Its observed wicket rate was 11.6%, compared with the overall rate of 5.49%, resulting in a lift of 2.11. In contrast, the safest decile had an observed wicket rate of 3.12%.
+
+Furthermore, the riskiest 30% of deliveries accounted for 45.0% of all wickets. These findings indicate that Model 7 is more effective at identifying groups of deliveries with elevated wicket risk than at making highly precise predictions for individual deliveries.
+
+
+
+```{r}
+#| tbl-cap: "Observed wicket rates and distribution of wickets across groups ranked by predicted wicket probability. Decile 10 represents the highest-risk deliveries."
+
+q2$tables$decile
+```
+
+
+#### Calibration and performance across phases
+
+In addition to ranking performance, calibration was examined by comparing the average predicted wicket probability with the observed wicket rate across ten equally sized groups of test deliveries. Predictions were closely aligned with observed outcomes in the lower-risk groups. For example, the fifth group had a predicted wicket rate of 4.56% and an observed rate of 4.57%. However, the model increasingly underestimated wicket probabilities towards the higher-risk end. In the ninth group, the predicted rate was 6.66%, compared with an observed rate of 7.52%. This difference was more pronounced in the highest-risk group, where the model predicted a wicket rate of 10.0%, while the observed rate was 11.6%.
+This suggests that although the model can distinguish between relatively low- and high-risk deliveries, its predicted probabilities are somewhat conservative among the highest-risk deliveries. The distinction between ranking and calibration is important: a model can successfully identify which deliveries are relatively riskier without accurately estimating their absolute probabilities of producing a wicket.
+
+Performance was also examined across the three phases of an innings. During the powerplay (overs 1–6), the model predicted 394 wickets against 398 observed. In the middle overs (7–16), it predicted 711 against 720 observed. These differences were relatively small. However, during the death overs (17–20), the model predicted 423 wickets compared with 481 observed. The predicted wicket rate was 8.51%, while the actual rate was 9.68%, representing an underestimation of 1.17 percentage points.
+
+The model therefore reproduced the observed wicket frequency reasonably closely in the powerplay and middle overs, but underestimated wickets during the death phase. This is an important limitation given the higher observed wicket frequency in the final overs of an innings.
+
+```{r}
+#| tbl-cap: Predicted and observed wicket counts and rates across the powerplay, middle and death phases.
+
+q2$tables$phase
+```
+
+
+#### Interpretation of influential features
+
+SHAP values were used to examine how individual features contributed to Model 7's predictions. Figure 3.1 presents the distribution of SHAP values for the 15 most influential features across a sample of test deliveries. Positive SHAP values increase the predicted log-odds of a wicket, while negative values decrease them. The colour indicates the relative feature value, with purple representing lower values and yellow representing higher values.
+
+The innings resource measure was the most influential feature in the displayed analysis, followed by over number, required run rate and balls remaining. This highlights the importance of match state in the model's predictions. Higher over numbers generally corresponded to more positive SHAP contributions, indicating an association between later stages of the innings and increased predicted wicket risk. Required run rate and balls remaining also showed substantial variation in their contributions, suggesting that the model responds to the changing demands and constraints of an innings.
+
+Recent match events were also influential. The number of balls since the previous wicket displayed a wide distribution of SHAP values, indicating that recent wicket history contributes to differences in predicted risk. Score before the delivery, partnership information and batter-related historical measures also appeared among the influential features. This suggests that the model incorporates both the immediate match situation and information about player performance when estimating wicket probabilities.
+
+```{r}
+#| tbl-cap: SHAP values for the 15 most influential features in a sample of test deliveries. Positive values increase predicted wicket risk, while negative values decrease it.
+
+q2$plots$shap_beeswarm
+```
+
+
+Overall, the results show that match-state information plays an important role in predicting wicket risk, with player-performance measures and recent match events providing additional information. However, SHAP values describe how features contribute to the fitted model's predictions and should not be interpreted as causal effects. The model's modest discrimination, underestimation of high-risk probabilities and weaker performance in the death overs should also be considered when assessing its practical usefulness.
+
+#### Model robustness and diagnostics
+
+Several assessments were conducted to examine the reliability of the predictive model. Match-grouped cross-validation ensured that deliveries from the same match were not shared between training and validation folds, while the chronological holdout set provided an assessment on later matches. Match-level bootstrap intervals were also used to quantify uncertainty in predictive performance while accounting for dependence between deliveries within a match.
+
+The calibration analysis identified some systematic underestimation of wicket probabilities among the highest-risk deliveries, indicating that ranking performance was stronger than probability estimation. Performance also varied across innings phases, with the model underestimating wickets during the death overs. Finally, comparison between Models 3 and 4 examined the sensitivity of predictive performance to the inclusion of historical player-performance features. Although the improvement in PR-AUC was inconclusive, ROC-AUC showed a small positive improvement. Together, these assessments provide insight into the model's reliability, predictive limitations and sensitivity to feature selection.
+
+### Which bowlers are most effective at restricting runs and taking wickets in the death overs, after controlling for the match state in which they bowl?
+
+This question uses linear and logistic mixed-effects models to estimate differences between bowlers in runs conceded and bowler-credited wickets, respectively [ref]. The models account for match-state variables and include random effects for bowler, striker and venue. Partial pooling moderates estimates for bowlers with limited observations, helping to avoid rankings driven by unusually favourable or unfavourable small samples.
+
+#### Modelling approach
+
+The second research question examines which bowlers are most effective at restricting runs and taking wickets during the death overs, after accounting for the match situations in which they bowl. Comparing observed economy rates and wicket totals alone would not adequately account for differences in match circumstances. For example, bowlers may face different levels of scoring pressure depending on the stage of the innings, the number of wickets already lost and whether the batting team is chasing a target. Mixed-effects models were therefore used to estimate bowler performance while accounting for these factors, as well as differences associated with the batter and venue.
+
+The analysis used deliveries from overs 17–20 across the first and second innings, excluding shortened matches. Two models were fitted using the same explanatory variables. A linear mixed-effects model examined runs conceded per delivery, calculated as runs off the bat plus wides and no-balls. A logistic mixed-effects model estimated the probability of a bowler-credited wicket, excluding dismissals such as run-outs that are not credited to the bowler.
+
+Both models included the chase indicator, required run rate, their interaction, wickets already lost, over number and whether the delivery was a free hit. Required run rate was set to zero for first-innings deliveries, where no target was being chased. The interaction between the chase indicator and required run rate allows the relationship between required run rate and the outcome to differ between first- and second-innings deliveries.
+
+Both models also included random intercepts for bowler, striker and venue. This accounts for differences associated with the batter facing the delivery and the ground at which the match was played, while estimating individual bowler effects. The models use partial pooling, which shrinks individual bowler estimates towards the overall average. This reduces the influence of unusually high or low results based on relatively limited observations.
+
+Bowler performance was summarised using two measures. For run restriction, the estimated bowler random effect was converted into runs saved per over relative to the average bowler, by multiplying the effect by −6. Positive values indicate that a bowler conceded fewer runs than expected under comparable modelled conditions. For wicket-taking, the bowler random effect was converted into an odds ratio using the exponential function. An odds ratio above one indicates higher odds of taking a bowler-credited wicket relative to the average bowler, after adjustment for the included factors.
+
+To focus the comparison on bowlers with a reasonable volume of opportunities, only those with at least 120 legal deliveries in the death overs were retained. This left 63 eligible bowlers for comparison.
+
+#### Run-restricting performance
+
+The adjusted rankings identified Haris Rauf as the strongest run-restricting bowler, saving approximately 0.30 runs per over relative to the average bowler. B Lee followed closely at 0.30 runs per over, with HF Gurney at 0.27, PM Siddle at 0.26 and Rashid Khan at approximately 0.26. These estimates represent the bowler effects after accounting for the match-state variables, striker and venue included in the model.
+
+Consequently, the rankings provide a more contextual comparison than simply ordering bowlers by their observed economy rates. They distinguish the estimated bowler effect from differences associated with the situations in which each bowler delivered. For example, a bowler operating under greater scoring pressure is not assessed solely on the number of runs conceded, as the model also accounts for the included match-state factors.
+
+Figure 4.1 compares actual runs conceded per over with the model-based baseline for the leading run-restricting bowlers. The baseline is calculated using the model's fixed effects and the striker and venue random effects, while excluding the bowler random effect. It therefore provides an estimate of the expected scoring rate for an average bowler facing the same modelled circumstances. The difference between actual performance and this baseline helps illustrate the estimated run-restricting performance of the leading bowlers.
+
+```{r}
+#| label: fig-death-runs-baseline
+#| fig-cap: "Actual and model-baseline runs conceded per over for the leading death-over run-restricting bowlers."
+
+q4$plots$baseline
+```
+
+#### Wicket-taking performance
+
+Run restriction and wicket-taking represent different dimensions of bowling effectiveness. A bowler may consistently concede fewer runs without necessarily taking more wickets. The logistic mixed-effects model provides a separate assessment of wicket-taking by estimating each bowler's odds of taking a bowler-credited wicket relative to the average, conditional on the included match-state variables, striker and venue.
+
+PM Siddle recorded the highest wicket odds ratio among the highlighted bowlers, at approximately 1.074. This represents around 7.4% higher odds of a bowler-credited wicket relative to the average bowler, after adjustment. KW Richardson and DR Sams also recorded positive estimated effects, with odds ratios of approximately 1.066 and 1.053 respectively. Haris Rauf's estimated odds ratio was approximately 1.032, indicating a smaller but still above-average estimated effect.
+
+These estimates should be interpreted as relative odds rather than increases in absolute wicket probability. An odds ratio of 1.074 does not mean that Siddle takes 7.4 percentage points more wickets; it represents approximately 7.4% higher odds relative to the average bowler under the modelled conditions.
+
+#### Comparing run restriction and wicket-taking
+
+Figure 4.2 brings the two performance measures together, plotting adjusted runs saved per over against wicket odds ratios. The horizontal and vertical reference lines represent average performance on each measure. Bowlers in the upper-right quadrant perform above average in both dimensions, while those in the lower-right quadrant restrict runs effectively but have below-average estimated wicket odds.
+
+The results demonstrate that strong run restriction does not necessarily translate into above-average wicket-taking. B Lee and HF Gurney, for example, appear among the leading run-restricting bowlers but have estimated wicket odds ratios below one. Their respective odds ratios are approximately 0.930 and 0.982. Conversely, KW Richardson and DR Sams show positive wicket-taking effects despite having less pronounced run-saving estimates.
+
+PM Siddle stands out because he performs strongly on both measures, combining approximately 0.26 runs saved per over with the highest highlighted wicket odds ratio. Haris Rauf is another notable performer, ranking first in adjusted runs saved per over while also recording an above-average wicket odds ratio of approximately 1.032. These examples illustrate why evaluating both outcomes provides a more complete assessment of death-over bowling performance than relying on economy rate or wicket totals alone.
+
+The size of each point represents the number of death overs bowled, providing an indication of the volume of observations underlying each bowler's estimate. This is useful when interpreting the rankings, as bowlers with different numbers of deliveries have different amounts of information contributing to their estimated effects. Partial pooling also reduces the influence of unusually high or low results based on smaller samples.
+
+```{r}
+#| label: fig-death-bowler-performance
+#| fig-cap: "Estimated bowler effects on run restriction and wicket-taking during the death overs. The dashed reference lines indicate average performance, while point size represents the number of death overs bowled."
+
+q4$plots$scatter
+```
+
+#### Variation in bowling outcomes and limitations
+
+The mixed-effects models also provide insight into the variation associated with batters, bowlers and venues. For runs conceded, the estimated random-effect standard deviations were 0.193 for strikers, 0.060 for bowlers and 0.056 for venues. The residual standard deviation was 1.681. Within this model, the estimated variation between strikers was considerably larger than the variation between bowlers or venues.
+
+In the wicket model, the corresponding random-effect standard deviations were approximately 0.207 for strikers and 0.082 for bowlers, while the estimated venue variation was negligible. These estimates similarly indicate greater variation between batters than between bowlers in the model. However, the standard deviations describe variation on the respective model scales and should not be interpreted as percentages of outcome variation explained.
+
+The rankings should be interpreted with several limitations in mind. First, the minimum threshold of 120 legal death-over deliveries excludes bowlers with smaller samples, meaning that the comparison does not cover every bowler who has participated in the BBL. Second, although partial pooling reduces the influence of limited observations on individual estimates, the rankings remain estimates rather than definitive measures of a bowler's underlying ability. Third, the models account only for the match-state variables and random effects included in their specifications. Other factors, such as bowling tactics, batter intent and specific delivery characteristics, may also influence outcomes but are not explicitly represented.
+
+Overall, the analysis identifies bowlers who perform particularly well in restricting runs and taking wickets under comparable modelled conditions. Haris Rauf and PM Siddle stand out for their combination of run restriction and wicket-taking, while the differing performances of other leading bowlers reinforce the value of treating these as separate dimensions of bowling effectiveness.
+
+
+
+
+## Limitations and Future Scope
+This analysis has several limitations. For the wicket prediction model, Model 7 demonstrates relatively modest predictive discrimination, with a PR-AUC of 0.091 and ROC-AUC of 0.613. Although it identifies deliveries with a higher likelihood of a wicket, its predictions underestimate wicket frequency in the death overs. This suggests that the model does not fully capture the increased difficulty and risk associated with late-innings situations. Furthermore, SHAP values describe how features contribute to model predictions but do not establish causal relationships.
+
+For the death-over bowling analysis, the results are based on 63 eligible bowlers who met the minimum threshold of 120 legal deliveries. While the mixed-effects models account for differences in match state, batter and venue, their estimates remain dependent on the selected predictors and model assumptions. The estimated bowler effects should therefore be interpreted as relative performance measures rather than definitive rankings. In addition, individual uncertainty intervals would provide a stronger basis for distinguishing between bowlers.
+
+Future work could improve wicket prediction by exploring additional contextual features, alternative modelling approaches and more targeted treatment of death-over deliveries. Further validation on other T20 competitions would also help establish whether the findings generalise beyond the BBL. For the bowling analysis, expanding the dataset, incorporating additional measures of bowling performance and reporting uncertainty around individual bowler effects could produce more robust comparisons. Together, these extensions would provide a more comprehensive understanding of how match context influences player performance in T20 cricket.
+
+## Scope for improvement/Future Analysis
 
 The same idea of using the dashboard to understand historical patterns rather than predict future matches could still be maintained, but with more variables the analysis could have gone much deeper. For example, if the exact Power Surge overs were available it would be possible to analyse when each team usually takes the Power Surge against different opponents and what the match situation looks like at that point, such as the score, wickets lost and required scoring rate. This could help understand whether teams have a particular pattern or situation in which they normally decide to use it.
 
@@ -208,6 +393,5 @@ Another improvement would be to make the win-probability model more detailed. Ri
 Another major improvement would be to combine the match data with weather data before and during the match. Weather can have a large impact on the playing conditions and could help explain some of the scoring and wicket patterns seen in the dashboard. For example, rain or a wet outfield can slow the ball after it is hit, while moisture around the pitch can also change how the ball behaves compared with a dry and sunny day.
 
 If historical weather information was available for each venue and match, variables such as rainfall, temperature and humidity could be combined with the ball-by-ball data. This would allow the dashboard to compare how teams and players have historically performed under different weather conditions and whether scoring rates or wicket patterns change depending on those conditions. This could add another important layer to understanding why the same venue or team matchup may behave very differently from one match to another.
-
 
 
