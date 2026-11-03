@@ -1,0 +1,16 @@
+---
+title: "BBL Phase Analytics"
+subtitle: "Scoring Rates and Wicket Patterns Across T20 Phases"
+format:
+  revealjs:
+    theme: default
+    css: styles.css
+    slide-number: true
+    transition: fade
+    center: false
+    width: 1600
+    height: 900
+---
+
+
+
