@@ -88,20 +88,20 @@ stadium_lookup |>
 
 To maintain data integrity across the pipeline, each column in the lookup dictionary serves a distinct methodological purpose:
 
-* **Original Venue String (`original_stadium`):** The raw, uncleaned text string extracted directly from historical BBL match logs.
+- **Original Venue String (`original_stadium`):** The raw, uncleaned text string extracted directly from historical BBL match logs.
 
-* **Standardized Venue (`clean_stadium`):** The unified canonical venue name used to consolidate match records across seasons and control for stadium fixed effects.
+- **Standardized Venue (`clean_stadium`):** The unified canonical venue name used to consolidate match records across seasons and control for stadium fixed effects.
 
-* **Assigned Home Team (`home_team`):** The primary BBL franchise allocated to the venue based on official Cricket Australia venue hosting rules.
+- **Assigned Home Team (`home_team`):** The primary BBL franchise allocated to the venue based on official Cricket Australia venue hosting rules.
 
-* **City (`city`):** The geographical location of the stadium.
+- **City (`city`):** The geographical location of the stadium.
 
 ### Binary Feature Derivation:
 
 - `toss_winner_is_home_team`: A binary indicator variable ($1$ if the team winning the toss was playing at their designated home venue, $0$ otherwise) designed to isolate home-ground advantage from toss outcome effects.
-  
+
 - `winner_same_as_toss_winner`: A binary target variable ($1$ if the toss-winning team ultimately won the match, $0$ otherwise) serving as the dependent response variable across both the Chi-Square test of independence and multivariate logistic regression models.
-  
+
 ### Categorical Factor Encoding:
 
 Venue identifiers and environmental match conditions were converted into categorical factors, enabling the logistic regression model to properly estimate fixed effects across different venues and match environments.
@@ -269,20 +269,21 @@ tab_model(
 
 The random-effects variance components provide key insights into pre-game grouping structure:
 
-* **Venue Variation ($\sigma^2_{\text{venue}} \approx 0$):** Stadium identity exhibits zero baseline variance, confirming that historical toss conversion rates do not systematic vary by ground location.
+- **Venue Variation (**$\sigma^2_{\text{venue}} \approx 0$): Stadium identity exhibits zero baseline variance, confirming that historical toss conversion rates do not systematic vary by ground location.
 
-* **Franchise Variation ($\sigma^2_{\text{team}} = 0.103, \text{ICC} = 0.03$):** Toss-winning franchise identity accounts for approximately 3% of the total outcome variance ($\text{ICC} = 0.03$). Controlling for this baseline team skill accounts for the improved fit in Model 3 (with Model 3 having smaller $\text{AICc}$) while confirming that toss decision coefficients ($\text{OR} = 1.19, p = 0.289$) remain non-significant.
+- **Franchise Variation (**$\sigma^2_{\text{team}} = 0.103, \text{ICC} = 0.03$): Toss-winning franchise identity accounts for approximately 3% of the total outcome variance ($\text{ICC} = 0.03$). Controlling for this baseline team skill accounts for the improved fit in Model 3 (with Model 3 having smaller $\text{AICc}$) while confirming that toss decision coefficients ($\text{OR} = 1.19, p = 0.289$) remain non-significant.
 
 #### Empirical Model Results
 
 Across all three specifications ($N = 647$), the regression results demonstrate that pre-game indicators exert minimal influence on match outcomes in the Big Bash League:
 
-* **Invariance of Toss Advantage:** The decision to field first exhibits a remarkably stable odds ratio across specifications, moving from $OR = 1.19$ ($p = 0.294$) in Model 1 to $OR = 1.16$ ($p = 0.349$) in Model 2, and setting at $OR = 1.19$ ($p = 0.289$) in Model 3. Across all models, the effect is statistically non-significant ($p > 0.05$), confirming that choosing to field first provides no true tactical edge.
+- **Invariance of Toss Advantage:** The decision to field first exhibits a remarkably stable odds ratio across specifications, moving from $OR = 1.19$ ($p = 0.294$) in Model 1 to $OR = 1.16$ ($p = 0.349$) in Model 2, and setting at $OR = 1.19$ ($p = 0.289$) in Model 3. Across all models, the effect is statistically non-significant ($p > 0.05$), confirming that choosing to field first provides no true tactical edge.
 
-* **Emergence of Home-Ground Advantage Trend:** While playing at a home venue is non-significant in Model 2 ($OR = 1.25, p = 0.165$), controlling for baseline team skill in Model 3 increases the odds ratio to $OR = 1.35$ ($95\%\text{ CI: } 0.97 - 1.87, p = 0.073$). Although it remains slightly above the strict $5\%$ significance threshold, it reveals a weak positive trend toward home-ground advantage once team quality is controlled for.
-* **Model Selection via $\text{AICc}$:** Model 3 demonstrates superior statistical fit, achieving the lowest information criterion ($\text{AICc} = 894.541$) compared to Model 1 ($897.499$) and Model 2 ($899.609$). Adding team quality improves model parsimony without overparameterizing the fixed effects.
+- **Emergence of Home-Ground Advantage Trend:** While playing at a home venue is non-significant in Model 2 ($OR = 1.25, p = 0.165$), controlling for baseline team skill in Model 3 increases the odds ratio to $OR = 1.35$ ($95\%\text{ CI: } 0.97 - 1.87, p = 0.073$). Although it remains slightly above the strict $5\%$ significance threshold, it reveals a weak positive trend toward home-ground advantage once team quality is controlled for.
 
-* **Bounded Explanatory Power:** In Model 3, Tjur's marginal $R^2$ (fixed effects alone) is $0.009$ ($0.9\%$), while conditional $R^2$ (fixed and random effects combined) reaches $0.039$ ($3.9\%$). Over $96\%$ of overall outcome variance remains unexplained by pre-game conditions, demonstrating that live in-game match execution primary dictates match outcomes.
+- **Model Selection via** $\text{AICc}$: Model 3 demonstrates superior statistical fit, achieving the lowest information criterion ($\text{AICc} = 894.541$) compared to Model 1 ($897.499$) and Model 2 ($899.609$). Adding team quality improves model parsimony without overparameterizing the fixed effects.
+
+- **Bounded Explanatory Power:** In Model 3, Tjur's marginal $R^2$ (fixed effects alone) is $0.009$ ($0.9\%$), while conditional $R^2$ (fixed and random effects combined) reaches $0.039$ ($3.9\%$). Over $96\%$ of overall outcome variance remains unexplained by pre-game conditions, demonstrating that live in-game match execution primary dictates match outcomes.
 
 ### Practical Strategy Takeaway
 
@@ -340,13 +341,13 @@ knitr::kable(feature_df, align = c("l", "l", "l", "l"))
 
 ### Scoring Efficiency Metrics (`strike_rate` & `economy_rate`):
 
-* **Batter Strike Rate (`strike_rate`):** Average runs scored per 100 deliveries faced:
+- **Batter Strike Rate (`strike_rate`):** Average runs scored per 100 deliveries faced:
 
 $$\text{SR} = \frac{\text{Total Runs}}{\text{Balls Faced}} \times 100$$
 
 Unlike batting average (which measures longevity per dismissal), strike rate isolates pure scoring velocity. In T20 cricket, scoring 25 runs off 12 balls ($\text{SR} = 208.33$) generates higher expected value than 35 runs off 35 balls ($\text{SR} = 100.0$).
-   
-* **Bowler Economy Rate (`economy_rate`):** Average runs conceded per 6-ball over:
+
+- **Bowler Economy Rate (`economy_rate`):** Average runs conceded per 6-ball over:
 
 $$\text{Economy} = \frac{\text{Total Runs Conceded}}{\text{Legal Overs Bowled}}$$
 
@@ -354,13 +355,13 @@ Represents the foundational baseline for defensive bowling; lower economy rates 
 
 ### Delivery Control Metrics (`dot_pct`):
 
-* **Batter Dot Percentage:** Proportion of deliveries faced resulting in zero runs:
+- **Batter Dot Percentage:** Proportion of deliveries faced resulting in zero runs:
 
 $$\text{Dot \%} = \frac{\text{Dot Balls}}{\text{Balls Faced}} \times 100$$
 
 High dot percentages indicate difficulty in strike rotation, placing scoring pressure on the non-striker.
-   
-* **Bowler Dot Percentage:** Proportion of deliveries bowled yielding zero runs:
+
+- **Bowler Dot Percentage:** Proportion of deliveries bowled yielding zero runs:
 
 $$\text{Dot \%} = \frac{\text{Dot Balls Bowled}}{\text{Total Deliveries}} \times 100$$
 
@@ -368,13 +369,13 @@ Dot balls are the primary mechanism for building pressure in T20 cricket, forcin
 
 ### Aggressive Impact Metrics (`boundary_pct` & `boundary_conceded_pct`):
 
-* **Batter Boundary Percentage (`boundary_pct`):** Percentage of deliveries hit for a four or six:
+- **Batter Boundary Percentage (`boundary_pct`):** Percentage of deliveries hit for a four or six:
 
 $$\text{Boundary \%} = \frac{\text{Fours} + \text{Sixes}}{\text{Balls Faced}} \times 100$$
 
 Directly isolates power hitters from touch players.
-   
-* **Bowler Boundary Conceded Percentage (`boundary_conceded_pct`):** Percentage of deliveries conceded for a boundary:
+
+- **Bowler Boundary Conceded Percentage (`boundary_conceded_pct`):** Percentage of deliveries conceded for a boundary:
 
 $$\text{Boundary Conceded \%} = \frac{\text{Fours Conceded} + \text{Sixes Conceded}}{\text{Total Deliveries}} \times 100$$
 
@@ -382,13 +383,13 @@ Measures a bowler's ability to limit expensive deliveries under attack.
 
 ### Phase Specialization Ratios (`pp_ball_pct` & `death_ball_pct`):
 
-* **Powerplay Ratio (`pp_ball_pct`):** Proportion of deliveries in Overs 1–6:
+- **Powerplay Ratio (`pp_ball_pct`):** Proportion of deliveries in Overs 1–6:
 
 $$\text{PP \%} = \frac{\text{Overs 1–6 Deliveries}}{\text{Total Deliveries}} \times 100$$
 
 Identifies top-order batters exploiting vacant outfield space and opening bowlers capitalizing on new-ball swing.
-   
-* **Death Overs Ratio (`death_ball_pct`):** Proportion of deliveries in Overs 17–20:
+
+- **Death Overs Ratio (`death_ball_pct`):** Proportion of deliveries in Overs 17–20:
 
 $$\text{Death \%} = \frac{\text{Overs 17–20 Deliveries}}{\text{Total Deliveries}} \times 100$$
 
@@ -598,19 +599,19 @@ cluster_table_df |>
   knitr::kable()
 ```
 
-1. **Cluster 1 (Tailenders & Lower-Order, $N = 43$):**
+1.  **Cluster 1 (Tailenders & Lower-Order,** $N = 43$):
 
 - Centered at $PC1 = -2.26, PC2 = +0.37$.
 
 - Lowest average strike rate ($105.47$), lowest boundary rate ($10.34\%$), and highest exposure to death overs ($45.34\%$). These are specialist bowlers forced to bat late in the innings under high pressure with limited batting output.
 
-2. **Cluster 2 (Powerplay Openers, $N = 95$):**
+2.  **Cluster 2 (Powerplay Openers,** $N = 95$):
 
 - Centered at $PC1 = +1.06, PC2 = +0.91$.
 
 - Over 51.78% of their total balls faced occur in Overs 1–6. They generate the highest boundary frequency ($16.29\%$), utilizing field restrictions to clear the infield despite accepting a higher dot-ball rate ($37.59\%$).
 
-3. **Cluster 3 (Middle Anchors & Finishers, $N = 89$):**
+3.  **Cluster 3 (Middle Anchors & Finishers,** $N = 89$):
 
 - Centered at $PC1 = -0.03, PC2 = -1.15$.
 
@@ -805,19 +806,19 @@ bowler_cluster_table_df |>
   knitr::kable()
 ```
 
-1. **Cluster 1: Late-Over Change-Up Specialists & All-Rounders ($N = 55$)**
+1.  **Cluster 1: Late-Over Change-Up Specialists & All-Rounders (**$N = 55$)
 
 - Centered at $PC1 = +0.65, PC2 = +1.47$
 
 - Highest average economy rate ($8.50$) and lowest dot-ball percentage ($27.24\%$). These bowlers operate in late-middle and death overs relying on pace variations, cutters, and change-ups. While conceding higher run rates, they shoulder volatile over assignments.
 
-2. **Cluster 2: Low-Economy Middle-Over Run Suppressors ($N = 72$)**
+2.  **Cluster 2: Low-Economy Middle-Over Run Suppressors (**$N = 72$)
 
 - Centered at $PC1 = -1.53, PC2 = +0.16$
 
 - Lowest economy rate ($7.18$) and lowest boundary concession rate ($11.37\%$), with minimal exposure to late death overs ($8.75\%$). Dominated by specialist spinners and defensive seamers who restrict run scoring during Overs 7–16.
 
-3. **Cluster 3: Frontline New-Ball & Death Pace Attackers ($N = 90$)**
+3.  **Cluster 3: Frontline New-Ball & Death Pace Attackers (**$N = 90$)
 
 - Centroid: $(PC1 = +0.83, PC2 = -1.03)$
 
@@ -856,20 +857,20 @@ format_multi_citation("plotly")
 
 # References
 
-- Wickham H, Averick M, Bryan J, Chang W, McGowan LD, François R, Grolemund G, Hayes A, Henry L, Hester J, Kuhn M, Pedersen TL, Miller E, Bache SM, Müller K, Ooms J, Robinson D, Seidel DP, Spinu V, Takahashi K, Vaughan D, Wilke C, Woo K, Yutani H (2019). “Welcome to the tidyverse.” _Journal of Open Source Software_, *4*(43), 1686. doi:10.21105/joss.01686 <https://doi.org/10.21105/joss.01686>.
+- Wickham H, Averick M, Bryan J, Chang W, McGowan LD, François R, Grolemund G, Hayes A, Henry L, Hester J, Kuhn M, Pedersen TL, Miller E, Bache SM, Müller K, Ooms J, Robinson D, Seidel DP, Spinu V, Takahashi K, Vaughan D, Wilke C, Woo K, Yutani H (2019). “Welcome to the tidyverse.” *Journal of Open Source Software*, *4*(43), 1686. doi:10.21105/joss.01686 <https://doi.org/10.21105/joss.01686>.
 
 - Dwijesh. (2026, July 27). Australia cricket stadiums list 2026: All major grounds, capacity & home teams. IPL. <https://www.ipl.com/cricket/news/australia-cricket-stadiums-list-2026-all-major-grounds-capacity-amp-home-teams/>
 
-- Xie Y (2025). _knitr: A General-Purpose Package for Dynamic Report Generation in R_. R package version 1.51, <https://yihui.org/knitr/>.
+- Xie Y (2025). *knitr: A General-Purpose Package for Dynamic Report Generation in R*. R package version 1.51, <https://yihui.org/knitr/>.
 
-- Xie Y (2015). _Dynamic Documents with R and knitr_, 2nd edition. Chapman and Hall/CRC, Boca Raton, Florida. ISBN 978-1498716963, <https://yihui.org/knitr/>.
+- Xie Y (2015). *Dynamic Documents with R and knitr*, 2nd edition. Chapman and Hall/CRC, Boca Raton, Florida. ISBN 978-1498716963, <https://yihui.org/knitr/>.
 
-- Xie Y (2014). “knitr: A Comprehensive Tool for Reproducible Research in R.” In Stodden V, Leisch F, Peng RD (eds.), _Implementing Reproducible Computational Research_. Chapman and Hall/CRC. ISBN 978-1466561595.
+- Xie Y (2014). “knitr: A Comprehensive Tool for Reproducible Research in R.” In Stodden V, Leisch F, Peng RD (eds.), *Implementing Reproducible Computational Research*. Chapman and Hall/CRC. ISBN 978-1466561595.
 
-- Bates D, Mächler M, Bolker B, Walker S (2015). “Fitting Linear Mixed-Effects Models Using lme4.” _Journal of Statistical Software_, *67*(1), 1-48. doi:10.18637/jss.v067.i01 <https://doi.org/10.18637/jss.v067.i01>.
+- Bates D, Mächler M, Bolker B, Walker S (2015). “Fitting Linear Mixed-Effects Models Using lme4.” *Journal of Statistical Software*, *67*(1), 1-48. doi:10.18637/jss.v067.i01 <https://doi.org/10.18637/jss.v067.i01>.
 
-- R Core Team (2026). _R: A Language and Environment for Statistical Computing_. R Foundation for Statistical Computing, Vienna, Austria. <https://www.R-project.org/>.
+- R Core Team (2026). *R: A Language and Environment for Statistical Computing*. R Foundation for Statistical Computing, Vienna, Austria. <https://www.R-project.org/>.
 
-- Maechler M, Rousseeuw P, Struyf A, Hubert M, Hornik K (2026). _cluster: Cluster Analysis Basics and Extensions_. R package version 2.1.8.2 - For new features, see the 'NEWS' and the 'Changelog' file in the package source), <https://CRAN.R-project.org/package=cluster>.
+- Maechler M, Rousseeuw P, Struyf A, Hubert M, Hornik K (2026). *cluster: Cluster Analysis Basics and Extensions*. R package version 2.1.8.2 - For new features, see the 'NEWS' and the 'Changelog' file in the package source), <https://CRAN.R-project.org/package=cluster>.
 
-- Sievert C (2020). _Interactive Web-Based Data Visualization with R, plotly, and shiny_. Chapman and Hall/CRC. ISBN 9781138331457, <https://plotly-r.com>.
+- Sievert C (2020). *Interactive Web-Based Data Visualization with R, plotly, and shiny*. Chapman and Hall/CRC. ISBN 9781138331457, <https://plotly-r.com>.

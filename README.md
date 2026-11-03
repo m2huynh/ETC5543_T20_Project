@@ -172,7 +172,7 @@ Additional modelling packages are required for the XGBoost and mixed-effects ana
 Run the relevant feature-engineering scripts before launching the dashboard or reproducing model results.
 
 For the dashboard follow the following steps,
-1. PREM/Clean Build/Feature_engineering.qmd
+1. PREM/Clean Build/Feature_engineering.qmd    (run all code)
 2. PREM/Clean Build/Dashboard.R
 
 ---
