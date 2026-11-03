@@ -1,0 +1,685 @@
+---
+title: "Model-iteration-7 (tuned ensemble)"
+format: html
+---
+
+Model 7: aim for the best honest score.
+Full feature set (Model 4 + venue x player + batting position, all built in this file),
+hyperparameters chosen by random search on grouped CV (training matches only),
+then an average of the top configurations over several seeds.
+The test set is used once, at the end. Target = any wicket (`wickets`).
+
+```{r}
+library(tidyverse)
+library(xgboost)
+library(yardstick)
+library(here)
+library(shapviz)
+library(gt)
+```
+
+Read data, keep innings 1 and 2
+
+```{r}
+target_col <- "wickets"
+
+bbl_inn <- readRDS(here("Pranav", "data", "bbl_t20_data.rds")) |>
+  ungroup() |>
+  filter(innings %in% c(1, 2))
+```
+
+Chronological cutoff, identical to Models 3 to 6. League priors use training matches only.
+
+```{r}
+match_dates <- bbl_inn |>
+  filter(shortened_match == 0) |>
+  distinct(match_id, start_date) |>
+  arrange(start_date, match_id)
+
+cutoff_index <- floor(nrow(match_dates) * 0.8)
+cutoff_date  <- match_dates$start_date[cutoff_index]
+
+train_match_ids <- match_dates |> filter(start_date <= cutoff_date) |> pull(match_id)
+match_lookup    <- bbl_inn |> distinct(match_id, start_date, venue)
+```
+
+Player-identity features (as in Model 4)
+
+```{r}
+K_bat  <- 120
+K_bowl <- 150
+
+bat_faced <- bbl_inn |>
+  group_by(match_id, striker) |>
+  summarise(balls = sum(ifelse(is.na(wides), 1, 0)), .groups = "drop")
+
+bat_out <- bbl_inn |>
+  filter(wickets == 1, !is.na(player_dismissed)) |>
+  group_by(match_id, striker = player_dismissed) |>
+  summarise(dism = n(), .groups = "drop")
+
+bat_match <- full_join(bat_faced, bat_out, by = c("match_id", "striker")) |>
+  left_join(match_lookup, by = "match_id") |>
+  mutate(balls = coalesce(balls, 0), dism = coalesce(dism, 0))
+
+league_bat <- bat_match |> filter(match_id %in% train_match_ids) |>
+  summarise(r = sum(dism) / sum(balls)) |> pull(r)
+
+bat_rate <- bat_match |>
+  arrange(striker, start_date, match_id) |>
+  group_by(striker) |>
+  mutate(b = lag(cumsum(balls), default = 0),
+         d = lag(cumsum(dism),  default = 0),
+         sk_bat_dismissal_rate = (d + K_bat * league_bat) / (b + K_bat)) |>
+  ungroup() |>
+  select(match_id, striker, sk_bat_dismissal_rate)
+
+bowl_match <- bbl_inn |>
+  group_by(match_id, start_date, bowler) |>
+  summarise(balls = sum(legal_ball), wkts = sum(bowler_wicket), .groups = "drop") |>
+  left_join(select(match_lookup, match_id, venue), by = "match_id")
+
+league_bowl <- bowl_match |> filter(match_id %in% train_match_ids) |>
+  summarise(r = sum(wkts) / sum(balls)) |> pull(r)
+
+bowl_rate <- bowl_match |>
+  arrange(bowler, start_date, match_id) |>
+  group_by(bowler) |>
+  mutate(b = lag(cumsum(balls), default = 0),
+         w = lag(cumsum(wkts),  default = 0),
+         sk_bowl_wicket_rate = (w + K_bowl * league_bowl) / (b + K_bowl)) |>
+  ungroup() |>
+  select(match_id, bowler, sk_bowl_wicket_rate)
+```
+
+Venue and venue x player features (as in Model 5)
+
+```{r}
+K_venue <- 1200
+K_bv    <- 60
+K_wv    <- 100
+
+venue_match <- bbl_inn |>
+  group_by(match_id, start_date, venue) |>
+  summarise(balls = sum(legal_ball), wkts = sum(wickets), .groups = "drop")
+
+league_venue <- venue_match |> filter(match_id %in% train_match_ids) |>
+  summarise(r = sum(wkts) / sum(balls)) |> pull(r)
+
+venue_rate <- venue_match |>
+  arrange(venue, start_date, match_id) |>
+  group_by(venue) |>
+  mutate(b = lag(cumsum(balls), default = 0),
+         w = lag(cumsum(wkts),  default = 0),
+         sk_venue_wicket_rate = (w + K_venue * league_venue) / (b + K_venue)) |>
+  ungroup() |>
+  select(match_id, sk_venue_wicket_rate)
+
+bat_venue <- bat_match |>
+  arrange(striker, venue, start_date, match_id) |>
+  group_by(striker, venue) |>
+  mutate(vb = lag(cumsum(balls), default = 0),
+         vd = lag(cumsum(dism),  default = 0)) |>
+  ungroup() |>
+  left_join(bat_rate, by = c("match_id", "striker")) |>
+  mutate(sk_bat_at_venue_rate = (vd + K_bv * sk_bat_dismissal_rate) / (vb + K_bv),
+         bat_venue_effect     = sk_bat_at_venue_rate - sk_bat_dismissal_rate) |>
+  select(match_id, striker, sk_bat_at_venue_rate, bat_venue_effect)
+
+bowl_venue <- bowl_match |>
+  arrange(bowler, venue, start_date, match_id) |>
+  group_by(bowler, venue) |>
+  mutate(vb = lag(cumsum(balls), default = 0),
+         vw = lag(cumsum(wkts),   default = 0)) |>
+  ungroup() |>
+  left_join(bowl_rate, by = c("match_id", "bowler")) |>
+  mutate(sk_bowl_at_venue_rate = (vw + K_wv * sk_bowl_wicket_rate) / (vb + K_wv),
+         bowl_venue_effect     = sk_bowl_at_venue_rate - sk_bowl_wicket_rate) |>
+  select(match_id, bowler, sk_bowl_at_venue_rate, bowl_venue_effect)
+```
+
+Batting position features (as in Model 5)
+
+```{r}
+K_pos <- 3
+
+appear <- bbl_inn |>
+  group_by(match_id, innings) |>
+  mutate(seq = row_number()) |>
+  ungroup() |>
+  select(match_id, innings, seq, striker, non_striker) |>
+  pivot_longer(c(striker, non_striker), names_to = "role", values_to = "player") |>
+  mutate(key = seq * 2L + if_else(role == "striker", 1L, 2L))
+
+position <- appear |>
+  group_by(match_id, innings, player) |>
+  summarise(first_key = min(key), .groups = "drop") |>
+  arrange(match_id, innings, first_key) |>
+  group_by(match_id, innings) |>
+  mutate(position = row_number()) |>
+  ungroup()
+
+pos_match <- position |>
+  select(match_id, striker = player, position) |>
+  left_join(select(match_lookup, match_id, start_date), by = "match_id")
+
+league_pos <- pos_match |> filter(match_id %in% train_match_ids) |>
+  summarise(m = mean(position)) |> pull(m)
+
+pos_hist <- pos_match |>
+  arrange(striker, start_date, match_id) |>
+  group_by(striker) |>
+  mutate(n_b = row_number() - 1,
+         s_b = lag(cumsum(position), default = 0),
+         striker_usual_position = (s_b + K_pos * league_pos) / (n_b + K_pos)) |>
+  ungroup() |>
+  select(match_id, striker, striker_usual_position)
+
+pos_now <- position |>
+  select(match_id, innings, striker = player, striker_position = position)
+```
+
+Join everything (row count must not change), then apply the Model 3 filters
+
+```{r}
+n0 <- nrow(bbl_inn)
+
+bbl_all <- bbl_inn |>
+  left_join(bat_rate,    by = c("match_id", "striker")) |>
+  left_join(bowl_rate,   by = c("match_id", "bowler")) |>
+  left_join(venue_rate,  by = "match_id") |>
+  left_join(bat_venue,   by = c("match_id", "striker")) |>
+  left_join(bowl_venue,  by = c("match_id", "bowler")) |>
+  left_join(pos_now,     by = c("match_id", "innings", "striker")) |>
+  left_join(pos_hist,    by = c("match_id", "striker")) |>
+  mutate(striker_pos_diff = striker_position - striker_usual_position)
+
+stopifnot(nrow(bbl_all) == n0)
+
+bbl_all <- bbl_all |>
+  filter(shortened_match == 0) |>
+  mutate(
+    phase_Powerplay = as.integer(phase == "Powerplay"),
+    phase_Middle    = as.integer(phase == "Middle"),
+    phase_Death     = as.integer(phase == "Death")
+  )
+```
+
+Feature set: everything from Models 4 and 5
+
+```{r}
+base_cols <- c(
+  "innings", "over_no", "balls_remaining", "score_before",
+  "wickets_lost_before", "required_runs", "free_hit",
+  "bowler_balls_bowled_before", "bowler_economy_before",
+  "bowler_boundary_p_before", "bowler_dot_ball_p_before",
+  "batsman_runs_scored_before", "batsman_balls_faced_before",
+  "batsman_strike_rate_before", "batsman_boundary_p_before",
+  "career_matches_before", "career_batting_avg_before",
+  "career_bowling_strike_rate_before", "career_batting_strike_rate_before",
+  "career_boundary_p_before", "career_matches_bowled_before",
+  "career_economy_before", "career_bowling_avg_before", "career_dot_p_before",
+  "phase_Powerplay", "phase_Middle", "phase_Death"
+)
+
+ratio_cols <- c("current_rr", "required_rr", "rr_gap", "resources",
+                "runs_per_wkt_in_hand", "batsman_sr_vs_rr", "batter_new")
+
+momentum_cols <- c("ball_in_over", "balls_since_wicket", "balls_since_boundary",
+                   "runs_last_6", "runs_last_12", "dots_last_6", "dots_last_12",
+                   "wkts_last_12", "bnds_last_12")
+
+partnership_cols <- c("partnership_runs_before", "partnership_balls_before")
+player_cols      <- c("sk_bat_dismissal_rate", "sk_bowl_wicket_rate")
+venue_cols       <- c("sk_venue_wicket_rate", "sk_bat_at_venue_rate", "bat_venue_effect",
+                      "sk_bowl_at_venue_rate", "bowl_venue_effect")
+position_cols    <- c("striker_position", "striker_usual_position", "striker_pos_diff")
+
+feature_cols <- c(base_cols, ratio_cols, momentum_cols, partnership_cols,
+                  player_cols, venue_cols, position_cols)
+length(feature_cols)
+```
+
+Select and split (same cutoff as before)
+
+```{r}
+model_data <- bbl_all |>
+  select(match_id, start_date, all_of(feature_cols), all_of(target_col))
+
+train_data <- model_data |> filter(start_date <= cutoff_date)
+test_data  <- model_data |> filter(start_date >  cutoff_date)
+
+y_train <- train_data[[target_col]]
+y_test  <- test_data[[target_col]]
+
+dtrain <- xgb.DMatrix(train_data |> select(all_of(feature_cols)) |> as.matrix(), label = y_train)
+dtest  <- xgb.DMatrix(test_data  |> select(all_of(feature_cols)) |> as.matrix(), label = y_test)
+
+c(train_rows = nrow(train_data), test_rows = nrow(test_data),
+  base_rate_train = mean(y_train), base_rate_test = mean(y_test))
+```
+
+Evaluation helper and grouped 5-fold CV folds 
+
+```{r}
+eval_preds <- function(truth, p) {
+  p <- pmin(pmax(p, 1e-15), 1 - 1e-15)
+  tibble(
+    pr_auc  = pr_auc_vec(factor(truth, levels = c(0, 1)), p, event_level = "second"),
+    roc_auc = roc_auc_vec(factor(truth, levels = c(0, 1)), p, event_level = "second"),
+    logloss = -mean(truth * log(p) + (1 - truth) * log(1 - p)),
+    brier   = mean((p - truth)^2)
+  )
+}
+
+set.seed(35571381)
+train_matches <- unique(train_data$match_id)
+fold_of_match <- sample(rep(1:5, length.out = length(train_matches)))
+folds <- lapply(1:5, function(k) {
+  which(train_data$match_id %in% train_matches[fold_of_match == k])
+})
+```
+
+Random search over hyperparameters, scored by grouped-CV PR-AUC on the training matches only.
+Config 1 is Model 2's settings, as the reference. Lower `n_configs` if it runs too long.
+
+```{r}
+n_configs <- 20
+set.seed(35571381)
+
+configs <- bind_rows(
+  tibble(max_depth = 6, min_child_weight = 5, lambda = 1, alpha = 0, gamma = 0,
+         subsample = 0.8, colsample_bytree = 0.8),
+  tibble(
+    max_depth        = sample(2:7, n_configs, replace = TRUE),
+    min_child_weight = round(exp(runif(n_configs, log(1), log(100)))),
+    lambda           = exp(runif(n_configs, log(0.5), log(50))),
+    alpha            = runif(n_configs, 0, 5),
+    gamma            = runif(n_configs, 0, 5),
+    subsample        = runif(n_configs, 0.5, 1),
+    colsample_bytree = runif(n_configs, 0.3, 1)
+  )
+) |> mutate(id = row_number(), .before = 1)
+
+tune <- pmap_dfr(configs, function(id, max_depth, min_child_weight, lambda, alpha,
+                                   gamma, subsample, colsample_bytree) {
+  p <- list(objective = "binary:logistic", eval_metric = "aucpr", eta = 0.05,
+            max_depth = max_depth, min_child_weight = min_child_weight,
+            lambda = lambda, alpha = alpha, gamma = gamma,
+            subsample = subsample, colsample_bytree = colsample_bytree)
+
+  cv <- xgb.cv(params = p, data = dtrain, nrounds = 1500, folds = folds,
+               early_stopping_rounds = 30, verbose = 0, maximize = TRUE)
+  lg <- cv$evaluation_log
+  b  <- which.max(lg$test_aucpr_mean)
+
+  message(sprintf("config %d of %d: grouped-CV PR-AUC %.4f (%d rounds)",
+                  id, n_configs + 1, lg$test_aucpr_mean[b], lg$iter[b]))
+
+  tibble(id, max_depth, min_child_weight, lambda, alpha, gamma, subsample,
+         colsample_bytree, nrounds = lg$iter[b], cv_pr = lg$test_aucpr_mean[b])
+})
+
+tune |> arrange(desc(cv_pr)) |> print(n = 10)
+tune |> filter(id == 1) |> select(id, cv_pr)    # Model 2's settings, for reference
+```
+
+Final models: top configurations, each trained with several seeds on all training matches, predictions averaged
+
+```{r}
+n_top <- 3
+seeds <- c(1, 2, 3)
+
+top <- tune |> arrange(desc(cv_pr)) |> slice_head(n = n_top)
+
+models <- map(seq_len(n_top), function(j) {
+  cfg <- top[j, ]
+  p <- list(objective = "binary:logistic", eval_metric = "aucpr", eta = 0.05,
+            max_depth = cfg$max_depth, min_child_weight = cfg$min_child_weight,
+            lambda = cfg$lambda, alpha = cfg$alpha, gamma = cfg$gamma,
+            subsample = cfg$subsample, colsample_bytree = cfg$colsample_bytree)
+  map(seeds, function(s) {
+    xgb.train(params = c(p, list(seed = s)), data = dtrain,
+              nrounds = cfg$nrounds, verbose = 0)
+  })
+}) |> unlist(recursive = FALSE)
+
+pred_list  <- map(models, ~ predict(.x, dtest))
+pred_probs <- Reduce(`+`, pred_list) / length(pred_list)
+```
+
+Match-level bootstrap for Model 7
+```{r}
+
+set.seed(35571381)
+
+idx_by_match <- split(seq_len(nrow(test_data)), test_data$match_id)
+
+boot_auc <- map_dfr(1:200, function(i) {
+  m <- sample(names(idx_by_match), replace = TRUE)
+  idx <- unlist(idx_by_match[m], use.names = FALSE)
+
+  eval_preds(y_test[idx], pred_probs[idx])
+})
+
+```
+
+Calibration
+
+```{r}
+calibration <- tibble(pred = pred_probs, actual = y_test) |>
+  mutate(bucket = ntile(pred, 10)) |>
+  group_by(bucket) |>
+  summarise(mean_pred = mean(pred), mean_actual = mean(actual), n = n(), .groups = "drop")
+calibration
+```
+
+
+Test-set performance and results
+```{r}
+# Deciles of predicted risk (10 = the riskiest 10% of deliveries)
+dec <- tibble(match_id = test_data$match_id, pred = pred_probs, actual = y_test) |>
+  mutate(decile = ntile(pred, 10),
+         top5   = pred >= quantile(pred, 0.95))
+
+presentation_stats <- function(d) {
+  overall <- mean(d$actual)
+  top10   <- d$decile == 10
+  tibble(
+    overall_wicket_rate              = overall,
+    deliveries_per_wicket_overall    = 1 / overall,
+    top_decile_wicket_rate           = mean(d$actual[top10]),
+    top_decile_lift                  = mean(d$actual[top10]) / overall,
+    top_decile_share_of_wickets      = sum(d$actual[top10]) / sum(d$actual),
+    top_decile_deliveries_per_wicket = 1 / mean(d$actual[top10]),
+    top_3_deciles_share_of_wickets   = sum(d$actual[d$decile >= 8]) / sum(d$actual),
+    bottom_decile_wicket_rate        = mean(d$actual[d$decile == 1]),
+    top_5pct_wicket_rate             = mean(d$actual[d$top5])
+  )
+}
+
+
+boot_pres <- map_dfr(1:1000, function(i) {
+  m   <- sample(names(idx_by_match), replace = TRUE)       # resample whole matches
+  idx <- unlist(idx_by_match[m], use.names = FALSE)
+  presentation_stats(dec[idx, ])
+})
+
+pres_table <- presentation_stats(dec) |>
+  pivot_longer(everything(), names_to = "metric", values_to = "estimate") |>
+  left_join(boot_pres |> pivot_longer(everything(), names_to = "metric") |>
+              group_by(metric) |>
+              summarise(lo = quantile(value, 0.025), hi = quantile(value, 0.975)),
+            by = "metric")
+
+# PR-AUC and ROC-AUC with their intervals 
+model_metrics <- eval_preds(y_test, pred_probs)
+
+auc_table <- tibble(
+  metric = c("pr_auc", "roc_auc"),
+  estimate = c(model_metrics$pr_auc, model_metrics$roc_auc),
+  lo = c(
+    quantile(boot_auc$pr_auc, 0.025),
+    quantile(boot_auc$roc_auc, 0.025)
+  ),
+  hi = c(
+    quantile(boot_auc$pr_auc, 0.975),
+    quantile(boot_auc$roc_auc, 0.975)
+  )
+)
+
+headline_metrics <- bind_rows(auc_table, pres_table)
+headline_metrics
+
+# Total wickets: predicted vs actual, and the same by phase of play
+c(predicted_wickets = sum(pred_probs), actual_wickets = sum(y_test))
+
+# Plot A: actual wicket rate by decile of predicted risk
+p_decile <- dec |>
+  group_by(decile) |>
+  summarise(wicket_rate = mean(actual), .groups = "drop") |>
+  ggplot(aes(factor(decile), wicket_rate)) +
+  geom_col() +
+  geom_hline(yintercept = mean(dec$actual), linetype = "dashed") +
+  scale_y_continuous(labels = scales::percent) +
+  labs(x = "Decile of predicted wicket risk (10 = riskiest)", y = "Actual wicket rate",
+       title = "Actual wicket rate by predicted-risk decile",
+       subtitle = "Dashed line = overall wicket rate in the test set")
+
+# Plot B: cumulative share of wickets captured as more deliveries are flagged
+p_cumulative <- dec |>
+  arrange(desc(pred)) |>
+  mutate(pct_deliveries = row_number() / n(), pct_wickets = cumsum(actual) / sum(actual)) |>
+  ggplot(aes(pct_deliveries, pct_wickets)) +
+  geom_line() +
+  geom_abline(linetype = "dashed") +
+  geom_vline(xintercept = 0.1, colour = "grey60") +
+  scale_x_continuous(labels = scales::percent) + scale_y_continuous(labels = scales::percent) +
+  labs(x = "Share of deliveries flagged (riskiest first)", y = "Share of all wickets captured",
+       title = "Wickets captured by flagging the riskiest deliveries",
+       subtitle = "Dashed line = flagging at random")
+```
+
+
+Xai for the model
+
+```{r}
+set.seed(35571381)
+samp_idx <- sample(nrow(test_data), 5000)          # sample keeps the plots quick
+X <- test_data[samp_idx, ] |> select(all_of(feature_cols)) |> as.matrix()
+
+contrib <- Reduce(`+`, map(models, ~ predict(.x, X, predcontrib = TRUE))) / length(models)
+stopifnot(ncol(contrib) == length(feature_cols) + 1)       # features + bias
+
+S  <- contrib[, seq_along(feature_cols), drop = FALSE]
+colnames(S) <- feature_cols
+sv <- shapviz(S, X = as.data.frame(X), baseline = contrib[1, ncol(contrib)])
+
+# Feature groups for the headline plot
+state_cols <- c("innings", "over_no", "balls_remaining", "score_before", "wickets_lost_before",
+                "required_runs", "free_hit", "phase_Powerplay", "phase_Middle", "phase_Death",
+                "current_rr", "required_rr", "rr_gap", "resources", "runs_per_wkt_in_hand")
+batter_group <- c(grep("^batsman_", feature_cols, value = TRUE), "batter_new",
+                  "career_matches_before", "career_batting_avg_before",
+                  "career_batting_strike_rate_before", "career_boundary_p_before",
+                  "sk_bat_dismissal_rate", position_cols)
+bowler_group <- c(grep("^bowler_", feature_cols, value = TRUE), "career_matches_bowled_before",
+                  "career_economy_before", "career_bowling_avg_before",
+                  "career_bowling_strike_rate_before", "career_dot_p_before", "sk_bowl_wicket_rate")
+
+groups <- list(match_state = state_cols, batter = batter_group, bowler = bowler_group,
+               momentum = momentum_cols, partnership = partnership_cols, venue = venue_cols)
+
+stopifnot(setequal(unlist(groups), feature_cols), anyDuplicated(unlist(groups)) == 0)
+
+# Plot 1 (headline): how much each group of features moves the predictions
+p_shap_groups <- imap_dfr(groups, ~ tibble(group = .y,
+                          mean_abs_shap = mean(abs(rowSums(S[, .x, drop = FALSE]))))) |>
+  ggplot(aes(reorder(group, mean_abs_shap), mean_abs_shap)) +
+  geom_col() + coord_flip() +
+  labs(x = NULL, y = "Mean |SHAP| (log-odds)")
+
+# Plot 2: the 15 individual features that matter most, and which way they push
+p_shap_beeswarm <- sv_importance(sv, kind = "beeswarm", max_display = 15)
+
+# Plot 3: how the risk changes with over, by wickets lost (SHAP dependence)
+p_shap_dep_over <- sv_dependence(sv, "over_no", color_var = "wickets_lost_before")
+
+# Plot 4: model prediction vs actual wicket rate, by over and innings
+p_by_over <- test_data |>
+  mutate(pred = pred_probs, actual = y_test,
+         innings = factor(innings, levels = c(1, 2),
+                          labels = c("Innings 1 (batting first)", "Innings 2 (chasing)"))) |>
+  group_by(innings, over_no) |>
+  summarise(predicted = mean(pred), actual = mean(actual), .groups = "drop") |>
+  ggplot(aes(over_no)) +
+  geom_line(aes(y = predicted, colour = "Model prediction")) +
+  geom_point(aes(y = actual, colour = "Actual")) +
+  facet_wrap(~ innings) +
+  scale_y_continuous(labels = scales::percent) +
+  labs(x = "Over", y = "Wicket rate per delivery", colour = NULL,
+       title = "Wicket rate by over: model vs actual")
+
+# Plot 5: predicted wicket probability by over and wickets lost
+p_heatmap  <- test_data |>
+  mutate(pred = pred_probs) |>
+  filter(wickets_lost_before <= 8) |>
+  group_by(over_no, wickets_lost_before) |>
+  summarise(pred = mean(pred), n = n(), .groups = "drop") |>
+  filter(n >= 30) |>
+  ggplot(aes(over_no, wickets_lost_before, fill = pred)) +
+  geom_tile() +
+  scale_fill_viridis_c(labels = scales::percent) +
+  labs(x = "Over", y = "Wickets lost", fill = "P(wicket)")
+
+# Plot 6: one delivery explained feature by feature (the riskiest ball in the sample)
+p_waterfall <- sv_waterfall(sv, row_id = which.max(rowSums(S)), max_display = 10)
+```
+
+
+```{r}
+base_rate <- mean(y_test)
+
+# --- Table 1: headline metrics -------------------------------------------------
+fmt_val <- function(x, fmt) {
+  case_when(fmt == "pct"  ~ scales::percent(x, accuracy = 0.1),
+            fmt == "num1" ~ sprintf("%.1f", x),
+            fmt == "num2" ~ sprintf("%.2f", x),
+            TRUE          ~ sprintf("%.3f", x))
+}
+
+metric_labels <- tribble(
+  ~metric, ~group, ~label, ~meaning, ~fmt,
+  "pr_auc", "Ranking quality", "PR-AUC",
+    sprintf("How well wicket deliveries are ranked above the rest (no-skill value: %.3f)", base_rate), "num3",
+  "roc_auc", "Ranking quality", "ROC-AUC",
+    "Chance a random wicket delivery is rated riskier than a random non-wicket one (0.5 = no skill)", "num3",
+  "overall_wicket_rate", "Overall wicket rate", "Overall wicket rate",
+    "Share of all test deliveries that were wickets", "pct",
+  "deliveries_per_wicket_overall", "Overall wicket rate", "Deliveries per wicket",
+    "Average number of deliveries bowled per wicket", "num1",
+  "top_decile_wicket_rate", "Riskiest 10% of deliveries", "Wicket rate",
+    "Share of the riskiest 10% of deliveries that were wickets", "pct",
+  "top_decile_lift", "Riskiest 10% of deliveries", "Top-decile lift",
+    "Top-decile wicket rate divided by the overall wicket rate", "num2",
+  "top_decile_share_of_wickets", "Riskiest 10% of deliveries", "Share of all wickets",
+    "Fraction of all test wickets that fall in the riskiest 10%", "pct",
+  "top_decile_deliveries_per_wicket", "Riskiest 10% of deliveries", "Deliveries per wicket",
+    "Average deliveries per wicket within the riskiest 10%", "num1",
+  "top_3_deciles_share_of_wickets", "Riskiest 30% / 5% / safest 10%", "Riskiest 30%: share of all wickets",
+    "Fraction of all test wickets that fall in the riskiest 30%", "pct",
+  "top_5pct_wicket_rate", "Riskiest 30% / 5% / safest 10%", "Riskiest 5%: wicket rate",
+    "Share of the riskiest 5% of deliveries that were wickets", "pct",
+  "bottom_decile_wicket_rate", "Riskiest 30% / 5% / safest 10%", "Safest 10%: wicket rate",
+    "Share of the safest 10% of deliveries that were wickets", "pct"
+)
+
+tbl_headline <- headline_metrics |>
+  left_join(metric_labels, by = "metric") |>
+  mutate(estimate_txt = fmt_val(estimate, fmt),
+         interval_txt = paste0(fmt_val(lo, fmt), " to ", fmt_val(hi, fmt))) |>
+  select(group, label, estimate_txt, interval_txt, meaning) |>
+  gt(groupname_col = "group") |>
+  cols_label(label = "Metric", estimate_txt = "Estimate",
+             interval_txt = "95% interval", meaning = "What it means") |>
+  cols_align(align = "center", columns = c(estimate_txt, interval_txt)) |>
+  tab_header(title = "Model 7: headline test-set metrics",
+             subtitle = "Intervals come from resampling whole matches") |>
+  tab_source_note(sprintf("Test set: %s deliveries, %s wickets (%.1f%% of deliveries)",
+                          format(length(y_test), big.mark = ","),
+                          format(sum(y_test), big.mark = ","), 100 * base_rate))
+tbl_headline
+
+# --- Table 2: by decile of predicted risk --------------------------------------
+tbl_decile <- dec |>
+  group_by(decile) |>
+  summarise(deliveries = n(), wickets = sum(actual),
+            predicted_rate = mean(pred), actual_rate = mean(actual), .groups = "drop") |>
+  arrange(desc(decile)) |>
+  mutate(lift = actual_rate / base_rate,
+         share_of_wickets = wickets / sum(wickets),
+         cumulative_share = cumsum(share_of_wickets),
+         decile = case_when(decile == 10 ~ "10 (riskiest)",
+                            decile == 1  ~ "1 (safest)",
+                            TRUE ~ as.character(decile))) |>
+  gt() |>
+  cols_label(decile = "Decile of predicted risk", deliveries = "Deliveries", wickets = "Wickets",
+             predicted_rate = "Predicted wicket rate", actual_rate = "Actual wicket rate",
+             lift = "Lift", share_of_wickets = "Share of all wickets",
+             cumulative_share = "Cumulative share") |>
+  fmt_integer(c(deliveries, wickets)) |>
+  fmt_percent(c(predicted_rate, actual_rate, share_of_wickets, cumulative_share), decimals = 1) |>
+  fmt_number(lift, decimals = 2) |>
+  tab_style(style = cell_text(weight = "bold"),
+            locations = cells_body(rows = decile == "10 (riskiest)")) |>
+  tab_header(title = "Wicket rate by decile of predicted risk") |>
+  tab_source_note("Lift = the decile's actual wicket rate divided by the overall wicket rate. Cumulative share runs from the riskiest decile down.")
+tbl_decile
+
+# --- Table 3: by phase of play --------------------------------------------------
+phase_levels <- c("Powerplay (overs 1-6)", "Middle (overs 7-16)", "Death (overs 17-20)")
+
+phase_base <- test_data |>
+  mutate(pred = pred_probs, actual = y_test,
+         phase = case_when(phase_Powerplay == 1 ~ phase_levels[1],
+                           phase_Middle == 1    ~ phase_levels[2],
+                           TRUE                 ~ phase_levels[3]))
+
+tbl_phase <- bind_rows(
+  phase_base |> group_by(phase) |>
+    summarise(deliveries = n(), predicted_wickets = sum(pred), actual_wickets = sum(actual), .groups = "drop"),
+  phase_base |>
+    summarise(phase = "All deliveries", deliveries = n(),
+              predicted_wickets = sum(pred), actual_wickets = sum(actual))
+) |>
+  mutate(phase = factor(phase, levels = c(phase_levels, "All deliveries"))) |>
+  arrange(phase) |>
+  mutate(phase = as.character(phase),
+         predicted_rate = predicted_wickets / deliveries,
+         actual_rate = actual_wickets / deliveries,
+         gap = predicted_rate - actual_rate) |>
+  gt() |>
+  cols_label(phase = "Phase", deliveries = "Deliveries",
+             predicted_wickets = "Predicted wickets", actual_wickets = "Actual wickets",
+             predicted_rate = "Predicted wicket rate", actual_rate = "Actual wicket rate",
+             gap = "Predicted minus actual") |>
+  fmt_integer(c(deliveries, predicted_wickets, actual_wickets)) |>
+  fmt_percent(c(predicted_rate, actual_rate), decimals = 2) |>
+  fmt_percent(gap, decimals = 2, force_sign = TRUE) |>
+  tab_style(style = cell_text(weight = "bold"),
+            locations = cells_body(rows = phase == "All deliveries")) |>
+  tab_header(title = "Predicted vs actual wickets by phase of play") |>
+  tab_source_note("Predicted wickets = sum of the model's predicted probabilities over the deliveries in the phase.")
+tbl_phase
+```
+
+
+presentation docs
+
+```{r}
+presentation <- list(
+  plots = list(decile = p_decile, cumulative = p_cumulative,
+               shap_groups = p_shap_groups, shap_beeswarm = p_shap_beeswarm,
+               shap_dep_over = p_shap_dep_over, by_over = p_by_over,
+               heatmap = p_heatmap, waterfall = p_waterfall),
+  tables = list(headline = tbl_headline, decile = tbl_decile,
+                phase = tbl_phase),
+  numbers = list(base_rate = base_rate, n_test_rows = length(y_test),
+                 n_test_wickets = sum(y_test), headline_metrics = headline_metrics),
+  shap = sv     # lets the slides draw other SHAP plots without rerunning the model
+)
+
+saveRDS(presentation, here("Pranav", "data", "presentation_objects.rds"))
+round(file.size(here("Pranav", "data", "presentation_objects.rds")) / 1e6, 1)   # size in MB
+```
+
+Save
+
+```{r}
+saveRDS(
+  list(models = models, tune = tune, top = top, feature_cols = feature_cols,
+        boot_auc = boot_auc, boot_pres = boot_pres, calibration = calibration,
+       pred_probs = pred_probs, y_test = y_test, test_data = test_data),
+  here("Pranav", "data", "model_7_results.rds")
+)
+```

@@ -3,8 +3,7 @@ title: "Model-iteration-4"
 format: html
 ---
 
-Model 4: Model 3 (same features, hyperparameters, grouped CV) plus two player-identity features,
-built inside this file from the saved data. Target = any wicket (`wickets`).
+Model 4: Model 3 (same features, hyperparameters, grouped CV) plus two player-identity features, built inside this file from the saved data. Target = any wicket (`wickets`).
 
 ```{r}
 library(tidyverse)

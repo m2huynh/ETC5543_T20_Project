@@ -3,12 +3,17 @@ title: "Model-iteration-2"
 format: html
 ---
 
-model 2 - changing evaluation metrics. Using pr-auc
+Model 2 - Changing evaluation metrics. Using pr-auc
+
+This iteration builds on the initial modelling experiment (Model 1), 
+which was run using objects loaded directly from the data preparation 
+script. Model 1 was not maintained as a standalone, reproducible file. 
+This version establishes the initial XGBoost benchmark and includes 
+the training, validation and test evaluation procedures.
 
 ```{r}
 library(tidyverse)
-library(xgboost)      
-library(Matrix)     
+library(xgboost)          
 library(pROC)      
 library(here)
 library(yardstick)
@@ -33,10 +38,10 @@ test_data <- model_data |>
 
 ```
 
-template end-
 
 
-xbgoost matrices
+
+Xbgoost matrices
 
 ```{r}
 y_train <- train_data$wickets
@@ -59,7 +64,7 @@ t20_xgtest <- xgb.DMatrix(
 )
 ```
 
-setting parameters
+Setting parameters
 
 ```{r}
 params <- list(
@@ -73,9 +78,7 @@ params <- list(
 )
 ```
 
-5foldcv
-
-
+5 fold cv
 ```{r}
 set.seed(35571381)
 
@@ -96,9 +99,8 @@ best_nrounds <- t20_cv$evaluation_log$iter[
 best_nrounds
 ```
 
-training final model
 
-
+Training the final model
 ```{r}
 t20_final <- xgb.train(
   params = params,
@@ -110,7 +112,7 @@ t20_final <- xgb.train(
 )
 ```
 
-predicting
+Making Predictions
 
 ```{r}
 pred_probs <- predict(t20_final, t20_xgtest)
@@ -140,7 +142,7 @@ roc_auc <- roc_auc_vec(
 roc_auc
 ```
 
-calibratino
+Calibration
 
 ```{r}
 calibration <- tibble(
@@ -159,14 +161,7 @@ calibration <- tibble(
 print(calibration)
 ```
 
-pr_auc
-[1] 0.0958973
-
-roc_auc
-[1] 0.6232527
-
-I'd record 0.0959 PR-AUC as the main Model 1/2 benchmark and use it to compare subsequent iterations.
-
+Saving the model results
 
 ```{r}
 saveRDS(

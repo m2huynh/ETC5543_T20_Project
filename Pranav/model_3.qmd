@@ -16,7 +16,7 @@ library(here)
 Read data and filter
 
 ```{r}
-target_col <- "wickets"   # switch to "bowler_wicket" to model bowler-credited wickets
+target_col <- "wickets"   
 
 bbl_all <- readRDS(here("Pranav", "data", "bbl_t20_data.rds"))
 
