@@ -906,24 +906,42 @@ Integrating clustering insights with the earlier GLMM toss findings leads to two
 
 
 
-
-
 ## Limitations and Future Scope
 
-This analysis has several limitations. For the wicket prediction model, Model 7 demonstrates relatively modest predictive discrimination, with a PR-AUC of 0.091 and ROC-AUC of 0.613. Although it identifies deliveries with a higher likelihood of a wicket, its predictions underestimate wicket frequency in the death overs. This suggests that the model does not fully capture the increased difficulty and risk associated with late-innings situations. Furthermore, SHAP values describe how features contribute to model predictions but do not establish causal relationships.
+While the analyses provide insights into player performance and match situations in the BBL, there are several opportunities to improve and extend the work.
 
-For the death-over bowling analysis, the results are based on 63 eligible bowlers who met the minimum threshold of 120 legal deliveries. While the mixed-effects models account for differences in match state, batter and venue, their estimates remain dependent on the selected predictors and model assumptions. The estimated bowler effects should therefore be interpreted as relative performance measures rather than definitive rankings. In addition, individual uncertainty intervals would provide a stronger basis for distinguishing between bowlers.
+The wicket prediction model demonstrates modest predictive performance (PR-AUC: 0.091; ROC-AUC: 0.613) and underestimates wicket frequency during the death overs. The death-over bowling analysis is based on 63 eligible bowlers, and the estimated bowler effects should be interpreted as relative performance measures rather than definitive rankings. Reporting uncertainty intervals for individual bowler effects would provide a stronger basis for comparison.
 
-Future work could improve wicket prediction by exploring additional contextual features, alternative modelling approaches and more targeted treatment of death-over deliveries. Further validation on other T20 competitions would also help establish whether the findings generalise beyond the BBL. For the bowling analysis, expanding the dataset, incorporating additional measures of bowling performance and reporting uncertainty around individual bowler effects could produce more robust comparisons. Together, these extensions would provide a more comprehensive understanding of how match context influences player performance in T20 cricket.
+The dashboard could be extended by incorporating more detailed information, such as exact Power Surge overs and bowler types. This would allow a closer examination of when teams use the Power Surge and how their performance varies against different bowling styles. The win-probability model could also benefit from additional variables, including batter and bowler information, partnerships, venue, recent performance and target size. Historical weather information, such as rainfall, temperature and humidity, could provide further insight into how playing conditions influence scoring rates and wicket patterns.
 
-## Scope for improvement/Future Analysis
+Further improvements to the modelling analyses could include exploring alternative approaches, incorporating additional contextual features and giving more attention to death-over deliveries. Expanding the dataset and validating the models using other T20 competitions would also help establish whether the findings generalise beyond the BBL. Together, these improvements could provide a more detailed understanding of how match situations and playing conditions influence player performance.
 
-The same idea of using the dashboard to understand historical patterns rather than predict future matches could still be maintained, but with more variables the analysis could have gone much deeper. For example, if the exact Power Surge overs were available it would be possible to analyse when each team usually takes the Power Surge against different opponents and what the match situation looks like at that point, such as the score, wickets lost and required scoring rate. This could help understand whether teams have a particular pattern or situation in which they normally decide to use it.
+## References
 
-The same analysis could be improved further if information about the type of bowler was available, such as pace, swing or spin. This could help understand whether a team usually takes the Power Surge against a particular type of bowler and how their scoring rate or wickets change during those situations. So instead of changing the overall idea of the dashboard, having more detailed variables would allow the same historical analysis to explain the patterns much better.
+- Bates, D., Mächler, M., Bolker, B., & Walker, S. (2015). Fitting Linear Mixed-Effects Models Using lme4. *Journal of Statistical Software*, 67(1), 1–48. https://doi.org/10.18637/jss.v067.i01
 
-Another improvement would be to make the win-probability model more detailed. Right now the model only uses required run rate, wickets in hand and balls remaining. These are important variables but they do not fully explain the difficulty of every chase situation. The model could be improved by adding variables such as the current batter, bowler, partnership, venue, current scoring rate, recent boundaries or wickets and even the target size. This would help the probability estimate represent the actual match situation more closely instead of depending only on three variables. The same pressure analysis could then be built using this improved probability and the comparison between high-pressure and low-pressure batting situations would become much stronger.
+- Cricket Australia. (2024). *Big Bash League Playing Conditions and Official Match Regulations*. Melbourne: Cricket Australia.
 
-Another major improvement would be to combine the match data with weather data before and during the match. Weather can have a large impact on the playing conditions and could help explain some of the scoring and wicket patterns seen in the dashboard. For example, rain or a wet outfield can slow the ball after it is hit, while moisture around the pitch can also change how the ball behaves compared with a dry and sunny day.
+- Cricsheet. (2026). *Big Bash League Ball-by-Ball Match Data*. Retrieved from https://cricsheet.org/
 
-If historical weather information was available for each venue and match, variables such as rainfall, temperature and humidity could be combined with the ball-by-ball data. This would allow the dashboard to compare how teams and players have historically performed under different weather conditions and whether scoring rates or wicket patterns change depending on those conditions. This could add another important layer to understanding why the same venue or team matchup may behave very differently from one match to another.
+- Gelman, A., & Hill, J. (2006). *Data Analysis Using Regression and Multilevel/Hierarchical Models*. Cambridge University Press.
+
+- Hartigan, J. A., & Wong, M. A. (1979). Algorithm AS 136: A K-Means Clustering Algorithm. *Applied Statistics*, 28(1), 100–108. https://doi.org/10.2307/2346830
+
+- Jolliffe, I. T. (2002). *Principal Component Analysis* (2nd ed.). Springer-Verlag. https://doi.org/10.1000/978-0-387-22440-4
+
+- Kaufman, L., & Rousseeuw, P. J. (1990). *Finding Groups in Data: An Introduction to Cluster Analysis*. John Wiley & Sons.
+
+- Maechler, M., Rousseeuw, P., Struyf, A., Hubert, M., & Hornik, K. (2026). *cluster: Cluster Analysis Basics and Extensions* (R package version 2.1.8.2). https://CRAN.R-project.org/package=cluster
+
+- R Core Team. (2026). *R: A Language and Environment for Statistical Computing*. R Foundation for Statistical Computing, Vienna, Australia. https://www.R-project.org/
+
+- Sievert, C. (2020). *Interactive Web-Based Data Visualization with R, plotly, and shiny*. Chapman and Hall/CRC. ISBN 9781138331457, https://plotly-r.com
+
+- Wickham, H., Averick, M., Bryan, J., Chang, W., McGowan, L. D., François, R., ... & Yutani, H. (2019). Welcome to the Tidyverse. *Journal of Open Source Software*, 4(43), 1686. https://doi.org/10.21105/joss.01686
+
+- Xie, Y. (2014). knitr: A Comprehensive Tool for Reproducible Research in R. In V. Stodden, F. Leisch, & R. D. Peng (Eds.), *Implementing Reproducible Computational Research*. Chapman and Hall/CRC. ISBN 978-1466561595.
+
+- Xie, Y. (2015). *Dynamic Documents with R and knitr* (2nd ed.). Chapman and Hall/CRC. ISBN 978-1498716963.
+
+- Xie, Y. (2025). *knitr: A General-Purpose Package for Dynamic Report Generation in R* (Version 1.51). https://yihui.org/knitr/
