@@ -568,7 +568,8 @@ ui <- page_sidebar(
         "Batsmen Pressure Analysis",
         div(
           class = "analysis-note",
-          "Compare each batter's cumulative strike rate in low-pressure and high-pressure chase situations between the selected teams across all seasons."
+          "Compare each batter's cumulative strike rate in low-pressure and high-pressure 
+           chase situations between the selected teams across all seasons."
         ),
         
         div(
@@ -2792,15 +2793,7 @@ server <- function(input, output, session) {
       )
   })
   
-  # =======================================================
-  # =======================================================
-  #
   # BATSMEN PRESSURE ANALYSIS
-  #
-  # CUMULATIVE ACROSS ALL SEASONS
-  #
-  # =======================================================
-  # =======================================================
   
   #team b filter
   
@@ -2947,12 +2940,7 @@ server <- function(input, output, session) {
             "<br><b>Balls Faced:</b> ",
             `balls_faced_Low Pressure`,
             "<br><b>Chase Matches:</b> ",
-            `chase_matches_Low Pressure`,
-            "<br><br><b>High - Low SR:</b> ",
-            round(
-              strike_rate_difference,
-              2
-            )
+            `chase_matches_Low Pressure`
           ),
         
         hover_high =
@@ -3000,12 +2988,6 @@ server <- function(input, output, session) {
             round(
               `average_target_High Pressure`,
               1
-            ),
-            
-            "<br><br><b>High - Low SR:</b> ",
-            round(
-              strike_rate_difference,
-              2
             )
           )
       )
