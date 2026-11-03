@@ -130,24 +130,19 @@ Bowler effects were used to compare their relative ability to restrict runs and 
 match conditions. The results provide a context-adjusted comparison of death-over bowling performance rather than relying 
 solely on traditional bowling statistics.
 
-# Limitations
+## 3. Strategic Coin Toss Evaluation & Unsupervised Player Archetype Discovery
 
-Important limitations of the project include:
+### Strategic Coin Toss Evaluation
 
+- **Bivariate Hypothesis Testing:** Pearson's Chi-Square test evaluated whether choosing to field yields a statistically significant win rate advantage ($\chi^2 = 0.94, \text{df} = 1, p = 0.333$).
+- **Hierarchical GLMM Framework:** Estimated binary logistic mixed-effects models (`lme4`) with random intercepts for venue ($u_{\text{venue}}$ across 48 canonical grounds) and toss-winning team ($u_{\text{team}}$ across 8 franchises). Applied partial pooling (Empirical Bayes shrinkage) to eliminate quasi-complete separation artifacts in low-sample regional grounds.
+- **Key Findings:** Toss decision is statistically non-significant ($\text{OR} = 1.19, p = 0.289$). Pre-match variables explain $<4\%$ of match outcome variance ($\text{Conditional } R^2 = 0.039$), confirming that match results are overwhelmingly dictated by live match execution rather than pre-game coin toss choices.
 
----
+### Unsupervised Player Archetype Discovery
 
-# Future Improvements
-
-Future versions of the project could include:
-
-
----
-
-# Repository Contents
-
-The repository contains:
-
+- **Feature Engineering:** Delivery-level performance vectors constructed separately for batters ($N = 227, \ge 100$ balls faced) and bowlers ($N = 217, \ge 120$ legal balls bowled) across efficiency, control, aggressive impact, and phase specialization ratios, scaled via $Z$-score standardization.
+- **PCA & $K$-Means Clustering ($k = 3$):** Partitioned players into 3 batter archetypes (Tailenders, Powerplay Openers, Middle Anchors/Finishers) and 3 bowler archetypes (Late-Over Change-Up Specialists, Middle-Over Suppressors, Frontline Pace Attackers).
+- **Model Validation & Strategy:** Silhouette diagnostics ($\text{Average } S(i) < 0.30$) confirmed T20 player skill sets exist along a continuous operational spectrum. Insights enable phase-matched roster construction, tactical matchup planning, and correcting market valuation errors in scouting.
 
 ---
 
@@ -163,9 +158,12 @@ Examples include:
 
 ```r
 library(tidyverse)
-library(shiny)
+library(lme4)
+library(cluster)
 library(plotly)
+library(shiny)
 library(bslib)
+library(sjPlot)
 ```
 
 Additional modelling packages are required for the XGBoost and mixed-effects analyses.
