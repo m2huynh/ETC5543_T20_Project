@@ -149,7 +149,8 @@ partnership_cols <- c("partnership_runs_before", "partnership_balls_before")
 
 player_cols <- c("sk_bat_dismissal_rate", "sk_bowl_wicket_rate")   # new in Model 4
 
-feature_cols <- c(base_cols)
+feature_cols <- c(base_cols, ratio_cols, momentum_cols,
+                  partnership_cols, player_cols)
 ```
 
 Select and split 
