@@ -133,3 +133,69 @@ Overall, the results show that match-state information plays an important role i
 Several assessments were conducted to examine the reliability of the predictive model. Match-grouped cross-validation ensured that deliveries from the same match were not shared between training and validation folds, while the chronological holdout set provided an assessment on later matches. Match-level bootstrap intervals were also used to quantify uncertainty in predictive performance while accounting for dependence between deliveries within a match.
 
 The calibration analysis identified some systematic underestimation of wicket probabilities among the highest-risk deliveries, indicating that ranking performance was stronger than probability estimation. Performance also varied across innings phases, with the model underestimating wickets during the death overs. Finally, comparison between Models 3 and 4 examined the sensitivity of predictive performance to the inclusion of historical player-performance features. Although the improvement in PR-AUC was inconclusive, ROC-AUC showed a small positive improvement. Together, these assessments provide insight into the model's reliability, predictive limitations and sensitivity to feature selection.
+
+### 4. Evaluating death-over bowling performance
+
+#### 4.1 Modelling approach
+
+The second research question examines which bowlers are most effective at restricting runs and taking wickets during the death overs, after accounting for the match situations in which they bowl. Comparing observed economy rates and wicket totals alone would not adequately account for differences in match circumstances. For example, bowlers may face different levels of scoring pressure depending on the stage of the innings, the number of wickets already lost and whether the batting team is chasing a target. Mixed-effects models were therefore used to estimate bowler performance while accounting for these factors, as well as differences associated with the batter and venue.
+
+The analysis used deliveries from overs 17–20 across the first and second innings, excluding shortened matches. Two models were fitted using the same explanatory variables. A linear mixed-effects model examined runs conceded per delivery, calculated as runs off the bat plus wides and no-balls. A logistic mixed-effects model estimated the probability of a bowler-credited wicket, excluding dismissals such as run-outs that are not credited to the bowler.
+
+Both models included the chase indicator, required run rate, their interaction, wickets already lost, over number and whether the delivery was a free hit. Required run rate was set to zero for first-innings deliveries, where no target was being chased. The interaction between the chase indicator and required run rate allows the relationship between required run rate and the outcome to differ between first- and second-innings deliveries.
+
+Both models also included random intercepts for bowler, striker and venue. This accounts for differences associated with the batter facing the delivery and the ground at which the match was played, while estimating individual bowler effects. The models use partial pooling, which shrinks individual bowler estimates towards the overall average. This reduces the influence of unusually high or low results based on relatively limited observations.
+
+Bowler performance was summarised using two measures. For run restriction, the estimated bowler random effect was converted into runs saved per over relative to the average bowler, by multiplying the effect by −6. Positive values indicate that a bowler conceded fewer runs than expected under comparable modelled conditions. For wicket-taking, the bowler random effect was converted into an odds ratio using the exponential function. An odds ratio above one indicates higher odds of taking a bowler-credited wicket relative to the average bowler, after adjustment for the included factors.
+
+To focus the comparison on bowlers with a reasonable volume of opportunities, only those with at least 120 legal deliveries in the death overs were retained. This left 63 eligible bowlers for comparison.
+
+#### 4.2 Run-restricting performance
+
+The adjusted rankings identified Haris Rauf as the strongest run-restricting bowler, saving approximately 0.30 runs per over relative to the average bowler. B Lee followed closely at 0.30 runs per over, with HF Gurney at 0.27, PM Siddle at 0.26 and Rashid Khan at approximately 0.26. These estimates represent the bowler effects after accounting for the match-state variables, striker and venue included in the model.
+
+Consequently, the rankings provide a more contextual comparison than simply ordering bowlers by their observed economy rates. They distinguish the estimated bowler effect from differences associated with the situations in which each bowler delivered. For example, a bowler operating under greater scoring pressure is not assessed solely on the number of runs conceded, as the model also accounts for the included match-state factors.
+
+Figure 4.1 compares actual runs conceded per over with the model-based baseline for the leading run-restricting bowlers. The baseline is calculated using the model's fixed effects and the striker and venue random effects, while excluding the bowler random effect. It therefore provides an estimate of the expected scoring rate for an average bowler facing the same modelled circumstances. The difference between actual performance and this baseline helps illustrate the estimated run-restricting performance of the leading bowlers.
+
+```{r}
+#| label: fig-death-runs-baseline
+#| fig-cap: "Actual and model-baseline runs conceded per over for the leading death-over run-restricting bowlers."
+
+q4$plots$baseline
+```
+
+#### 4.3 Wicket-taking performance
+
+Run restriction and wicket-taking represent different dimensions of bowling effectiveness. A bowler may consistently concede fewer runs without necessarily taking more wickets. The logistic mixed-effects model provides a separate assessment of wicket-taking by estimating each bowler's odds of taking a bowler-credited wicket relative to the average, conditional on the included match-state variables, striker and venue.
+
+PM Siddle recorded the highest wicket odds ratio among the highlighted bowlers, at approximately 1.074. This represents around 7.4% higher odds of a bowler-credited wicket relative to the average bowler, after adjustment. KW Richardson and DR Sams also recorded positive estimated effects, with odds ratios of approximately 1.066 and 1.053 respectively. Haris Rauf's estimated odds ratio was approximately 1.032, indicating a smaller but still above-average estimated effect.
+
+These estimates should be interpreted as relative odds rather than increases in absolute wicket probability. An odds ratio of 1.074 does not mean that Siddle takes 7.4 percentage points more wickets; it represents approximately 7.4% higher odds relative to the average bowler under the modelled conditions.
+
+#### 4.4 Comparing run restriction and wicket-taking
+
+Figure 4.2 brings the two performance measures together, plotting adjusted runs saved per over against wicket odds ratios. The horizontal and vertical reference lines represent average performance on each measure. Bowlers in the upper-right quadrant perform above average in both dimensions, while those in the lower-right quadrant restrict runs effectively but have below-average estimated wicket odds.
+
+The results demonstrate that strong run restriction does not necessarily translate into above-average wicket-taking. B Lee and HF Gurney, for example, appear among the leading run-restricting bowlers but have estimated wicket odds ratios below one. Their respective odds ratios are approximately 0.930 and 0.982. Conversely, KW Richardson and DR Sams show positive wicket-taking effects despite having less pronounced run-saving estimates.
+
+PM Siddle stands out because he performs strongly on both measures, combining approximately 0.26 runs saved per over with the highest highlighted wicket odds ratio. Haris Rauf is another notable performer, ranking first in adjusted runs saved per over while also recording an above-average wicket odds ratio of approximately 1.032. These examples illustrate why evaluating both outcomes provides a more complete assessment of death-over bowling performance than relying on economy rate or wicket totals alone.
+
+The size of each point represents the number of death overs bowled, providing an indication of the volume of observations underlying each bowler's estimate. This is useful when interpreting the rankings, as bowlers with different numbers of deliveries have different amounts of information contributing to their estimated effects. Partial pooling also reduces the influence of unusually high or low results based on smaller samples.
+
+```{r}
+#| label: fig-death-bowler-performance
+#| fig-cap: "Estimated bowler effects on run restriction and wicket-taking during the death overs. The dashed reference lines indicate average performance, while point size represents the number of death overs bowled."
+
+q4$plots$scatter
+```
+
+#### 4.5 Variation in bowling outcomes and limitations
+
+The mixed-effects models also provide insight into the variation associated with batters, bowlers and venues. For runs conceded, the estimated random-effect standard deviations were 0.193 for strikers, 0.060 for bowlers and 0.056 for venues. The residual standard deviation was 1.681. Within this model, the estimated variation between strikers was considerably larger than the variation between bowlers or venues.
+
+In the wicket model, the corresponding random-effect standard deviations were approximately 0.207 for strikers and 0.082 for bowlers, while the estimated venue variation was negligible. These estimates similarly indicate greater variation between batters than between bowlers in the model. However, the standard deviations describe variation on the respective model scales and should not be interpreted as percentages of outcome variation explained.
+
+The rankings should be interpreted with several limitations in mind. First, the minimum threshold of 120 legal death-over deliveries excludes bowlers with smaller samples, meaning that the comparison does not cover every bowler who has participated in the BBL. Second, although partial pooling reduces the influence of limited observations on individual estimates, the rankings remain estimates rather than definitive measures of a bowler's underlying ability. Third, the models account only for the match-state variables and random effects included in their specifications. Other factors, such as bowling tactics, batter intent and specific delivery characteristics, may also influence outcomes but are not explicitly represented.
+
+Overall, the analysis identifies bowlers who perform particularly well in restricting runs and taking wickets under comparable modelled conditions. Haris Rauf and PM Siddle stand out for their combination of run restriction and wicket-taking, while the differing performances of other leading bowlers reinforce the value of treating these as separate dimensions of bowling effectiveness.
