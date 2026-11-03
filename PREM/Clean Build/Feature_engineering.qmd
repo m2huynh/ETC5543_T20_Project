@@ -218,11 +218,7 @@ db_data <- raw_data |>
   )
 ```
 
-
-
 ### **Scoring rate engineering**
-
-
 
 ```{r}
 #by season, team, oppn, over
