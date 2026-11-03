@@ -1,5 +1,9 @@
 ---
 title: "Modelling Match State and Player Performance in the Big Bash League"
+author:
+  - "Hieu Xuan Nguyen (Mark) - 35614978"
+  - "Pranav Sajeev - 35571381"
+  - "Prem Mallapuram - 35773499"
 format:
   pdf:
     documentclass: scrreprt    # Automatically gives you a dedicated title/cover page
