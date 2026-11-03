@@ -1,0 +1,240 @@
+---
+title: "Q4 simple"
+format: html
+---
+1. Data preparation
+BBL ball-by-ball data (2011/12 to 2024/25), restricted to innings 1 and 2.
+Shortened matches excluded, because required runs and balls remaining are distorted in rain-affected games.
+Death overs defined as overs 17-20, following the project brief.
+Two outcomes per delivery: runs conceded by the bowler (runs off the bat plus wides and no-balls) and bowler wicket (dismissals credited to the bowler, so run-outs are excluded).
+
+```{r}
+library(tidyverse); library(lme4); library(here); library(ggrepel)
+
+bbl_all <- readRDS(here("Pranav", "data", "bbl_t20_data.rds")) |> ungroup()
+
+death <- bbl_all |>
+  filter(innings %in% c(1, 2), shortened_match == 0, over_no >= 17) |>
+  mutate(
+    bowler_runs  = runs_off_bat + coalesce(wides, 0) + coalesce(noballs, 0),
+    chase        = as.integer(innings == 2),
+    req_rr       = if_else(chase == 1,
+                           required_runs / pmax(balls_remaining, 1) * 6, 0),
+    wickets_lost = pmin(wickets_lost_before, 8)
+  )
+```
+
+3. Models
+A linear mixed model for runs and a logistic mixed model for wickets, with the same predictors in both.
+Random effects for bowler, striker and venue. The striker and venue terms mean a bowler isn’t credited for facing tail-enders or bowling at small grounds.
+The wicket model uses nAGQ = 0, a faster approximation to the likelihood, to cope with the data size.
+
+4. Why mixed models
+Each bowler’s effect is estimated with partial pooling: pulled toward the league average in proportion to how little data he has. This stops a bowler with a lucky 20-over sample from topping the ranking.
+Everything is estimated jointly, so the bowler effect is already adjusted for match state, batter and venue.
+
+```{r}
+runs_model <- lmer(
+  bowler_runs ~ chase * req_rr + wickets_lost + over_no + free_hit +
+    (1 | bowler) + (1 | striker) + (1 | venue),
+  data = death
+)
+
+wicket_model <- glmer(
+  bowler_wicket ~ chase * req_rr + wickets_lost + over_no + free_hit +
+    (1 | bowler) + (1 | striker) + (1 | venue),
+  data = death, family = binomial, nAGQ = 0
+)
+
+VarCorr(runs_model); VarCorr(wicket_model)
+```
+
+5. Extracting bowler results
+Runs saved per over = −(bowler effect) × 6. Positive means fewer runs than an average bowler in the same situations.
+Wicket odds ratio = exp(bowler effect). 1.00 is average, and 1.10 means 10% higher odds of a wicket on a ball.
+Bowlers need at least 120 legal balls (20 death overs) to be included.
+
+```{r}
+runs_effect <- ranef(runs_model)$bowler |>
+  rownames_to_column("bowler") |>
+  rename(run_effect = `(Intercept)`) |>
+  mutate(runs_saved_per_over = -run_effect * 6)
+
+wicket_effect <- ranef(wicket_model)$bowler |>
+  rownames_to_column("bowler") |>
+  rename(wicket_effect = `(Intercept)`) |>
+  mutate(wicket_odds_ratio = exp(wicket_effect))
+
+volume <- death |>
+  group_by(bowler) |>
+  summarise(legal_balls = sum(legal_ball), overs = legal_balls / 6, .groups = "drop")
+
+bowler_results <- runs_effect |>
+  left_join(wicket_effect, by = "bowler") |>
+  left_join(volume, by = "bowler") |>
+  filter(legal_balls >= 120)
+
+bowler_results |>
+  arrange(desc(runs_saved_per_over)) |>
+  select(bowler, overs, runs_saved_per_over, wicket_odds_ratio) |>
+  mutate(across(where(is.numeric), ~ round(.x, 2))) |>
+  head(15)
+```
+
+
+scatter plot
+
+```{r}
+plot_data <- bowler_results |>
+  mutate(
+    top_runs  = min_rank(desc(runs_saved_per_over)) <= 8,
+    extreme_w = min_rank(desc(wicket_odds_ratio)) <= 3 |
+                min_rank(wicket_odds_ratio) <= 3,
+    standout  = top_runs | extreme_w,
+    label     = if_else(standout, bowler, NA_character_)
+  )
+
+ggplot(plot_data, aes(runs_saved_per_over, wicket_odds_ratio)) +
+  geom_hline(yintercept = 1, linetype = "dashed", colour = "grey60") +
+  geom_vline(xintercept = 0, linetype = "dashed", colour = "grey60") +
+  geom_point(aes(colour = standout, size = overs), alpha = 0.7) +
+  geom_text_repel(aes(label = label), size = 3, max.overlaps = Inf,
+                  box.padding = 0.5, na.rm = TRUE) +
+  scale_colour_manual(values = c("FALSE" = "grey70", "TRUE" = "#D55E00"), guide = "none") +
+  scale_size_continuous(range = c(2, 7), name = "Death overs bowled") +
+  labs(x = "Runs saved per over vs average bowler (right = better)",
+       y = "Wicket-taking odds ratio (up = better, 1 = average)",
+       title = "BBL death-over bowlers (overs 17-20)",
+       subtitle = "Adjusted for match state, batter and venue. Bowlers with at least 20 death overs.") +
+  theme_minimal(base_size = 12) +
+  theme(legend.position = "bottom", panel.grid.minor = element_blank())
+```
+
+expeted vs real plot
+
+
+```{r}
+death <- death |>
+  mutate(exp_runs = predict(runs_model, re.form = ~ (1 | striker) + (1 | venue)))
+
+
+rate_tbl <- death |>
+  group_by(bowler) |>
+  summarise(legal_balls = sum(legal_ball),
+            overs       = legal_balls / 6,
+            expected    = sum(exp_runs)    / legal_balls * 6,
+            actual      = sum(bowler_runs) / legal_balls * 6,
+            .groups = "drop") |>
+  filter(legal_balls >= 120) |>
+  mutate(gap = expected - actual)
+
+plot_lead <- rate_tbl |>
+  inner_join(select(bowler_results, bowler, runs_saved_per_over), by = "bowler") |>
+  slice_max(runs_saved_per_over, n = 12) |>          # shrunk leaders, same as scatter
+  mutate(label = paste0(bowler, " (", sprintf("%.2f", runs_saved_per_over), ")"),
+         label = fct_reorder(label, runs_saved_per_over))   # best at top
+
+ggplot(plot_lead, aes(y = label)) +
+  geom_segment(aes(x = expected, xend = actual, yend = label), colour = "grey70") +
+  geom_point(aes(x = expected, colour = "Model baseline (average bowler)"), size = 3) +
+  geom_point(aes(x = actual,   colour = "Actual"), size = 3) +
+  scale_colour_manual(values = c("Model baseline (average bowler)" = "grey40",
+                                 "Actual" = "#D55E00"), name = NULL) +
+  labs(x = "Runs per over in the death overs", y = NULL,
+       title = "Top death bowlers: actual vs model baseline",
+       subtitle = "Ranked by adjusted runs saved per over (in brackets). Baseline = average bowler in the same situations") +
+  theme_minimal(base_size = 12) + theme(legend.position = "bottom")
+```
+
+
+```{r}
+# Larger text for slides
+slide_theme <- theme_minimal(base_size = 16) +
+  theme(legend.position = "bottom", panel.grid.minor = element_blank())
+
+q4_scatter <- ggplot(plot_data, aes(runs_saved_per_over, wicket_odds_ratio)) +
+  geom_hline(yintercept = 1, linetype = "dashed", colour = "grey60") +
+  geom_vline(xintercept = 0, linetype = "dashed", colour = "grey60") +
+  geom_point(aes(colour = standout, size = overs), alpha = 0.7) +
+  geom_text_repel(aes(label = label), size = 4.5, max.overlaps = Inf,
+                  box.padding = 0.5, na.rm = TRUE) +
+  scale_colour_manual(values = c("FALSE" = "grey70", "TRUE" = "#D55E00"), guide = "none") +
+  scale_size_continuous(range = c(2, 7), name = "Death overs bowled") +
+  labs(x = "Runs saved per over vs average bowler (right = better)",
+       y = "Wicket odds ratio (up = better)",
+       title = "BBL death-over bowlers (overs 17-20)") +
+  slide_theme
+
+q4_baseline <- ggplot(plot_lead, aes(y = label)) +
+  geom_segment(aes(x = expected, xend = actual, yend = label), colour = "grey70") +
+  geom_point(aes(x = expected, colour = "Model baseline"), size = 3) +
+  geom_point(aes(x = actual, colour = "Actual"), size = 3) +
+  scale_colour_manual(values = c("Model baseline" = "grey40", "Actual" = "#D55E00"),
+                      name = NULL) +
+  labs(x = "Runs per over in the death overs", y = NULL,
+       title = "Top run-restricting death bowlers", subtitle = "Ranked by adjusted runs saved per over.") +
+  slide_theme
+
+vc <- function(m) as.data.frame(VarCorr(m)) |> select(group = grp, sd = sdcor)
+
+q4_objects <- list(
+  plots = list(scatter = q4_scatter, baseline = q4_baseline),
+  tables = list(top10 = bowler_results |>
+                  arrange(desc(runs_saved_per_over)) |>
+                  select(bowler, overs, runs_saved_per_over, wicket_odds_ratio) |>
+                  head(10)),
+  numbers = list(n_bowlers = nrow(bowler_results),
+                 runs_sd = vc(runs_model), wicket_sd = vc(wicket_model),
+                 or_range = range(bowler_results$wicket_odds_ratio),
+                 runs_range = range(bowler_results$runs_saved_per_over))
+)
+
+sd_bars <- vc(runs_model) |>
+  filter(group != "Residual") |>
+  mutate(runs_per_over = sd * 6,
+         group = recode(group, striker = "Batter", bowler = "Bowler", venue = "Venue")) |>
+  ggplot(aes(reorder(group, runs_per_over), runs_per_over)) +
+  geom_col(fill = "#D55E00") + coord_flip() +
+  labs(x = NULL, y = "Spread in effect (runs per over)",
+       title = "Who moves death-over scoring?") +
+  slide_theme
+
+q4_objects$plots$sd_bars <- sd_bars
+death <- death |>
+  mutate(exp_wkt = predict(wicket_model, type = "response",
+                           re.form = ~ (1 | striker) + (1 | venue)))
+
+wkt_tbl <- death |>
+  group_by(bowler) |>
+  summarise(legal_balls = sum(legal_ball),
+            expected = sum(exp_wkt)       / legal_balls * 6,
+            actual   = sum(bowler_wicket) / legal_balls * 6,
+            .groups = "drop") |>
+  filter(legal_balls >= 120)
+
+plot_wkt <- wkt_tbl |>
+  inner_join(select(bowler_results, bowler, wicket_odds_ratio), by = "bowler") |>
+  slice_max(wicket_odds_ratio, n = 12) |>
+  mutate(label = paste0(bowler, " (", sprintf("%.2f", wicket_odds_ratio), ")"),
+         label = fct_reorder(label, wicket_odds_ratio))
+
+q4_wkt_baseline <- ggplot(plot_wkt, aes(y = label)) +
+  geom_segment(aes(x = expected, xend = actual, yend = label), colour = "grey70") +
+  geom_point(aes(x = expected, colour = "Model baseline (average bowler)"), size = 3) +
+  geom_point(aes(x = actual,   colour = "Actual"), size = 3) +
+  scale_colour_manual(values = c("Model baseline (average bowler)" = "grey40",
+                                 "Actual" = "#D55E00"), name = NULL) +
+  labs(x = "Wickets per over in the death overs", y = NULL,
+       title = "Top wicket-taking death bowlers",
+       subtitle = "Ranked by adjusted wicket odds ratio") +
+  theme_minimal(base_size = 16) +
+  theme(legend.position = "bottom")
+
+q4_wkt_baseline
+
+q4_objects$plots$wkt_baseline <- q4_wkt_baseline
+
+
+saveRDS(q4_objects, here("Pranav", "data", "q4_presentation_objects.rds"))
+
+```
